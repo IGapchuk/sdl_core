@@ -259,6 +259,22 @@ class MessageHelper {
   static smart_objects::SmartObjectList CreateAddCommandRequestToHMI(
       ApplicationConstSharedPtr app, ApplicationManager& app_mngr);
 
+  static smart_objects::SmartObjectSPtr CreateMessageForHMI(
+      hmi_apis::messageType::eType message_type, const uint32_t correlation_id);
+
+  /**
+   * @brief Creates Message for sending to HMI for unsubscribe from specified
+   * VehicleData. Creates and returns message with vehicle data for unsubscribe.
+   * @param vehicle_data - collection with vehicle data types to unsubscribe.
+   * @param app - application which should be unsubscribed from specified
+   * vehicle data.
+   * @return - request filled with vehicle data params to unsubscribe
+   * ,application id and function id.
+   */
+  static smart_objects::SmartObjectSPtr
+  CreateUnsubscribeVehicleDataMessageForHMI(
+      const application_manager::ApplicationSharedPtr& app);
+
   static smart_objects::SmartObjectList
   CreateAddVRCommandRequestFromChoiceToHMI(ApplicationConstSharedPtr app,
                                            ApplicationManager& app_mngr);
