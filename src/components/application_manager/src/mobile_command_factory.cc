@@ -143,7 +143,6 @@ CommandSharedPtr MobileCommandFactory::CreateCommand(
     commands::Command::CommandOrigin origin,
     ApplicationManager& application_manager) {
   CommandSharedPtr command;
-
   switch ((*message)[strings::params][strings::function_id].asInt()) {
     case mobile_apis::FunctionID::RegisterAppInterfaceID: {
       if ((*message)[strings::params][strings::message_type] ==
