@@ -44,7 +44,6 @@ VIUnsubscribeVehicleDataRequest::~VIUnsubscribeVehicleDataRequest() {}
 
 void VIUnsubscribeVehicleDataRequest::Run() {
   LOG4CXX_AUTO_TRACE(logger_);
-
   SendRequest();
 }
 
