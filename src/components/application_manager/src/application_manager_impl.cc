@@ -2624,7 +2624,47 @@ void ApplicationManagerImpl::UnregisterApplication(
     } else {
       resume_controller().RemoveApplicationFromSaved(app_to_remove);
     }
+
+    application_manager::VehicleInfoSubscriptions vehicle_data_for_unsubscribe =
+        SelectVehicleDataForUnsubscribe(app_to_remove);
+    auto message_to_hmi =
+        MessageHelper::CreateUnsubscribeVehicleDataMessageForHMI(
+            vehicle_data_for_unsubscribe, app_to_remove);
+
+#ifdef DEBUG
+    MessageHelper::PrintSmartObject(*message_to_hmi);
+#endif
+
+    CommandSharedPtr command =
+        HMICommandFactory::CreateCommand(message_to_hmi, *this);
+    if (!command) {
+      LOG4CXX_WARN(logger_, "Failed to create command from smart object");
+    }
+
+    int32_t message_type =
+        (*(message_to_hmi.get()))[strings::params][strings::message_type]
+            .asInt();
+
+    if (kRequest == message_type) {
+      LOG4CXX_DEBUG(logger_, "ManageHMICommand");
+      request_ctrl_.addHMIRequest(command);
+    }
+
+    if (command->Init()) {
+      command->Run();
+      if (kResponse == message_type) {
+        const uint32_t correlation_id =
+            (*(message_to_hmi.get()))[strings::params][strings::correlation_id]
+                .asUInt();
+        const int32_t function_id =
+            (*(message_to_hmi.get()))[strings::params][strings::function_id]
+                .asInt();
+        request_ctrl_.OnHMIResponse(correlation_id, function_id);
+      }
+    }
+
     applications_.erase(app_to_remove);
+
     (hmi_capabilities_->get_hmi_language_handler())
         .OnUnregisterApplication(app_id);
     AppV4DevicePredicate finder(handle);
@@ -2847,6 +2887,27 @@ void ApplicationManagerImpl::OnLowVoltage() {
 bool ApplicationManagerImpl::IsLowVoltage() {
   LOG4CXX_TRACE(logger_, "result: " << is_low_voltage_);
   return is_low_voltage_;
+}
+
+VehicleInfoSubscriptions
+ApplicationManagerImpl::SelectVehicleDataForUnsubscribe(
+    const ApplicationSharedPtr& application) {
+  auto vehicle_data_for_unsubscribe = application->SubscribedIVI().GetData();
+  auto vehicle_data_collector =
+      [this, &vehicle_data_for_unsubscribe, application](
+          const std::uint32_t vehicle_data) {
+        for (auto& app : applications_) {
+          if (app->app_id() != application->app_id()) {
+            if (app->IsSubscribedToIVI(vehicle_data)) {
+              vehicle_data_for_unsubscribe.erase(vehicle_data);
+            }
+          }
+        }
+      };
+  std::for_each(vehicle_data_for_unsubscribe.begin(),
+                vehicle_data_for_unsubscribe.end(),
+                vehicle_data_collector);
+  return vehicle_data_for_unsubscribe;
 }
 
 std::string ApplicationManagerImpl::GetHashedAppID(

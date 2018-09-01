@@ -39,8 +39,9 @@
 #include <set>
 #include <string>
 #include <algorithm>
-#include <utility>
 #include <map>
+#include <memory>
+#include <utility>
 
 #include "application_manager/application.h"
 #include "application_manager/application_manager.h"
@@ -1063,6 +1064,48 @@ smart_objects::SmartObjectList MessageHelper::CreateAddCommandRequestToHMI(
   return requests;
 }
 
+smart_objects::SmartObjectSPtr MessageHelper::CreateMessageForHMI(
+    hmi_apis::messageType::eType message_type, const uint32_t correlation_id) {
+  auto message = new smart_objects::SmartObject(smart_objects::SmartType_Map);
+  auto& ref = *message;
+
+  ref[strings::params][strings::message_type] = static_cast<int>(message_type);
+  ref[strings::params][strings::protocol_version] =
+      commands::CommandImpl::protocol_version_;
+  ref[strings::params][strings::protocol_type] =
+      commands::CommandImpl::hmi_protocol_type_;
+  ref[strings::params][strings::correlation_id] = correlation_id;
+  return message;
+}
+
+smart_objects::SmartObjectSPtr
+MessageHelper::CreateUnsubscribeVehicleDataMessageForHMI(
+    const VehicleInfoSubscriptions& vehicle_data,
+    const application_manager::ApplicationSharedPtr& app) {
+  auto message_to_hmi =
+      CreateMessageForHMI(hmi_apis::messageType::request, app->app_id());
+  (*message_to_hmi)[strings::params][strings::function_id] =
+      hmi_apis::FunctionID::VehicleInfo_UnsubscribeVehicleData;
+  smart_objects::SmartObject msg_params =
+      smart_objects::SmartObject(smart_objects::SmartType_Map);
+  const VehicleData& v_data = MessageHelper::vehicle_data();
+
+  // This lambda puts data (as boolean) into message about needed vehicle
+  // data to unsubscribe, according to smart object keys.
+  auto vehicle_data_setter = [&msg_params, &v_data](const uint32_t v_type) {
+    for (const auto& item : v_data) {
+      if (item.second == v_type) {
+        msg_params[item.first] = true;
+      }
+    }
+  };
+
+  std::for_each(vehicle_data.begin(), vehicle_data.end(), vehicle_data_setter);
+  (*message_to_hmi)[strings::msg_params] = msg_params;
+
+  return message_to_hmi;
+}
+
 smart_objects::SmartObjectList
 MessageHelper::CreateAddVRCommandRequestFromChoiceToHMI(
     ApplicationConstSharedPtr app, ApplicationManager& app_mngr) {
@@ -1328,9 +1371,11 @@ void MessageHelper::SendOnAppUnregNotificationToHMI(
       hmi_apis::FunctionID::BasicCommunication_OnAppUnregistered;
 
   message[strings::params][strings::message_type] = MessageType::kNotification;
-  // we put hmi_app_id because applicaton list does not contain application on
+  // we put hmi_app_id because applicaton list does not contain application
+  // on
   // this momment
-  // and ReplaceHMIByMobileAppId function will be unable to replace app_id to
+  // and ReplaceHMIByMobileAppId function will be unable to replace app_id
+  // to
   // hmi_app_id
   message[strings::msg_params][strings::app_id] = app->hmi_app_id();
   message[strings::msg_params][strings::unexpected_disconnect] =
@@ -2183,7 +2228,8 @@ mobile_apis::Result::eType MessageHelper::VerifyImage(
     smart_objects::SmartObject& image,
     ApplicationConstSharedPtr app,
     ApplicationManager& app_mngr) {
-  // Checking image type first: if STATIC - skip existence check, since it is
+  // Checking image type first: if STATIC - skip existence check, since it
+  // is
   // HMI related file and it should know it location
   const uint32_t image_type = image[strings::image_type].asUInt();
   mobile_apis::ImageType::eType type =
@@ -2447,7 +2493,9 @@ bool MessageHelper::PrintSmartObject(const smart_objects::SmartObject& object) {
   if (0 != tab) {
     --tab;
   } else {
-    printf("\n-------------------------------------------------------------\n");
+    printf(
+        "\n-------------------------------------------------------------"
+        "\n");
   }
 #endif
   return true;
