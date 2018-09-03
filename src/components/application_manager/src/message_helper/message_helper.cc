@@ -40,7 +40,6 @@
 #include <string>
 #include <algorithm>
 #include <map>
-#include <memory>
 #include <utility>
 
 #include "application_manager/application.h"
@@ -1065,23 +1064,26 @@ smart_objects::SmartObjectList MessageHelper::CreateAddCommandRequestToHMI(
 }
 
 smart_objects::SmartObjectSPtr MessageHelper::CreateMessageForHMI(
-    hmi_apis::messageType::eType message_type, const uint32_t correlation_id) {
-  auto message = new smart_objects::SmartObject(smart_objects::SmartType_Map);
-  auto& ref = *message;
+    const hmi_apis::messageType::eType message_type,
+    const uint32_t correlation_id) {
+  auto message_so =
+      new smart_objects::SmartObject(smart_objects::SmartType_Map);
+  auto& message_ref = *message_so;
 
-  ref[strings::params][strings::message_type] = static_cast<int>(message_type);
-  ref[strings::params][strings::protocol_version] =
+  message_ref[strings::params][strings::message_type] =
+      static_cast<int>(message_type);
+  message_ref[strings::params][strings::protocol_version] =
       commands::CommandImpl::protocol_version_;
-  ref[strings::params][strings::protocol_type] =
+  message_ref[strings::params][strings::protocol_type] =
       commands::CommandImpl::hmi_protocol_type_;
-  ref[strings::params][strings::correlation_id] = correlation_id;
-  return message;
+  message_ref[strings::params][strings::correlation_id] = correlation_id;
+  return message_so;
 }
 
 smart_objects::SmartObjectSPtr
 MessageHelper::CreateUnsubscribeVehicleDataMessageForHMI(
     const VehicleInfoSubscriptions& vehicle_data,
-    const application_manager::ApplicationSharedPtr& app) {
+    ApplicationConstSharedPtr app) {
   auto message_to_hmi =
       CreateMessageForHMI(hmi_apis::messageType::request, app->app_id());
   (*message_to_hmi)[strings::params][strings::function_id] =
@@ -1372,11 +1374,8 @@ void MessageHelper::SendOnAppUnregNotificationToHMI(
 
   message[strings::params][strings::message_type] = MessageType::kNotification;
   // we put hmi_app_id because applicaton list does not contain application
-  // on
-  // this momment
-  // and ReplaceHMIByMobileAppId function will be unable to replace app_id
-  // to
-  // hmi_app_id
+  // on this momment and ReplaceHMIByMobileAppId function will be unable to
+  // replace app_id to hmi_app_id
   message[strings::msg_params][strings::app_id] = app->hmi_app_id();
   message[strings::msg_params][strings::unexpected_disconnect] =
       is_unexpected_disconnect;

@@ -1244,7 +1244,15 @@ class ApplicationManagerImpl
    * to unsubscribe.
    */
   application_manager::VehicleInfoSubscriptions SelectVehicleDataForUnsubscribe(
-      const app_mngr::ApplicationSharedPtr& application);
+      app_mngr::ApplicationConstSharedPtr application);
+
+  /**
+   * @brief Unsubscribe specified application from vehicle data.
+   * @param - Pointer to application instance.
+   * @return - Return result of sending (success or not).
+   */
+  bool SendUnsubscribeAppFromVehicleDataToHMI(
+      application_manager::ApplicationConstSharedPtr application);
 
  private:
   /*
