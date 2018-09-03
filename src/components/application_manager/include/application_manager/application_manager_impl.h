@@ -1235,6 +1235,25 @@ class ApplicationManagerImpl
    */
   bool IsLowVoltage();
 
+  /**
+   * @brief Selects vehicle data of specified application for unsubscribing
+   * according to subscriptions of other registered applications that also
+   * subscribed to vehicle data .
+   * @param app - pointer to application instance.
+   * @return vehicle_data_for_unscribe - collection with selected vehicle data
+   * to unsubscribe.
+   */
+  application_manager::VehicleInfoSubscriptions SelectVehicleDataForUnsubscribe(
+      app_mngr::ApplicationConstSharedPtr application);
+
+  /**
+   * @brief Unsubscribe specified application from vehicle data.
+   * @param - Pointer to application instance.
+   * @return - Return result of sending (success or not).
+   */
+  bool SendUnsubscribeAppFromVehicleDataToHMI(
+      application_manager::ApplicationConstSharedPtr application);
+
  private:
   /*
    * NaviServiceStatusMap shows which navi service (audio/video) is opened

@@ -2624,7 +2624,14 @@ void ApplicationManagerImpl::UnregisterApplication(
     } else {
       resume_controller().RemoveApplicationFromSaved(app_to_remove);
     }
+
+    const bool result = SendUnsubscribeAppFromVehicleDataToHMI(app_to_remove);
+    LOG4CXX_INFO(logger_,
+                 "Sending UnsubscribeVehicleData to HMI finished "
+                     << (result ? " successful." : " with fail."));
+
     applications_.erase(app_to_remove);
+
     (hmi_capabilities_->get_hmi_language_handler())
         .OnUnregisterApplication(app_id);
     AppV4DevicePredicate finder(handle);
@@ -2847,6 +2854,44 @@ void ApplicationManagerImpl::OnLowVoltage() {
 bool ApplicationManagerImpl::IsLowVoltage() {
   LOG4CXX_TRACE(logger_, "result: " << is_low_voltage_);
   return is_low_voltage_;
+}
+
+VehicleInfoSubscriptions
+ApplicationManagerImpl::SelectVehicleDataForUnsubscribe(
+    ApplicationConstSharedPtr application) {
+  auto vehicle_data_for_unsubscribe = application->SubscribedIVI().GetData();
+  auto vehicle_data_collector =
+      [this, &vehicle_data_for_unsubscribe, application](
+          const std::uint32_t vehicle_data) {
+        for (auto& app : applications_) {
+          if (app->app_id() != application->app_id()) {
+            if (app->IsSubscribedToIVI(vehicle_data)) {
+              vehicle_data_for_unsubscribe.erase(vehicle_data);
+            }
+          }
+        }
+      };
+  std::for_each(vehicle_data_for_unsubscribe.begin(),
+                vehicle_data_for_unsubscribe.end(),
+                vehicle_data_collector);
+  return vehicle_data_for_unsubscribe;
+}
+
+bool ApplicationManagerImpl::SendUnsubscribeAppFromVehicleDataToHMI(
+    ApplicationConstSharedPtr application) {
+  bool sending_result = false;
+
+  const application_manager::VehicleInfoSubscriptions
+      vehicle_data_for_unsubscribe =
+          SelectVehicleDataForUnsubscribe(application);
+
+  if (!vehicle_data_for_unsubscribe.empty()) {
+    auto message_to_hmi =
+        MessageHelper::CreateUnsubscribeVehicleDataMessageForHMI(
+            vehicle_data_for_unsubscribe, application);
+    sending_result = ManageHMICommand(message_to_hmi);
+  }
+  return sending_result;
 }
 
 std::string ApplicationManagerImpl::GetHashedAppID(
