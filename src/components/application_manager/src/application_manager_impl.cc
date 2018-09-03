@@ -2627,39 +2627,43 @@ void ApplicationManagerImpl::UnregisterApplication(
 
     application_manager::VehicleInfoSubscriptions vehicle_data_for_unsubscribe =
         SelectVehicleDataForUnsubscribe(app_to_remove);
-    auto message_to_hmi =
-        MessageHelper::CreateUnsubscribeVehicleDataMessageForHMI(
-            vehicle_data_for_unsubscribe, app_to_remove);
+
+    if (!vehicle_data_for_unsubscribe.empty()) {
+      auto message_to_hmi =
+          MessageHelper::CreateUnsubscribeVehicleDataMessageForHMI(
+              vehicle_data_for_unsubscribe, app_to_remove);
 
 #ifdef DEBUG
-    MessageHelper::PrintSmartObject(*message_to_hmi);
+      MessageHelper::PrintSmartObject(*message_to_hmi);
 #endif
 
-    CommandSharedPtr command =
-        HMICommandFactory::CreateCommand(message_to_hmi, *this);
-    if (!command) {
-      LOG4CXX_WARN(logger_, "Failed to create command from smart object");
-    }
+      CommandSharedPtr command =
+          HMICommandFactory::CreateCommand(message_to_hmi, *this);
+      if (!command) {
+        LOG4CXX_WARN(logger_, "Failed to create command from smart object");
+      }
 
-    int32_t message_type =
-        (*(message_to_hmi.get()))[strings::params][strings::message_type]
-            .asInt();
+      int32_t message_type =
+          (*(message_to_hmi.get()))[strings::params][strings::message_type]
+              .asInt();
 
-    if (kRequest == message_type) {
-      LOG4CXX_DEBUG(logger_, "ManageHMICommand");
-      request_ctrl_.addHMIRequest(command);
-    }
+      if (kRequest == message_type) {
+        LOG4CXX_DEBUG(logger_, "ManageHMICommand");
+        request_ctrl_.addHMIRequest(command);
+      }
 
-    if (command->Init()) {
-      command->Run();
-      if (kResponse == message_type) {
-        const uint32_t correlation_id =
-            (*(message_to_hmi.get()))[strings::params][strings::correlation_id]
-                .asUInt();
-        const int32_t function_id =
-            (*(message_to_hmi.get()))[strings::params][strings::function_id]
-                .asInt();
-        request_ctrl_.OnHMIResponse(correlation_id, function_id);
+      if (command->Init()) {
+        command->Run();
+        if (kResponse == message_type) {
+          const uint32_t correlation_id =
+              (*(message_to_hmi
+                     .get()))[strings::params][strings::correlation_id]
+                  .asUInt();
+          const int32_t function_id =
+              (*(message_to_hmi.get()))[strings::params][strings::function_id]
+                  .asInt();
+          request_ctrl_.OnHMIResponse(correlation_id, function_id);
+        }
       }
     }
 
