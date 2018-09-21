@@ -32,6 +32,8 @@
 
 #include "transport_manager/transport_manager_default.h"
 #include "gtest/gtest.h"
+
+#include "resumption/last_state_wrapper.h"
 #include "resumption/mock_last_state.h"
 #include "transport_manager/bt/mock_bluetooth_transport_adapter.h"
 #include "transport_manager/cloud/mock_cloud_websocket_transport_adapter.h"
@@ -187,28 +189,20 @@ void TestTransportManagerDefault::ExpectationsSettings_TM(
       bluetooth_device;
   ON_CALL(mock_last_state_, get_dictionary())
       .WillByDefault(ReturnRef(custom_dictionary_));
+  ON_CALL(*mock_last_state, dictionary())
+      .WillByDefault(Return(custom_dictionary));
 
-  EXPECT_CALL(transport_manager_settings_, use_last_state())
-      .WillRepeatedly(Return(use_last_state));
-  EXPECT_CALL(transport_manager_settings_, transport_manager_tcp_adapter_port())
-      .WillRepeatedly(Return(tcp_adapter_port_));
-
-  EXPECT_CALL(transport_manager_settings_, bluetooth_uuid())
-      .WillRepeatedly(Return(kBTUUID.data()));
-
-  EXPECT_CALL(transport_manager_settings_, aoa_filter_manufacturer())
-      .WillRepeatedly(ReturnRef(dummy_parameter_));
-  EXPECT_CALL(transport_manager_settings_, aoa_filter_model_name())
-      .WillRepeatedly(ReturnRef(dummy_parameter_));
-  EXPECT_CALL(transport_manager_settings_, aoa_filter_description())
-      .WillRepeatedly(ReturnRef(dummy_parameter_));
-  EXPECT_CALL(transport_manager_settings_, aoa_filter_version())
-      .WillRepeatedly(ReturnRef(dummy_parameter_));
-  EXPECT_CALL(transport_manager_settings_, aoa_filter_uri())
-      .WillRepeatedly(ReturnRef(dummy_parameter_));
-  EXPECT_CALL(transport_manager_settings_, aoa_filter_serial_number())
-      .WillRepeatedly(ReturnRef(dummy_parameter_));
-}
+  EXPECT_CALL(transport_manager_settings, use_last_state())
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(transport_manager_settings, transport_manager_tcp_adapter_port())
+      .WillRepeatedly(Return(12345u));
+  std::string network_interface = "";
+  EXPECT_CALL(transport_manager_settings,
+              transport_manager_tcp_adapter_network_interface())
+      .WillRepeatedly(ReturnRef(network_interface));
+  transport_manager.Init(wrapper);
+  transport_manager.Stop();
+}  // namespace transport_manager_test
 
 void TestTransportManagerDefault::ExpectationsBluetooth_TA() {
   // Expectations for Mock of bluetooth transport adapter
