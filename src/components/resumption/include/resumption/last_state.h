@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Ford Motor Company
+ * Copyright (c) 2018, Ford Motor Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,6 @@
 #ifndef SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_H_
 #define SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_H_
 
-#include <string>
-
 #include "json/json.h"
 
 namespace resumption {
@@ -47,14 +45,28 @@ class LastState {
   virtual ~LastState() {}
 
   /**
-   * @brief Saving dictionary to filesystem
-   */
-  virtual void SaveStateToFileSystem() = 0;
+    * @brief SaveToFileSystem
+    * Saving dictionary to filesystem
+    */
+  virtual void SaveToFileSystem() = 0;
 
   /**
-   * @brief Get reference to dictionary
+   * @brief RemoveFromFileSystem
+   * Remove dictionary from filesystem
    */
-  virtual Json::Value& get_dictionary() = 0;
+  virtual void RemoveFromFileSystem() = 0;
+
+  /**
+   * @brief dictionary Gets internal dictionary
+   * @return Copy of internal dictionary json value
+   */
+  virtual Json::Value dictionary() const = 0;
+
+  /**
+   * @brief set_dictionary Resets internal dictionary
+   * @param dictionary New dictionary json value to be set
+   */
+  virtual void set_dictionary(const Json::Value& dictionary) = 0;
 };
 
 }  // namespace resumption

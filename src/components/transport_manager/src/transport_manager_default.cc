@@ -89,9 +89,10 @@ TransportManagerDefault::TransportManagerDefault(
     const TransportAdapterFactory& ta_factory)
     : TransportManagerImpl(settings), ta_factory_(ta_factory) {}
 
-int TransportManagerDefault::Init(resumption::LastState& last_state) {
+int TransportManagerDefault::Init(
+    std::shared_ptr<resumption::LastStateWrapper> last_state_wrapper) {
   LOG4CXX_TRACE(logger_, "enter");
-  if (E_SUCCESS != TransportManagerImpl::Init(last_state)) {
+  if (E_SUCCESS != TransportManagerImpl::Init(last_state_wrapper)) {
     LOG4CXX_TRACE(logger_,
                   "exit with E_TM_IS_NOT_INITIALIZED. Condition: E_SUCCESS != "
                   "TransportManagerImpl::Init()");
