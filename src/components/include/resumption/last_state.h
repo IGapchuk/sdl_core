@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, Ford Motor Company
+ * Copyright (c) 2018, Ford Motor Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,67 +30,45 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_IMPL_H_
-#define SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_IMPL_H_
+#ifndef SRC_COMPONENTS_INCLUDE_RESUMPTION_LAST_STATE_H_
+#define SRC_COMPONENTS_INCLUDE_RESUMPTION_LAST_STATE_H_
 
-#include <string>
-
-#include "resumption/last_state.h"
-#include "utils/lock.h"
-#include "utils/macro.h"
+#include "json/json.h"
 
 namespace resumption {
 
-/**
- * @brief The LastStateImpl class handles interface of last state
- */
-
-class LastStateImpl : public LastState {
+class LastState {
  public:
-  /**
-   * @brief Constructor
-   */
-  LastStateImpl(const std::string& app_storage_folder,
-                const std::string& app_info_storage);
   /**
    * @brief Destructor
    */
-  ~LastStateImpl();
-  /**
-   * @brief Saving dictionary to filesystem
-   */
-  void SaveToFileSystem() OVERRIDE;
+  virtual ~LastState() {}
 
   /**
-   * @brief Remove dictionary from filesystem
-   */
-  void RemoveFromFileSystem() OVERRIDE;
+    * @brief SaveToFileSystem
+    * Saving dictionary to filesystem
+    */
+  virtual void SaveToFileSystem() = 0;
 
   /**
-   * @brief Get reference to dictionary
+   * @brief RemoveFromFileSystem
+   * Remove dictionary from filesystem
    */
-  Json::Value dictionary() const OVERRIDE;
+  virtual void RemoveFromFileSystem() = 0;
+
   /**
-   * @brief Resets internal dictionary
+   * @brief dictionary Gets internal dictionary
+   * @return Copy of internal dictionary json value
+   */
+  virtual Json::Value dictionary() const = 0;
+
+  /**
+   * @brief set_dictionary sets internal dictionary
    * @param dictionary New dictionary json value to be set
    */
-  void set_dictionary(const Json::Value& dictionary) OVERRIDE;
-
- private:
-  /**
-   * @brief Load dictionary from filesystem
-   */
-  void LoadFromFileSystem();
-
-  Json::Value dictionary_;
-  mutable sync_primitives::Lock dictionary_lock_;
-
-  std::string app_storage_folder_;
-  std::string app_info_storage_;
-
-  DISALLOW_COPY_AND_ASSIGN(LastStateImpl);
+  virtual void set_dictionary(const Json::Value& dictionary) = 0;
 };
 
 }  // namespace resumption
 
-#endif  // SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_IMPL_H_
+#endif  // SRC_COMPONENTS_INCLUDE_RESUMPTION_LAST_STATE_H_

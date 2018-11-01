@@ -56,9 +56,11 @@ class DataAccessor {
       --(*counter_);
     }
   }
+
   const T& GetData() const {
     return data_;
   }
+
   T& GetMutableData() const {
     return const_cast<T&>(data_);
   }

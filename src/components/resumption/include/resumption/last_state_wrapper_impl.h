@@ -1,4 +1,5 @@
-/* Copyright (c) 2018, Ford Motor Company
+/*
+ * Copyright (c) 2018, Ford Motor Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,20 +30,33 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_WRAPPER_IMPL_H_
+#define SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_WRAPPER_IMPL_H_
+
+#include <memory>
+
+#include "resumption/last_state.h"
 #include "resumption/last_state_wrapper.h"
-#include "utils/logger.h"
+#include "utils/macro.h"
+#include "utils/lock.h"
+#include "utils/data_accessor.h"
 
 namespace resumption {
 
-CREATE_LOGGERPTR_GLOBAL(logger_, "Resumption")
+class LastStateWrapperImpl : public LastStateWrapper {
+ public:
+  /**
+   * @brief Constructor
+   */
+  explicit LastStateWrapperImpl(std::shared_ptr<LastState> last_state);
 
-LastStateWrapper::LastStateWrapper(std::shared_ptr<LastState> last_state)
-    : last_state_(last_state)
-    , lock_(std::make_shared<sync_primitives::Lock>()) {}
+  LastStateAccessor get_accessor() const OVERRIDE;
 
-LastStateAccessor LastStateWrapper::get_accessor() const {
-  LOG4CXX_AUTO_TRACE(logger_);
-  return DataAccessor<LastState>(*last_state_, lock_);
-}
+ private:
+  std::shared_ptr<LastState> last_state_;
+  mutable std::shared_ptr<sync_primitives::Lock> lock_;
+};
 
 }  // namespace resumption
+
+#endif  // SRC_COMPONENTS_RESUMPTION_INCLUDE_RESUMPTION_LAST_STATE_WRAPPER_IMPL_H_

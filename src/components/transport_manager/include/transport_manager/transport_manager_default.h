@@ -38,10 +38,6 @@
 
 #include "transport_manager/transport_manager_impl.h"
 
-namespace resumption {
-class LastStateWrapper;
-}
-
 namespace transport_manager {
 
 struct TransportAdapterFactory {
@@ -80,8 +76,7 @@ class TransportManagerDefault : public TransportManagerImpl {
    *
    * @return Code error.
    */
-  int Init(std::shared_ptr<resumption::LastStateWrapper> last_state_wrapper)
-      OVERRIDE;
+  int Init(resumption::LastStateWrapperPtr last_state_wrapper) OVERRIDE;
 
   /**
    * @brief Destructor.
