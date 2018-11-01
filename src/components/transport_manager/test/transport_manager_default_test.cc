@@ -168,7 +168,7 @@ class TestTransportManagerDefault : public ::testing::Test {
   MockTCPTransportAdapter* mock_tcp_ta_;
   MockUsbAoaAdapter* mock_usb_aoa_ta_;
   MockCloudWebsocketTransportAdapter* mock_cloud_websocket_ta_;
-};
+};  // namespace transport_manager_test
 
 void TestTransportManagerDefault::ExpectationsSettings_TM(
     const bool use_last_state) {
