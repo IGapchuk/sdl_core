@@ -164,7 +164,7 @@ struct IsSameNickname {
   }
 
  private:
-  const custom_str::CustomString& app_id_;
+  const custom_str::CustomString app_id_;
 };
 }
 
@@ -224,20 +224,49 @@ void RegisterAppInterfaceRequest::Run() {
     return;
   }
 
-  if (IsApplicationSwitched()) {
+  std::string device_mac_addr;
+  connection_handler::DeviceHandle device_id = 0;
+
+  auto& connect_handler = application_manager_.connection_handler();
+  auto result = connect_handler.GetDataOnSessionKey(
+      connection_key(), nullptr, nullptr, &device_id);
+
+  if (-1 != result) {
+    result = connect_handler.get_session_observer().GetDataOnDeviceID(
+        device_id, nullptr, nullptr, &device_mac_addr, nullptr);
+  }
+
+  if (-1 == result) {
+    LOG4CXX_ERROR(logger_, "Failed get connection info.");
+    std::shared_ptr<smart_objects::SmartObject> response(
+        MessageHelper::CreateNegativeResponse(
+            connection_key(),
+            mobile_apis::FunctionID::RegisterAppInterfaceID,
+            (*message_)[strings::params][strings::correlation_id].asUInt(),
+            mobile_apis::Result::GENERIC_ERROR));
+    rpc_service_.ManageMobileCommand(response, Command::SOURCE_SDL);
     return;
   }
 
+  LOG4CXX_DEBUG(logger_,
+                "device_mac: " << device_mac_addr
+                               << " device_id: " << device_id);
+
+  if (IsApplicationSwitched(device_id, device_mac_addr)) {
+    return;
+  }
+
+  // cache the original app ID (for legacy behavior)
+  const std::string policy_app_id =
+      application_manager_.GetCorrectMobileIDFromMessage(message_);
+
   ApplicationSharedPtr application =
-      application_manager_.application(connection_key());
+      application_manager_.application(device_mac_addr, policy_app_id);
 
   if (application) {
     SendResponse(false, mobile_apis::Result::APPLICATION_REGISTERED_ALREADY);
     return;
   }
-  // cache the original app ID (for legacy behavior)
-  const std::string policy_app_id =
-      application_manager_.GetCorrectMobileIDFromMessage(message_);
 
   const smart_objects::SmartObject& msg_params =
       (*message_)[strings::msg_params];
@@ -266,7 +295,7 @@ void RegisterAppInterfaceRequest::Run() {
     return;
   }
 
-  if (IsApplicationWithSameAppIdRegistered()) {
+  if (IsApplicationWithSameAppIdRegistered(device_id)) {
     SendResponse(false, mobile_apis::Result::DISALLOWED);
     return;
   }
@@ -281,7 +310,7 @@ void RegisterAppInterfaceRequest::Run() {
     return;
   }
 
-  mobile_apis::Result::eType coincidence_result = CheckCoincidence();
+  mobile_apis::Result::eType coincidence_result = CheckCoincidence(device_id);
 
   if (mobile_apis::Result::SUCCESS != coincidence_result) {
     LOG4CXX_ERROR(logger_, "Coincidence check failed.");
@@ -831,7 +860,8 @@ void RegisterAppInterfaceRequest::SendRegisterAppInterfaceResponseToMobile(
   // Start PTU after successfull registration
   // Sends OnPermissionChange notification to mobile right after RAI response
   // and HMI level set-up
-  GetPolicyHandler().OnAppRegisteredOnMobile(application->policy_app_id());
+  GetPolicyHandler().OnAppRegisteredOnMobile(application->mac_address(),
+                                             application->policy_app_id());
 
   if (result_code != mobile_apis::Result::RESUME_FAILED) {
     resumer.StartResumption(application, hash_id);
@@ -1019,10 +1049,16 @@ void RegisterAppInterfaceRequest::SendOnAppRegisteredNotificationToHMI(
   DCHECK(rpc_service_.ManageHMICommand(notification));
 }
 
-mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckCoincidence() {
+mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckCoincidence(
+    const connection_handler::DeviceHandle& device_id) {
   LOG4CXX_AUTO_TRACE(logger_);
   const smart_objects::SmartObject& msg_params =
       (*message_)[strings::msg_params];
+
+  const smart_objects::SmartArray* tts_array = nullptr;
+  if (msg_params.keyExists(strings::tts_name)) {
+    tts_array = msg_params[strings::tts_name].asArray();
+  }
 
   ApplicationSet accessor = application_manager_.applications().GetData();
 
@@ -1031,6 +1067,9 @@ mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckCoincidence() {
       msg_params[strings::app_name].asCustomString();
 
   for (; accessor.end() != it; ++it) {
+    if (device_id != (*it)->device()) {
+      continue;
+    }
     // name check
     const custom_str::CustomString& cur_name = (*it)->name();
     if (app_name.CompareIgnoreCase(cur_name)) {
@@ -1061,6 +1100,26 @@ mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckCoincidence() {
         return mobile_apis::Result::DUPLICATE_NAME;
       }
     }  // end vr check
+
+    // tts check
+    if (tts_array && (*it)->tts_name()) {
+      const std::vector<smart_objects::SmartObject>* tts_curr =
+          (*it)->tts_name()->asArray();
+      smart_objects::SmartArray::const_iterator it_tts =
+          std::find_first_of(tts_array->begin(),
+                             tts_array->end(),
+                             tts_curr->begin(),
+                             tts_curr->end(),
+                             CoincidencePredicateTTS());
+      if (it_tts != tts_array->end()) {
+        LOG4CXX_ERROR(
+            logger_,
+            "TTS name: "
+                << (*it_tts)[strings::text].asCustomString().AsMBString()
+                << " is known already");
+        return mobile_apis::Result::DUPLICATE_NAME;
+      }
+    }  // end tts check
 
   }  // application for end
 
@@ -1182,7 +1241,8 @@ void RegisterAppInterfaceRequest::FillDeviceInfo(
   }
 }
 
-bool RegisterAppInterfaceRequest::IsApplicationWithSameAppIdRegistered() {
+bool RegisterAppInterfaceRequest::IsApplicationWithSameAppIdRegistered(
+    const connection_handler::DeviceHandle& device_id) {
   LOG4CXX_AUTO_TRACE(logger_);
 
   const custom_string::CustomString mobile_app_id(
@@ -1196,6 +1256,15 @@ bool RegisterAppInterfaceRequest::IsApplicationWithSameAppIdRegistered() {
 
   for (; it != it_end; ++it) {
     if (mobile_app_id.CompareIgnoreCase((*it)->policy_app_id().c_str())) {
+      if (device_id != (*it)->device()) {
+        LOG4CXX_DEBUG(logger_,
+                      "These policy_app_id equal, but applications have "
+                      "different device id"
+                          << " mobile_app_id: " << mobile_app_id.c_str()
+                          << " device_id: " << device_id
+                          << " device_id: " << (*it)->device());
+        continue;
+      }
       return true;
     }
   }
@@ -1370,13 +1439,15 @@ void RegisterAppInterfaceRequest::SendSubscribeCustomButtonNotification() {
   CreateHMINotification(FunctionID::Buttons_OnButtonSubscription, msg_params);
 }
 
-bool RegisterAppInterfaceRequest::IsApplicationSwitched() {
+bool RegisterAppInterfaceRequest::IsApplicationSwitched(
+    const connection_handler::DeviceHandle& device_id,
+    const std::string& device_mac_addr) {
   const std::string& policy_app_id =
       application_manager_.GetCorrectMobileIDFromMessage(message_);
 
   LOG4CXX_DEBUG(logger_, "Looking for application id " << policy_app_id);
 
-  auto app = application_manager_.application_by_policy_id(policy_app_id);
+  auto app = application_manager_.application(device_mac_addr, policy_app_id);
 
   if (!app) {
     LOG4CXX_DEBUG(logger_,
@@ -1387,7 +1458,7 @@ bool RegisterAppInterfaceRequest::IsApplicationSwitched() {
 
   LOG4CXX_DEBUG(logger_,
                 "Application with policy id " << policy_app_id << " is found.");
-  if (!application_manager_.IsAppInReconnectMode(policy_app_id)) {
+  if (!application_manager_.IsAppInReconnectMode(device_id, policy_app_id)) {
     LOG4CXX_DEBUG(logger_,
                   "Policy id " << policy_app_id
                                << " is not found in reconnection list.");

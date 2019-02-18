@@ -127,7 +127,8 @@ class ChangeRegistrationRequest
    * @return SUCCESS if there is no coincidence of app.name/VR synonyms,
    * otherwise appropriate error code returns
    */
-  mobile_apis::Result::eType CheckCoincidence();
+  mobile_apis::Result::eType CheckCoincidence(
+      const connection_handler::DeviceHandle& device_id);
 
   /**
    * @brief Checks if requested name is allowed by policy
@@ -161,6 +162,23 @@ class ChangeRegistrationRequest
     };
 
     const custom_str::CustomString& newItem_;
+  };
+
+  /**
+    * @brief Predicate for using with CheckCoincidence method to compare with
+    *TTS
+    * name SO
+    *
+    * return TRUE if there is coincidence of TTS, otherwise FALSE
+    */
+  struct CoincidencePredicateTTS {
+    bool operator()(const smart_objects::SmartObject& obj_1,
+                    const smart_objects::SmartObject& obj_2) {
+      const custom_str::CustomString& tts_name_1 =
+          obj_1[application_manager::strings::text].asCustomString();
+      return tts_name_1.CompareIgnoreCase(
+          obj_2[application_manager::strings::text].asCustomString());
+    }
   };
 
   app_mngr::commands::Pending pending_requests_;

@@ -136,7 +136,8 @@ class RegisterAppInterfaceRequest
    *
    * return TRUE if ID is known already, otherwise - FALSE
    */
-  bool IsApplicationWithSameAppIdRegistered();
+  bool IsApplicationWithSameAppIdRegistered(
+      const connection_handler::DeviceHandle& device_id);
 
   /*
    * @brief Check new application parameters (name, tts, vr) for
@@ -145,7 +146,8 @@ class RegisterAppInterfaceRequest
    * return SUCCESS if there is no coincidence of app.name/TTS/VR synonyms,
    * otherwise appropriate error code returns
   */
-  mobile_apis::Result::eType CheckCoincidence();
+  mobile_apis::Result::eType CheckCoincidence(
+      const connection_handler::DeviceHandle& device_id);
 
   /*
   * @brief Predicate for using with CheckCoincidence method to compare with VR
@@ -162,6 +164,22 @@ class RegisterAppInterfaceRequest
       return newItem_.CompareIgnoreCase(vr_synonym);
     }
     const custom_str::CustomString& newItem_;
+  };
+
+  /**
+   * @brief Predicate for using with CheckCoincidence method to compare with TTS
+   * name SO
+   *
+   * return TRUE if there is coincidence of TTS, otherwise FALSE
+   */
+  struct CoincidencePredicateTTS {
+    bool operator()(const smart_objects::SmartObject& obj_1,
+                    const smart_objects::SmartObject& obj_2) {
+      const custom_str::CustomString& tts_name_1 =
+          obj_1[application_manager::strings::text].asCustomString();
+      return tts_name_1.CompareIgnoreCase(
+          obj_2[application_manager::strings::text].asCustomString());
+    }
   };
 
   /**
@@ -207,7 +225,8 @@ class RegisterAppInterfaceRequest
    * switching.
    * @return True if application is detected as switched, otherwise false.
    */
-  bool IsApplicationSwitched();
+  bool IsApplicationSwitched(const connection_handler::DeviceHandle& device_id,
+                             const std::string& device_mac_addr);
 
  private:
   std::string response_info_;
