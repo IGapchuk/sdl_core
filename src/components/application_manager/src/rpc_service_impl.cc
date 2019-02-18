@@ -78,7 +78,9 @@ bool RPCServiceImpl::ManageMobileCommand(
       (*message)[strings::params][strings::connection_key].asUInt());
 
   auto app_ptr = app_manager_.application(connection_key);
-  if (app_ptr && app_manager_.IsAppInReconnectMode(app_ptr->policy_app_id())) {
+  if (app_ptr &&
+      app_manager_.IsAppInReconnectMode(app_ptr->device(),
+                                        app_ptr->policy_app_id())) {
     commands_holder_.Suspend(
         app_ptr, CommandHolder::CommandType::kMobileCommand, message);
     return true;
@@ -279,7 +281,9 @@ bool RPCServiceImpl::ManageHMICommand(
         (*message)[strings::msg_params][strings::app_id].asUInt();
 
     auto app = app_manager_.application(static_cast<uint32_t>(connection_key));
-    if (app && app_manager_.IsAppInReconnectMode(app->policy_app_id())) {
+    if (app &&
+        app_manager_.IsAppInReconnectMode(app->device(),
+                                          app->policy_app_id())) {
       commands_holder_.Suspend(
           app, CommandHolder::CommandType::kHmiCommand, message);
       return true;
