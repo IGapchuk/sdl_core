@@ -1463,7 +1463,7 @@ bool RegisterAppInterfaceRequest::IsApplicationSwitched(
                   "Policy id " << policy_app_id
                                << " is not found in reconnection list.");
     SendResponse(false, mobile_apis::Result::APPLICATION_REGISTERED_ALREADY);
-    return false;
+    return true;
   }
 
   LOG4CXX_DEBUG(logger_, "Application is found in reconnection list.");
