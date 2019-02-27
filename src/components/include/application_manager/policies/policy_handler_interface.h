@@ -68,11 +68,13 @@ class PolicyHandlerInterface {
   virtual bool ReceiveMessageFromSDK(const std::string& file,
                                      const BinaryMessage& pt_string) = 0;
   virtual bool UnloadPolicyLibrary() = 0;
-  virtual void OnPermissionsUpdated(const std::string& policy_app_id,
+  virtual void OnPermissionsUpdated(const std::string& device_id,
+                                    const std::string& policy_app_id,
                                     const Permissions& permissions,
                                     const HMILevel& default_hmi) = 0;
 
-  virtual void OnPermissionsUpdated(const std::string& policy_app_id,
+  virtual void OnPermissionsUpdated(const std::string& device_id,
+                                    const std::string& policy_app_id,
                                     const Permissions& permissions) = 0;
 
 #ifdef EXTERNAL_PROPRIETARY_MODE
@@ -378,7 +380,8 @@ class PolicyHandlerInterface {
    *
    * @param application_id registered application.
    */
-  virtual void OnAppRegisteredOnMobile(const std::string& application_id) = 0;
+  virtual void OnAppRegisteredOnMobile(const std::string& device_id,
+                                       const std::string& application_id) = 0;
 
   /**
    * @brief Checks if certain request type is allowed for application

@@ -506,7 +506,8 @@ void PolicyHandler::OnDeviceConsentChanged(const std::string& device_id,
 
       policy_manager_->ReactOnUserDevConsentForApp(policy_app_id, is_allowed);
 
-      policy_manager_->SendNotificationOnPermissionsUpdated(policy_app_id);
+      policy_manager_->SendNotificationOnPermissionsUpdated(device_id,
+                                                            policy_app_id);
     }
   }
 }
@@ -1349,14 +1350,15 @@ void PolicyHandler::PTExchangeAtUserRequest(uint32_t correlation_id) {
       update_status, correlation_id, application_manager_);
 }
 
-void PolicyHandler::OnPermissionsUpdated(const std::string& policy_app_id,
+void PolicyHandler::OnPermissionsUpdated(const std::string& device_id,
+                                         const std::string& policy_app_id,
                                          const Permissions& permissions,
                                          const HMILevel& default_hmi) {
   LOG4CXX_AUTO_TRACE(logger_);
-  OnPermissionsUpdated(policy_app_id, permissions);
+  OnPermissionsUpdated(device_id, policy_app_id, permissions);
 
   ApplicationSharedPtr app =
-      application_manager_.application_by_policy_id(policy_app_id);
+      application_manager_.application(device_id, policy_app_id);
   if (app.use_count() == 0) {
     LOG4CXX_WARN(
         logger_,
@@ -1405,11 +1407,12 @@ void PolicyHandler::OnPermissionsUpdated(const std::string& policy_app_id,
   }
 }
 
-void PolicyHandler::OnPermissionsUpdated(const std::string& policy_app_id,
+void PolicyHandler::OnPermissionsUpdated(const std::string& device_id,
+                                         const std::string& policy_app_id,
                                          const Permissions& permissions) {
   LOG4CXX_AUTO_TRACE(logger_);
   ApplicationSharedPtr app =
-      application_manager_.application_by_policy_id(policy_app_id);
+      application_manager_.application(device_id, policy_app_id);
   if (app.use_count() == 0) {
     LOG4CXX_WARN(
         logger_,
@@ -1872,9 +1875,10 @@ void PolicyHandler::OnAppsSearchCompleted(const bool trigger_ptu) {
   policy_manager_->OnAppsSearchCompleted(trigger_ptu);
 }
 
-void PolicyHandler::OnAppRegisteredOnMobile(const std::string& application_id) {
+void PolicyHandler::OnAppRegisteredOnMobile(const std::string& device_id,
+                                            const std::string& application_id) {
   POLICY_LIB_CHECK_VOID();
-  policy_manager_->OnAppRegisteredOnMobile(application_id);
+  policy_manager_->OnAppRegisteredOnMobile(device_id, application_id);
 }
 
 RequestType::State PolicyHandler::GetAppRequestTypeState(

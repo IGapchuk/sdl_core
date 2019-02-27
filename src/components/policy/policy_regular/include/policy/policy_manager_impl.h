@@ -406,7 +406,7 @@ class PolicyManagerImpl : public PolicyManager {
    * @param application_id Unique application id
    */
   void SendNotificationOnPermissionsUpdated(
-      const std::string& application_id) OVERRIDE;
+      const std::string& device_id, const std::string& application_id) OVERRIDE;
 
   /**
    * @brief Removes unpaired device records and related records from DB
@@ -570,7 +570,8 @@ class PolicyManagerImpl : public PolicyManager {
    * It will send OnAppPermissionSend notification and will try to start PTU. *
    * @param application_id registered application.
    */
-  void OnAppRegisteredOnMobile(const std::string& application_id) OVERRIDE;
+  void OnAppRegisteredOnMobile(const std::string& device_id,
+                               const std::string& application_id) OVERRIDE;
 
   void OnDeviceSwitching(const std::string& device_id_from,
                          const std::string& device_id_to) OVERRIDE;

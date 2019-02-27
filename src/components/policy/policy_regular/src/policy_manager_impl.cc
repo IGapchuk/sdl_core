@@ -503,9 +503,9 @@ void PolicyManagerImpl::OnAppsSearchCompleted(const bool trigger_ptu) {
 }
 
 void PolicyManagerImpl::OnAppRegisteredOnMobile(
-    const std::string& application_id) {
+    const std::string& device_id, const std::string& application_id) {
   StartPTExchange();
-  SendNotificationOnPermissionsUpdated(application_id);
+  SendNotificationOnPermissionsUpdated(device_id, application_id);
 }
 
 void PolicyManagerImpl::OnDeviceSwitching(const std::string& device_id_from,
@@ -589,9 +589,8 @@ bool PolicyManagerImpl::ResetUserConsent() {
 }
 
 void PolicyManagerImpl::SendNotificationOnPermissionsUpdated(
-    const std::string& application_id) {
+    const std::string& device_id, const std::string& application_id) {
   LOG4CXX_AUTO_TRACE(logger_);
-  const std::string device_id = GetCurrentDeviceId(application_id);
   if (device_id.empty()) {
     LOG4CXX_WARN(logger_,
                  "Couldn't find device info for application id "
@@ -628,12 +627,13 @@ void PolicyManagerImpl::SendNotificationOnPermissionsUpdated(
 
   const ApplicationOnDevice who = {device_id, application_id};
   if (access_remote_->IsAppRemoteControl(who)) {
-    listener()->OnPermissionsUpdated(application_id, notification_data);
+    listener()->OnPermissionsUpdated(
+        device_id, application_id, notification_data);
     return;
   }
 
   listener()->OnPermissionsUpdated(
-      application_id, notification_data, default_hmi);
+      device_id, application_id, notification_data, default_hmi);
 }
 
 bool PolicyManagerImpl::CleanupUnpairedDevices() {
@@ -1406,7 +1406,8 @@ void PolicyManagerImpl::SendAppPermissionsChanged(
     const std::string& device_id, const std::string& application_id) {
   Permissions notification_data;
   GetPermissions(device_id, application_id, &notification_data);
-  listener()->OnPermissionsUpdated(application_id, notification_data);
+  listener()->OnPermissionsUpdated(
+      device_id, application_id, notification_data);
 }
 
 void PolicyManagerImpl::OnPrimaryGroupsChanged(

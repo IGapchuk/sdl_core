@@ -372,7 +372,7 @@ class PolicyManager : public usage_statistics::StatisticsManager {
    * @param application_id Unique application id
    */
   virtual void SendNotificationOnPermissionsUpdated(
-      const std::string& application_id) = 0;
+      const std::string& device_id, const std::string& application_id) = 0;
 
   /**
    * @brief Marks device as upaired
@@ -508,7 +508,8 @@ class PolicyManager : public usage_statistics::StatisticsManager {
    * It will send OnAppPermissionSend notification and will try to start PTU. *
    * @param application_id registered application.
    */
-  virtual void OnAppRegisteredOnMobile(const std::string& application_id) = 0;
+  virtual void OnAppRegisteredOnMobile(const std::string& device_id,
+                                       const std::string& application_id) = 0;
 
   virtual void OnDeviceSwitching(const std::string& device_id_from,
                                  const std::string& device_id_to) = 0;
