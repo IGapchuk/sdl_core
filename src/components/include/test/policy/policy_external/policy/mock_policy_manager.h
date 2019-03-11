@@ -140,8 +140,9 @@ class MockPolicyManager : public PolicyManager {
                void(const std::string& ccpu_version,
                     const std::string& wers_country_code,
                     const std::string& language));
-  MOCK_METHOD1(SendNotificationOnPermissionsUpdated,
-               void(const std::string& application_id));
+  MOCK_METHOD2(SendNotificationOnPermissionsUpdated,
+               void(const std::string& device_id,
+                    const std::string& application_id));
   MOCK_METHOD1(MarkUnpairedDevice, void(const std::string& device_id));
   MOCK_METHOD2(
       AddApplication,
@@ -177,8 +178,9 @@ class MockPolicyManager : public PolicyManager {
   MOCK_METHOD1(SaveUpdateStatusRequired, void(bool is_update_needed));
   MOCK_METHOD0(OnAppsSearchStarted, void());
   MOCK_METHOD1(OnAppsSearchCompleted, void(const bool trigger_ptu));
-  MOCK_METHOD1(OnAppRegisteredOnMobile,
-               void(const std::string& application_id));
+  MOCK_METHOD2(OnAppRegisteredOnMobile,
+               void(const std::string& device_id,
+                    const std::string& application_id));
   MOCK_CONST_METHOD0(GetLockScreenIconUrl, std::string());
   MOCK_CONST_METHOD1(
       GetAppRequestTypes,

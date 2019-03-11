@@ -393,7 +393,7 @@ TEST_F(
   status.insert(ExternalConsentStatusItem(type_2_, id_2_, kStatusOn));
   status.insert(ExternalConsentStatusItem(type_3_, id_3_, kStatusOn));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
 
   EXPECT_TRUE(policy_manager_->SetExternalConsentStatus(status));
 
@@ -442,7 +442,7 @@ TEST_F(
   status.insert(ExternalConsentStatusItem(type_2_, id_2_, kStatusOn));
   status.insert(ExternalConsentStatusItem(type_3_, id_3_, kStatusOn));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
 
   EXPECT_TRUE(policy_manager_->SetExternalConsentStatus(status));
 
@@ -498,7 +498,7 @@ TEST_F(
 
   EXPECT_FALSE(pt->policy_table.device_data->end() != updated_device_data);
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_1_))
       .WillRepeatedly(Return(device_id_1_));
 
@@ -566,7 +566,7 @@ TEST_F(
 
   EXPECT_FALSE(pt->policy_table.device_data->end() != updated_device_data);
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_1_))
       .WillRepeatedly(Return(device_id_1_));
 
@@ -621,7 +621,7 @@ TEST_F(
 
   EXPECT_TRUE(policy_manager_->GetCache()->ApplyUpdate(t));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_1_))
       .WillOnce(Return(device_id_1_))         // registered
       .WillOnce(Return(""))                   // not registered
@@ -711,7 +711,7 @@ TEST_F(
 
   EXPECT_TRUE(policy_manager_->GetCache()->ApplyUpdate(t));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_1_))
       .WillOnce(Return(device_id_1_))         // registered
       .WillOnce(Return(""))                   // not registered
@@ -809,7 +809,7 @@ TEST_F(PolicyManagerImplTest_ExternalConsent,
 
   EXPECT_TRUE(policy_manager_->SetExternalConsentStatus(status));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_1_))
       .WillRepeatedly(Return(device_id_1_));
 
@@ -934,7 +934,7 @@ TEST_F(PolicyManagerImplTest_ExternalConsent,
 
   EXPECT_TRUE(policy_manager_->SetExternalConsentStatus(status));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_1_))
       .WillRepeatedly(Return(device_id_1_));
 
@@ -1068,7 +1068,7 @@ TEST_F(
   status_on.insert(ExternalConsentStatusItem(type_2_, id_2_, kStatusOn));
   status_on.insert(ExternalConsentStatusItem(type_3_, id_3_, kStatusOn));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _));
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _));
 
   EXPECT_TRUE(policy_manager_->SetExternalConsentStatus(status_on));
 
@@ -1104,7 +1104,8 @@ TEST_F(
   status_off.insert(ExternalConsentStatusItem(type_2_, id_2_, kStatusOff));
   status_off.insert(ExternalConsentStatusItem(type_3_, id_3_, kStatusOff));
 
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_1_, _)).Times(1);
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_1_, app_id_1_, _))
+      .Times(1);
 
   EXPECT_TRUE(policy_manager_->SetExternalConsentStatus(status_off));
 

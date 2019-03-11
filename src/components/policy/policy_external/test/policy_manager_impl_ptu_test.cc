@@ -946,7 +946,7 @@ TEST_F(PolicyManagerImplTest2,
   // Set PT was updated 10 days ago (limit is 30 days for now)
   // So no limit exceeded
   policy_manager_->PTUpdatedAt(counter, days - 10);
-  policy_manager_->OnAppRegisteredOnMobile(app_id_2_);
+  policy_manager_->OnAppRegisteredOnMobile(device_id_2_, app_id_2_);
   EXPECT_EQ("UP_TO_DATE", policy_manager_->GetPolicyTableStatus());
 }
 
@@ -965,7 +965,7 @@ TEST_F(PolicyManagerImplTest2,
   ::policy::Counters counter = ::policy::Counters::DAYS_AFTER_EPOCH;
   // Set PT was updated 50 days ago (limit is 30 days for now)
   policy_manager_->PTUpdatedAt(counter, days - 50);
-  policy_manager_->OnAppRegisteredOnMobile(app_id_2_);
+  policy_manager_->OnAppRegisteredOnMobile(device_id_2_, app_id_2_);
   EXPECT_EQ("UPDATE_NEEDED", policy_manager_->GetPolicyTableStatus());
 }
 
@@ -993,7 +993,7 @@ TEST_F(
   for (int i = 0; i < ign_cycles; ++i) {
     policy_manager_->IncrementIgnitionCycles();
   }
-  policy_manager_->OnAppRegisteredOnMobile(app_id_2_);
+  policy_manager_->OnAppRegisteredOnMobile(device_id_2_, app_id_2_);
   // Check update required
   EXPECT_EQ("UPDATE_NEEDED", policy_manager_->GetPolicyTableStatus());
 }
@@ -1045,7 +1045,8 @@ TEST_F(PolicyManagerImplTest2,
 
   policy_manager_->SetUserConsentForApp(perm_consent,
                                         policy::PolicyManager::kSilentMode);
-  policy_manager_->SendNotificationOnPermissionsUpdated(app_id_2_);
+  policy_manager_->SendNotificationOnPermissionsUpdated(device_id_2_,
+                                                        app_id_2_);
   std::vector< ::policy::FunctionalGroupPermission> actual_groups_permissions;
   std::vector< ::policy::FunctionalGroupPermission>::iterator it;
   policy_manager_->GetUserConsentForApp(
@@ -1153,7 +1154,8 @@ TEST_F(
 
   policy_manager_->SetUserConsentForApp(perm_consent,
                                         policy::PolicyManager::kSilentMode);
-  policy_manager_->SendNotificationOnPermissionsUpdated(app_id_2_);
+  policy_manager_->SendNotificationOnPermissionsUpdated(device_id_2_,
+                                                        app_id_2_);
   std::vector< ::policy::FunctionalGroupPermission> actual_groups_permissions;
   std::vector< ::policy::FunctionalGroupPermission>::iterator it;
   policy_manager_->GetPermissionsForApp(
@@ -1284,7 +1286,8 @@ TEST_F(PolicyManagerImplTest2,
 
   policy_manager_->SetUserConsentForApp(perm_consent,
                                         policy::PolicyManager::kSilentMode);
-  policy_manager_->SendNotificationOnPermissionsUpdated(app_id_2_);
+  policy_manager_->SendNotificationOnPermissionsUpdated(device_id_2_,
+                                                        app_id_2_);
   std::vector< ::policy::FunctionalGroupPermission> actual_groups_permissions;
   std::vector< ::policy::FunctionalGroupPermission>::iterator it;
   policy_manager_->GetPermissionsForApp(

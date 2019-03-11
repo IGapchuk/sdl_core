@@ -638,9 +638,10 @@ TEST_F(
   EXPECT_EQ("NONE", default_hmi1);
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(app_id_2_))
       .WillOnce(Return(""));
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_2_, _, default_hmi1))
+  EXPECT_CALL(listener_, OnPermissionsUpdated(device_id_2_, app_id_2_, _))
       .Times(0);
-  policy_manager_->SendNotificationOnPermissionsUpdated(app_id_2_);
+  policy_manager_->SendNotificationOnPermissionsUpdated(device_id_2_,
+                                                        app_id_2_);
 
   ASSERT_TRUE(
       (policy_manager_->GetCache())->AddDevice(device_id_2_, "Bluetooth"));
@@ -666,8 +667,10 @@ TEST_F(
   std::string default_hmi2;
   policy_manager_->GetDefaultHmi(app_id_2_, &default_hmi2);
   EXPECT_EQ("LIMITED", default_hmi2);
-  EXPECT_CALL(listener_, OnPermissionsUpdated(app_id_2_, _, default_hmi2));
-  policy_manager_->SendNotificationOnPermissionsUpdated(app_id_2_);
+  EXPECT_CALL(listener_,
+              OnPermissionsUpdated(device_id_2_, app_id_2_, _, default_hmi2));
+  policy_manager_->SendNotificationOnPermissionsUpdated(device_id_2_,
+                                                        app_id_2_);
 }
 
 }  // namespace policy

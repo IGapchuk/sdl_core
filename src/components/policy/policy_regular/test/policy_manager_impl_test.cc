@@ -852,7 +852,7 @@ TEST_F(PolicyManagerImplTest2,
   // Set PT was updated 10 days ago (limit is 30 days for now)
   // So no limit exceeded
   manager->PTUpdatedAt(counter, days - 10);
-  manager->OnAppRegisteredOnMobile(app_id2);
+  manager->OnAppRegisteredOnMobile(dev_id2, app_id2);
   EXPECT_EQ("UP_TO_DATE", manager->GetPolicyTableStatus());
 }
 
@@ -1314,7 +1314,7 @@ TEST_F(
   perm_consent.group_permissions = groups_permissions;
 
   manager->SetUserConsentForApp(perm_consent);
-  manager->SendNotificationOnPermissionsUpdated(app_id2);
+  manager->SendNotificationOnPermissionsUpdated(dev_id2, app_id2);
   std::vector< ::policy::FunctionalGroupPermission> actual_groups_permissions;
   std::vector< ::policy::FunctionalGroupPermission>::iterator it;
   manager->GetPermissionsForApp(dev_id2, app_id2, actual_groups_permissions);

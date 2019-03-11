@@ -57,12 +57,14 @@ class MockPolicyHandlerInterface : public policy::PolicyHandlerInterface {
                bool(const std::string& file,
                     const policy::BinaryMessage& pt_string));
   MOCK_METHOD0(UnloadPolicyLibrary, bool());
-  MOCK_METHOD3(OnPermissionsUpdated,
-               void(const std::string& policy_app_id,
+  MOCK_METHOD4(OnPermissionsUpdated,
+               void(const std::string& device_id,
+                    const std::string& policy_app_id,
                     const policy::Permissions& permissions,
                     const policy::HMILevel& default_hmi));
-  MOCK_METHOD2(OnPermissionsUpdated,
-               void(const std::string& policy_app_id,
+  MOCK_METHOD3(OnPermissionsUpdated,
+               void(const std::string& device_id,
+                    const std::string& policy_app_id,
                     const policy::Permissions& permissions));
 
 #ifdef EXTERNAL_PROPRIETARY_MODE
@@ -192,8 +194,9 @@ class MockPolicyHandlerInterface : public policy::PolicyHandlerInterface {
   MOCK_CONST_METHOD1(HeartBeatTimeout, uint32_t(const std::string& app_id));
   MOCK_METHOD0(OnAppsSearchStarted, void());
   MOCK_METHOD1(OnAppsSearchCompleted, void(const bool trigger_ptu));
-  MOCK_METHOD1(OnAppRegisteredOnMobile,
-               void(const std::string& application_id));
+  MOCK_METHOD2(OnAppRegisteredOnMobile,
+               void(const std::string& device_id,
+                    const std::string& application_id));
   MOCK_CONST_METHOD2(IsRequestTypeAllowed,
                      bool(const std::string& policy_app_id,
                           mobile_apis::RequestType::eType type));
