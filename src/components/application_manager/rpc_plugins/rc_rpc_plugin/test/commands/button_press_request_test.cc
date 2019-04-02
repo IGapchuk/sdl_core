@@ -72,6 +72,8 @@ const std::string kPolicyAppId = "Test";
 namespace rc_rpc_plugin_test {
 
 using namespace rc_rpc_plugin;
+using namespace application_manager;
+using namespace application_manager::commands;
 
 class ButtonPressRequestTest
     : public CommandRequestTest<CommandsTestMocks::kIsNice> {
@@ -115,7 +117,7 @@ class ButtonPressRequestTest
     for (size_t i = 0; i < button_names.size(); i++) {
       button_caps[i] = ButtonCapability(button_names[i]);
     }
-    rc_capabilities_[strings::kbuttonCapabilities] = button_caps;
+    rc_capabilities_[rc_rpc_plugin::strings::kbuttonCapabilities] = button_caps;
     ON_CALL(app_mngr_, application(_)).WillByDefault(Return(mock_app_));
     ON_CALL(*mock_app_, QueryInterface(RCRPCPlugin::kRCPluginID))
         .WillByDefault(Return(rc_app_extention_));
@@ -123,6 +125,11 @@ class ButtonPressRequestTest
         .WillByDefault(ReturnRef(mock_policy_handler_));
     ON_CALL(app_mngr_, hmi_capabilities())
         .WillByDefault(ReturnRef(mock_hmi_capabilities_));
+    ON_CALL(app_mngr_, hmi_interfaces())
+        .WillByDefault(ReturnRef(mock_hmi_interfaces_));
+    ON_CALL(mock_hmi_interfaces_, GetInterfaceState(_))
+        .WillByDefault(
+            Return(application_manager::HmiInterfaces::STATE_AVAILABLE));
     ON_CALL(mock_hmi_capabilities_, rc_capability())
         .WillByDefault(Return(&rc_capabilities_));
     ON_CALL(*mock_app_, policy_app_id()).WillByDefault(Return(kPolicyAppId));
@@ -131,6 +138,10 @@ class ButtonPressRequestTest
                          mobile_apis::AppHMIType::eType::REMOTE_CONTROL,
                          nullptr)).WillByDefault(Return(true));
     ON_CALL(mock_allocation_manager_, is_rc_enabled())
+        .WillByDefault(Return(true));
+    ON_CALL(mock_policy_handler_, CheckModule(_, _))
+        .WillByDefault(Return(true));
+    ON_CALL(mock_allocation_manager_, IsResourceFree(_))
         .WillByDefault(Return(true));
   }
 
@@ -163,7 +174,7 @@ class ButtonPressRequestTest
   smart_objects::SmartObject rc_capabilities_;
   std::shared_ptr<MockApplication> mock_app_;
   std::shared_ptr<rc_rpc_plugin::RCAppExtension> rc_app_extention_;
-  test::components::policy_test::MockPolicyHandlerInterface
+  testing::NiceMock<test::components::policy_test::MockPolicyHandlerInterface>
       mock_policy_handler_;
   testing::NiceMock<rc_rpc_plugin_test::MockResourceAllocationManager>
       mock_allocation_manager_;
@@ -186,7 +197,6 @@ TEST_F(ButtonPressRequestTest,
 
   // Expectations
   const std::string resource = "CLIMATE";
-  ON_CALL(mock_policy_handler_, CheckModule(_, _)).WillByDefault(Return(true));
   EXPECT_CALL(mock_allocation_manager_, IsResourceFree(resource))
       .WillOnce(Return(true));
   EXPECT_CALL(mock_allocation_manager_, AcquireResource(resource, _))
@@ -321,6 +331,221 @@ TEST_F(ButtonPressRequestTest,
   std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
       CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
           mobile_message);
+  command->on_event(event);
+}
+
+TEST_F(
+    ButtonPressRequestTest,
+    OnEvent_RC_GetInteriorVehicleDataConsent_AppNotRegistered_Response_APPLICATION_NOT_REGISTERED) {
+  MessageSharedPtr message = CreateBasicMessage();
+  ON_CALL(app_mngr_, application(_)).WillByDefault(Return(MockAppPtr()));
+
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(
+          MobileResultCodeIs(mobile_apis::Result::APPLICATION_NOT_REGISTERED),
+          Command::CommandSource::SOURCE_SDL));
+
+  application_manager::event_engine::Event event(
+      hmi_apis::FunctionID::RC_GetInteriorVehicleDataConsent);
+  event.set_smart_object(*message);
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(message);
+  command->on_event(event);
+}
+
+TEST_F(ButtonPressRequestTest, onTimeOut_ResponsesToMobile_GENERIC_ERROR) {
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
+          mobile_message);
+
+  EXPECT_CALL(mock_allocation_manager_,
+              SetResourceState(_, kAppId, rc_rpc_plugin::ResourceState::FREE));
+
+  EXPECT_CALL(mock_rpc_service_,
+              ManageMobileCommand(
+                  MobileResultCodeIs(mobile_apis::Result::GENERIC_ERROR),
+                  Command::CommandSource::SOURCE_SDL));
+
+  ASSERT_TRUE(command->Init());
+  command->onTimeOut();
+}
+
+TEST_F(ButtonPressRequestTest,
+       Run_RCInterfacesIsNotAvailable_ResponsesToMobile_UNSUPPORTED_RESOURCE) {
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+
+  ON_CALL(app_mngr_, hmi_interfaces())
+      .WillByDefault(ReturnRef(mock_hmi_interfaces_));
+  ON_CALL(mock_hmi_interfaces_, GetInterfaceState(_))
+      .WillByDefault(Return(HmiInterfaces::STATE_NOT_AVAILABLE));
+
+  EXPECT_CALL(mock_rpc_service_,
+              ManageMobileCommand(
+                  MobileResultCodeIs(mobile_apis::Result::UNSUPPORTED_RESOURCE),
+                  Command::CommandSource::SOURCE_SDL));
+
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
+          mobile_message);
+
+  ASSERT_TRUE(command->Init());
+  command->Run();
+}
+
+TEST_F(ButtonPressRequestTest,
+       Run_AppHasNoRemoteControlFunctions_ResponsesToMobile_DISALLOWED) {
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+
+  ON_CALL(mock_policy_handler_, CheckHMIType(kPolicyAppId, _, _))
+      .WillByDefault(Return(false));
+
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(MobileResultCodeIs(mobile_apis::Result::DISALLOWED),
+                          Command::CommandSource::SOURCE_SDL));
+
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
+          mobile_message);
+
+  ASSERT_TRUE(command->Init());
+  command->Run();
+}
+
+TEST_F(ButtonPressRequestTest,
+       Run_RCIsDisabledByUser_ResponsesToMobile_USER_DISALLOWED) {
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+
+  ON_CALL(mock_allocation_manager_, is_rc_enabled())
+      .WillByDefault(Return(false));
+
+  EXPECT_CALL(mock_policy_handler_, CheckHMIType(_, _, _))
+      .WillOnce(Return(true));
+  EXPECT_CALL(mock_allocation_manager_,
+              SetResourceState(_, kAppId, ResourceState::eType::FREE));
+
+  EXPECT_CALL(mock_rpc_service_,
+              ManageMobileCommand(
+                  MobileResultCodeIs(mobile_apis::Result::USER_DISALLOWED),
+                  Command::CommandSource::SOURCE_SDL));
+
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
+          mobile_message);
+
+  ASSERT_TRUE(command->Init());
+  command->Run();
+}
+
+TEST_F(ButtonPressRequestTest, Run_ResourceIsNotFree_IN_USE) {
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+
+  ON_CALL(mock_allocation_manager_, IsResourceFree(_))
+      .WillByDefault(Return(false));
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(MobileResultCodeIs(mobile_apis::Result::IN_USE),
+                          Command::CommandSource::SOURCE_SDL));
+
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
+          mobile_message);
+
+  ASSERT_TRUE(command->Init());
+  command->Run();
+}
+
+TEST_F(ButtonPressRequestTest, Run_AcquireResultREJECT_Response_Rejected) {
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+
+  ON_CALL(mock_allocation_manager_, AcquireResource(_, kAppId))
+      .WillByDefault(Return(AcquireResult::REJECTED));
+
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(MobileResultCodeIs(mobile_apis::Result::REJECTED),
+                          Command::CommandSource::SOURCE_SDL));
+
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(
+          mobile_message);
+
+  ASSERT_TRUE(command->Init());
+  command->Run();
+}
+
+TEST_F(ButtonPressRequestTest, OnEvent_ButtonAllowed_SendsRequestToHMI) {
+  MessageSharedPtr message = CreateBasicMessage();
+  (*message)[application_manager::strings::params]
+            [application_manager::hmi_response::code] =
+                hmi_apis::Common_Result::WARNINGS;
+  auto& msg_params = (*message)[application_manager::strings::msg_params];
+  msg_params[message_params::kAllowed] = true;
+  msg_params[message_params::kModuleType] = mobile_apis::ModuleType::CLIMATE;
+  msg_params[message_params::kButtonName] = mobile_apis::ButtonName::AC;
+
+  EXPECT_CALL(mock_allocation_manager_, ForceAcquireResource(_, kAppId));
+  EXPECT_CALL(mock_allocation_manager_,
+              SetResourceState(_, kAppId, ResourceState::BUSY));
+
+  EXPECT_CALL(mock_rpc_service_,
+              ManageHMICommand(
+                  HMIResultCodeIs(hmi_apis::FunctionID::Buttons_ButtonPress),
+                  _)).WillOnce(Return(true));
+
+  application_manager::event_engine::Event event(
+      hmi_apis::FunctionID::RC_GetInteriorVehicleDataConsent);
+  event.set_smart_object(*message);
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(message);
+  command->on_event(event);
+}
+
+TEST_F(ButtonPressRequestTest,
+       OnEvent_ButtonIsDisallowed_SendsResponse_REJECTED) {
+  MessageSharedPtr message = CreateBasicMessage();
+  (*message)[application_manager::strings::params]
+            [application_manager::hmi_response::code] =
+                hmi_apis::Common_Result::WARNINGS;
+  auto& msg_params = (*message)[application_manager::strings::msg_params];
+  msg_params[message_params::kAllowed] = false;
+  msg_params[message_params::kModuleType] = mobile_apis::ModuleType::CLIMATE;
+  msg_params[message_params::kButtonName] = mobile_apis::ButtonName::AC;
+
+  EXPECT_CALL(mock_allocation_manager_, OnDriverDisallowed(_, kAppId));
+
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(MobileResultCodeIs(mobile_apis::Result::REJECTED),
+                          Command::CommandSource::SOURCE_SDL));
+
+  application_manager::event_engine::Event event(
+      hmi_apis::FunctionID::RC_GetInteriorVehicleDataConsent);
+  event.set_smart_object(*message);
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(message);
+  command->on_event(event);
+}
+
+TEST_F(ButtonPressRequestTest,
+       OnEvent_Result_INVALID_ID_SendsResponse_INVALID_ID) {
+  MessageSharedPtr message = CreateBasicMessage();
+  (*message)[application_manager::strings::params]
+            [application_manager::hmi_response::code] =
+                hmi_apis::Common_Result::INVALID_ID;
+
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(MobileResultCodeIs(mobile_apis::Result::INVALID_ID),
+                          Command::CommandSource::SOURCE_SDL));
+
+  application_manager::event_engine::Event event(
+      hmi_apis::FunctionID::RC_GetInteriorVehicleDataConsent);
+  event.set_smart_object(*message);
+  std::shared_ptr<rc_rpc_plugin::commands::ButtonPressRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::ButtonPressRequest>(message);
   command->on_event(event);
 }
 
