@@ -1588,11 +1588,13 @@ CacheManager::LockScreenDismissalWarningMessage(
       (*pt_->policy_table.consumer_friendly_messages
             ->messages)[lock_screen_dismissal_warning_message];
 
-  LanguageFinder finder(language);
-  policy_table::Languages::const_iterator it_language = std::find_if(
-      msg_languages.languages.begin(), msg_languages.languages.end(), finder);
+  const auto it_end = msg_languages.languages.end();
+  const auto it_begin = msg_languages.languages.begin();
 
-  if (msg_languages.languages.end() == it_language) {
+  LanguageFinder finder(language);
+  const auto it_language = std::find_if(it_begin, it_end, finder);
+
+  if (it_end == it_language) {
     LOG4CXX_WARN(logger_,
                  "Language " << language << " haven't been found for "
                              << lock_screen_dismissal_warning_message);
@@ -1601,11 +1603,9 @@ CacheManager::LockScreenDismissalWarningMessage(
     // should be used instead.
     LanguageFinder fallback_language_finder("en-us");
 
-    policy_table::Languages::const_iterator it_fallback_language =
-        std::find_if(msg_languages.languages.begin(),
-                     msg_languages.languages.end(),
-                     fallback_language_finder);
-    if (msg_languages.languages.end() == it_fallback_language) {
+    const auto it_fallback_language =
+        std::find_if(it_begin, it_end, fallback_language_finder);
+    if (it_end == it_fallback_language) {
       LOG4CXX_ERROR(logger_,
                     "No fallback language found for "
                         << lock_screen_dismissal_warning_message);
