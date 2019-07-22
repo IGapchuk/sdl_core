@@ -271,7 +271,8 @@ class CacheManager : public CacheManagerInterface {
    * @return Array of appropriate messages parameters
    */
   std::vector<UserFriendlyMessage> GetUserFriendlyMsg(
-      const std::vector<std::string>& msg_codes, const std::string& language);
+      const std::vector<std::string>& msg_codes,
+      const std::string& language) const;
 
   /**
    * @brief Get list of URLs related to particular service

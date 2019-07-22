@@ -293,7 +293,7 @@ class CacheManagerInterface {
    */
   virtual std::vector<UserFriendlyMessage> GetUserFriendlyMsg(
       const std::vector<std::string>& msg_codes,
-      const std::string& language) = 0;
+      const std::string& language) const = 0;
 
   /**
    * @brief Get list of URLs related to particular service

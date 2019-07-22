@@ -289,7 +289,7 @@ class CacheManager : public CacheManagerInterface {
   std::vector<UserFriendlyMessage> GetUserFriendlyMsg(
       const std::vector<std::string>& msg_codes,
       const std::string& language,
-      const std::string& active_hmi_language);
+      const std::string& active_hmi_language) const;
 
   /**
    * @brief GetLockScreenIcon allows to obtain lock screen icon url;

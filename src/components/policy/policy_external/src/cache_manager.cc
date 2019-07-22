@@ -1584,46 +1584,21 @@ CacheManager::LockScreenDismissalWarningMessage(
       "LockScreenDismissalWarning";
   sync_primitives::AutoLock auto_lock(cache_lock_);
 
-  policy_table::MessageLanguages msg_languages =
-      (*pt_->policy_table.consumer_friendly_messages
-            ->messages)[lock_screen_dismissal_warning_message];
+  std::vector<std::string> msg_codes{lock_screen_dismissal_warning_message};
 
-  const auto it_end = msg_languages.languages.end();
-  const auto it_begin = msg_languages.languages.begin();
+  const auto messages = GetUserFriendlyMsg(msg_codes, language, "en-us");
 
-  LanguageFinder finder(language);
-  const auto it_language = std::find_if(it_begin, it_end, finder);
-
-  if (it_end == it_language) {
-    LOG4CXX_WARN(logger_,
-                 "Language " << language << " haven't been found for "
-                             << lock_screen_dismissal_warning_message);
-
-    // If message has no records with required language, fallback language
-    // should be used instead.
-    LanguageFinder fallback_language_finder("en-us");
-
-    const auto it_fallback_language =
-        std::find_if(it_begin, it_end, fallback_language_finder);
-    if (it_end == it_fallback_language) {
-      LOG4CXX_ERROR(logger_,
-                    "No fallback language found for "
-                        << lock_screen_dismissal_warning_message);
-      return empty;
-    }
-
-    auto default_message = (*it_fallback_language).second.textBody;
-    return boost::optional<std::string>(*default_message);
+  if (messages.empty() || messages[0].text_body.empty()) {
+    return empty;
   }
 
-  auto message = (*it_language).second.textBody;
-  return boost::optional<std::string>(*message);
+  return boost::optional<std::string>(messages[0].text_body);
 }
 
 std::vector<UserFriendlyMessage> CacheManager::GetUserFriendlyMsg(
     const std::vector<std::string>& msg_codes,
     const std::string& language,
-    const std::string& active_hmi_language) {
+    const std::string& active_hmi_language) const {
   LOG4CXX_AUTO_TRACE(logger_);
   std::vector<UserFriendlyMessage> result;
   CACHE_MANAGER_CHECK(result);

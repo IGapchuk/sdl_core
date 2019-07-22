@@ -883,44 +883,20 @@ CacheManager::LockScreenDismissalWarningMessage(
       "LockScreenDismissalWarning";
   sync_primitives::AutoLock auto_lock(cache_lock_);
 
-  policy_table::MessageLanguages msg_languages =
-      (*pt_->policy_table.consumer_friendly_messages
-            ->messages)[lock_screen_dismissal_warning_message];
+  std::vector<std::string> msg_codes{lock_screen_dismissal_warning_message};
 
-  LanguageFinder finder(language);
-  policy_table::Languages::const_iterator it_language = std::find_if(
-      msg_languages.languages.begin(), msg_languages.languages.end(), finder);
+  const auto messages = GetUserFriendlyMsg(msg_codes, language);
 
-  if (msg_languages.languages.end() == it_language) {
-    LOG4CXX_WARN(logger_,
-                 "Language " << language << " haven't been found for "
-                             << lock_screen_dismissal_warning_message);
-
-    // If message has no records with required language, fallback language
-    // should be used instead.
-    LanguageFinder fallback_language_finder("en-us");
-
-    policy_table::Languages::const_iterator it_fallback_language =
-        std::find_if(msg_languages.languages.begin(),
-                     msg_languages.languages.end(),
-                     fallback_language_finder);
-    if (msg_languages.languages.end() == it_fallback_language) {
-      LOG4CXX_ERROR(logger_,
-                    "No fallback language found for "
-                        << lock_screen_dismissal_warning_message);
-      return empty;
-    }
-
-    auto default_message = (*it_fallback_language).second.textBody;
-    return boost::optional<std::string>(*default_message);
+  if (messages.empty() || messages[0].text_body.empty()) {
+    return empty;
   }
 
-  auto message = (*it_language).second.textBody;
-  return boost::optional<std::string>(*message);
+  return boost::optional<std::string>(messages[0].text_body);
 }
 
 std::vector<UserFriendlyMessage> CacheManager::GetUserFriendlyMsg(
-    const std::vector<std::string>& msg_codes, const std::string& language) {
+    const std::vector<std::string>& msg_codes,
+    const std::string& language) const {
   LOG4CXX_AUTO_TRACE(logger_);
   std::vector<UserFriendlyMessage> result;
   CACHE_MANAGER_CHECK(result);
@@ -966,6 +942,12 @@ std::vector<UserFriendlyMessage> CacheManager::GetUserFriendlyMsg(
 
     UserFriendlyMessage msg;
     msg.message_code = *it;
+    msg.tts = *message_string.tts;
+    msg.label = *message_string.label;
+    msg.line1 = *message_string.line1;
+    msg.line2 = *message_string.line2;
+    msg.text_body = *message_string.textBody;
+
     result.push_back(msg);
   }
   return result;
