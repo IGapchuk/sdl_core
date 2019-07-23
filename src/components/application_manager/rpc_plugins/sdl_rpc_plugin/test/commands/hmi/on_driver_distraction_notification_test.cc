@@ -154,10 +154,8 @@ TEST_F(HMIOnDriverDistractionNotificationTest,
   ON_CALL(mock_policy_handler_interface_, LockScreenDismissalEnabledState())
       .WillByDefault(Return(OptionalBool(true)));
 
-  EXPECT_CALL(mock_message_helper_,
-              AddLockScreenDismissalWarningToMessage(_, kMobileLanguage, _))
-      .WillOnce(DoAll(SetMessage(kLockScreenDismissalWarningMessage_en),
-                      Return(true)));
+  ON_CALL(mock_policy_handler_interface_, LockScreenDismissalWarningMessage(_))
+      .WillByDefault(Return(kLockScreenDismissalWarningMessage_en));
 
   policy::CheckPermissionResult result;
   result.hmi_level_permitted = policy::kRpcAllowed;
@@ -199,10 +197,8 @@ TEST_F(HMIOnDriverDistractionNotificationTest,
   ON_CALL(mock_policy_handler_interface_, LockScreenDismissalEnabledState())
       .WillByDefault(Return(boost::optional<bool>(true)));
 
-  EXPECT_CALL(mock_message_helper_,
-              AddLockScreenDismissalWarningToMessage(_, kMobileLanguage, _))
-      .WillOnce(DoAll(SetMessage(kLockScreenDismissalWarningMessage_en),
-                      Return(true)));
+  ON_CALL(mock_policy_handler_interface_, LockScreenDismissalWarningMessage(_))
+      .WillByDefault(Return(kLockScreenDismissalWarningMessage_en));
 
   policy::CheckPermissionResult result;
   result.hmi_level_permitted = policy::kRpcDisallowed;
@@ -321,6 +317,9 @@ TEST_F(HMIOnDriverDistractionNotificationTest,
   ON_CALL(mock_policy_handler_interface_, LockScreenDismissalEnabledState())
       .WillByDefault(Return(OptionalBool(true)));
 
+  ON_CALL(mock_policy_handler_interface_, LockScreenDismissalWarningMessage(_))
+      .WillByDefault(Return(kLockScreenDismissalWarningMessage_en));
+
   // In case when specified language is absent in policy table, will added
   // message on default language (en-us)
   const mobile_apis::Language::eType mobile_language =
@@ -329,11 +328,6 @@ TEST_F(HMIOnDriverDistractionNotificationTest,
   ON_CALL(*mock_app_, ui_language()).WillByDefault(ReturnRef(mobile_language));
   ON_CALL(mock_message_helper_, MobileLanguageToString(mobile_language))
       .WillByDefault(Return(required_language));
-
-  EXPECT_CALL(mock_message_helper_,
-              AddLockScreenDismissalWarningToMessage(_, mobile_language, _))
-      .WillOnce(DoAll(SetMessage(kLockScreenDismissalWarningMessage_en),
-                      Return(true)));
 
   policy::CheckPermissionResult result;
   result.hmi_level_permitted = policy::kRpcAllowed;
