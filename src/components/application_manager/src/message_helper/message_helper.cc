@@ -381,28 +381,6 @@ void MessageHelper::BroadcastCapabilityUpdate(
   app_mngr.GetRPCService().ManageHMICommand(hmi_notification);
 }
 
-bool MessageHelper::AddLockScreenDismissalWarningToMessage(
-    ns_smart_device_link::ns_smart_objects::SmartObject& notification_so,
-    const mobile_apis::Language::eType& mobile_ui_language,
-    const policy::PolicyHandlerInterface& policy_handler) {
-  LOG4CXX_AUTO_TRACE(logger_);
-
-  const auto mobile_language = MobileLanguageToString(mobile_ui_language);
-
-  const auto lock_screen_dismissal_warning_message =
-      policy_handler.LockScreenDismissalWarningMessage(mobile_language);
-
-  if (!lock_screen_dismissal_warning_message ||
-      lock_screen_dismissal_warning_message->empty()) {
-    LOG4CXX_WARN(logger_, "LockScreenDismissalWarningMessage is invalid");
-    return false;
-  }
-  notification_so[strings::msg_params]
-                 [mobile_notification::lock_screen_dismissal_warning] =
-                     *lock_screen_dismissal_warning_message;
-  return true;
-}
-
 smart_objects::SmartObject MessageHelper::CreateAppServiceCapabilities(
     std::vector<smart_objects::SmartObject>& all_services) {
   smart_objects::SmartObject app_service_capabilities(

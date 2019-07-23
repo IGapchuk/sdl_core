@@ -3908,7 +3908,29 @@ void ApplicationManagerImpl::SendDriverDistractionState(
     return;
   }
 
-  auto create_notification = [application, this]() {
+  auto add_lock_screen_dismissal_warning =
+      [application, this](ns_smart_device_link::ns_smart_objects::SmartObject&
+                              notification_so) {
+        const auto mobile_language =
+            MessageHelper::MobileLanguageToString(application->ui_language());
+
+        const auto lock_screen_dismissal_warning_message =
+            policy_handler_->LockScreenDismissalWarningMessage(mobile_language);
+
+        if (!lock_screen_dismissal_warning_message ||
+            lock_screen_dismissal_warning_message->empty()) {
+          LOG4CXX_WARN(logger_, "LockScreenDismissalWarningMessage is invalid");
+          return;
+        }
+
+        notification_so[strings::msg_params]
+                       [mobile_notification::lock_screen_dismissal_warning] =
+                           *lock_screen_dismissal_warning_message;
+      };
+
+  auto create_notification = [application,
+                              this,
+                              add_lock_screen_dismissal_warning]() {
     auto notification = std::make_shared<smart_objects::SmartObject>();
     auto& msg_params = (*notification)[strings::msg_params];
     auto& params = (*notification)[strings::params];
@@ -3928,14 +3950,7 @@ void ApplicationManagerImpl::SendDriverDistractionState(
           *lock_screen_dismissal;
 
       if (*lock_screen_dismissal) {
-        const bool result =
-            MessageHelper::AddLockScreenDismissalWarningToMessage(
-                *notification, application->ui_language(), *policy_handler_);
-
-        if (!result) {
-          LOG4CXX_WARN(logger_,
-                       "Adding LockScreenDismissalWarning message was failed");
-        }
+        add_lock_screen_dismissal_warning(*notification);
       }
     }
 

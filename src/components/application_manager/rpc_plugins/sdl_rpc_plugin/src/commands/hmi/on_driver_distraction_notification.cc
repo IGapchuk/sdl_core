@@ -58,6 +58,26 @@ struct OnDriverDistractionProcessor {
             mobile_api::FunctionID::OnDriverDistractionID)) {}
 
   void operator()(ApplicationSharedPtr application) {
+    auto add_lock_screen_dismissal_warning =
+        [application, this](ns_smart_device_link::ns_smart_objects::SmartObject&
+                                notification_so) {
+          const auto mobile_language =
+              MessageHelper::MobileLanguageToString(application->ui_language());
+
+          const auto lock_screen_dismissal_warning_message =
+              application_manager_.GetPolicyHandler()
+                  .LockScreenDismissalWarningMessage(mobile_language);
+
+          if (!lock_screen_dismissal_warning_message ||
+              lock_screen_dismissal_warning_message->empty()) {
+            return;
+          }
+
+          notification_so[strings::msg_params]
+                         [mobile_notification::lock_screen_dismissal_warning] =
+                             *lock_screen_dismissal_warning_message;
+        };
+
     if (application) {
       (*on_driver_distraction_so_)[strings::params][strings::connection_key] =
           application->app_id();
@@ -67,16 +87,13 @@ struct OnDriverDistractionProcessor {
           application, stringified_function_id_, params, result);
       const auto& msg_params =
           (*on_driver_distraction_so_)[strings::msg_params];
-      const bool is_lock_screen_dissmisal_exists = msg_params.keyExists(
+      const bool is_lock_screen_dismissal_exists = msg_params.keyExists(
           mobile_notification::lock_screen_dismissal_enabled);
 
-      if (is_lock_screen_dissmisal_exists &&
+      if (is_lock_screen_dismissal_exists &&
           msg_params[mobile_notification::lock_screen_dismissal_enabled]
               .asBool()) {
-        MessageHelper::AddLockScreenDismissalWarningToMessage(
-            *on_driver_distraction_so_,
-            application->ui_language(),
-            application_manager_.GetPolicyHandler());
+        add_lock_screen_dismissal_warning(*on_driver_distraction_so_);
       }
       if (result.hmi_level_permitted != policy::kRpcAllowed) {
         MobileMessageQueue messages;

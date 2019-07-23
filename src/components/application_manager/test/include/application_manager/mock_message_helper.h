@@ -318,10 +318,6 @@ class MockMessageHelper {
   MOCK_METHOD2(BroadcastCapabilityUpdate,
                void(smart_objects::SmartObject& msg_params,
                     ApplicationManager& app_mngr));
-  MOCK_METHOD3(AddLockScreenDismissalWarningToMessage,
-               bool(smart_objects::SmartObject&,
-                    const mobile_apis::Language::eType&,
-                    const policy::PolicyHandlerInterface&));
 
   static MockMessageHelper* message_helper_mock();
 };

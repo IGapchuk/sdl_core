@@ -595,13 +595,4 @@ void MessageHelper::BroadcastCapabilityUpdate(
       msg_params, app_mngr);
 }
 
-bool MessageHelper::AddLockScreenDismissalWarningToMessage(
-    ns_smart_device_link::ns_smart_objects::SmartObject& notification_so,
-    const mobile_apis::Language::eType& mobile_ui_language,
-    const policy::PolicyHandlerInterface& policy_handler) {
-  return MockMessageHelper::message_helper_mock()
-      ->AddLockScreenDismissalWarningToMessage(
-          notification_so, mobile_ui_language, policy_handler);
-}
-
 }  // namespace application_manager
