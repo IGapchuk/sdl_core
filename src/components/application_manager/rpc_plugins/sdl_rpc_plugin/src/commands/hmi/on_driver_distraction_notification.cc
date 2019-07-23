@@ -58,42 +58,35 @@ struct OnDriverDistractionProcessor {
             mobile_api::FunctionID::OnDriverDistractionID)) {}
 
   void operator()(ApplicationSharedPtr application) {
-    auto add_lock_screen_dismissal_warning =
-        [application, this](ns_smart_device_link::ns_smart_objects::SmartObject&
-                                notification_so) {
-          const auto mobile_language =
-              MessageHelper::MobileLanguageToString(application->ui_language());
-
-          const auto lock_screen_dismissal_warning_message =
-              application_manager_.GetPolicyHandler()
-                  .LockScreenDismissalWarningMessage(mobile_language);
-
-          if (!lock_screen_dismissal_warning_message ||
-              lock_screen_dismissal_warning_message->empty()) {
-            return;
-          }
-
-          notification_so[strings::msg_params]
-                         [mobile_notification::lock_screen_dismissal_warning] =
-                             *lock_screen_dismissal_warning_message;
-        };
-
     if (application) {
-      (*on_driver_distraction_so_)[strings::params][strings::connection_key] =
-          application->app_id();
+      // Create modifiable copy of base message
+      smart_objects::SmartObject message = *on_driver_distraction_so_;
+      message[strings::params][strings::connection_key] = application->app_id();
       const RPCParams params;
       policy::CheckPermissionResult result;
       application_manager_.GetPolicyHandler().CheckPermissions(
           application, stringified_function_id_, params, result);
-      const auto& msg_params =
-          (*on_driver_distraction_so_)[strings::msg_params];
+      auto& msg_params = message[strings::msg_params];
       const bool is_lock_screen_dismissal_exists = msg_params.keyExists(
           mobile_notification::lock_screen_dismissal_enabled);
 
       if (is_lock_screen_dismissal_exists &&
           msg_params[mobile_notification::lock_screen_dismissal_enabled]
               .asBool()) {
-        add_lock_screen_dismissal_warning(*on_driver_distraction_so_);
+        const auto language =
+            MessageHelper::MobileLanguageToString(application->ui_language());
+
+        const auto warning_message =
+            application_manager_.GetPolicyHandler()
+                .LockScreenDismissalWarningMessage(language);
+        // Only allow lock screen dismissal if a warning message is available
+        if (warning_message && !warning_message->empty()) {
+          msg_params[mobile_notification::lock_screen_dismissal_warning] =
+              *warning_message;
+        } else {
+          msg_params[mobile_notification::lock_screen_dismissal_enabled] =
+              false;
+        }
       }
       if (result.hmi_level_permitted != policy::kRpcAllowed) {
         MobileMessageQueue messages;
@@ -109,10 +102,12 @@ struct OnDriverDistractionProcessor {
                 }),
             messages.end());
         application->SwapMobileMessageQueue(messages);
-        application->PushMobileMessage(on_driver_distraction_so_);
+        application->PushMobileMessage(
+            std::make_shared<smart_objects::SmartObject>(message));
         return;
       }
-      command_.SendNotificationToMobile(on_driver_distraction_so_);
+      command_.SendNotificationToMobile(
+          std::make_shared<smart_objects::SmartObject>(message));
     }
   }
 

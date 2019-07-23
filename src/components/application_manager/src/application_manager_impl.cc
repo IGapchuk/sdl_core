@@ -3908,29 +3908,7 @@ void ApplicationManagerImpl::SendDriverDistractionState(
     return;
   }
 
-  auto add_lock_screen_dismissal_warning =
-      [application, this](ns_smart_device_link::ns_smart_objects::SmartObject&
-                              notification_so) {
-        const auto mobile_language =
-            MessageHelper::MobileLanguageToString(application->ui_language());
-
-        const auto lock_screen_dismissal_warning_message =
-            policy_handler_->LockScreenDismissalWarningMessage(mobile_language);
-
-        if (!lock_screen_dismissal_warning_message ||
-            lock_screen_dismissal_warning_message->empty()) {
-          LOG4CXX_WARN(logger_, "LockScreenDismissalWarningMessage is invalid");
-          return;
-        }
-
-        notification_so[strings::msg_params]
-                       [mobile_notification::lock_screen_dismissal_warning] =
-                           *lock_screen_dismissal_warning_message;
-      };
-
-  auto create_notification = [application,
-                              this,
-                              add_lock_screen_dismissal_warning]() {
+  auto create_notification = [application, this]() {
     auto notification = std::make_shared<smart_objects::SmartObject>();
     auto& msg_params = (*notification)[strings::msg_params];
     auto& params = (*notification)[strings::params];
@@ -3946,12 +3924,23 @@ void ApplicationManagerImpl::SendDriverDistractionState(
     if (lock_screen_dismissal &&
         hmi_apis::Common_DriverDistractionState::DD_ON ==
             driver_distraction_state()) {
-      msg_params[mobile_notification::lock_screen_dismissal_enabled] =
-          *lock_screen_dismissal;
+      bool dismissal_enabled = *lock_screen_dismissal;
+      if (dismissal_enabled) {
+        const auto language =
+            MessageHelper::MobileLanguageToString(application->ui_language());
 
-      if (*lock_screen_dismissal) {
-        add_lock_screen_dismissal_warning(*notification);
+        const auto warning_message =
+            policy_handler_->LockScreenDismissalWarningMessage(language);
+        // Only allow lock screen dismissal if a warning message is available
+        if (warning_message && !warning_message->empty()) {
+          msg_params[mobile_notification::lock_screen_dismissal_warning] =
+              *warning_message;
+        } else {
+          dismissal_enabled = false;
+        }
       }
+      msg_params[mobile_notification::lock_screen_dismissal_enabled] =
+          dismissal_enabled;
     }
 
     params[strings::connection_key] = application->app_id();
