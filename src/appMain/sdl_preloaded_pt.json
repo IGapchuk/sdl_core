@@ -641,6 +641,14 @@
                             "BACKGROUND",
                             "NONE"
                         ]
+                    },
+                    "POISearch": {
+                        "hmi_levels": [
+                            "FULL",
+                            "LIMITED",
+                            "BACKGROUND",
+                            "NONE"
+                        ]
                     }
                 }
             },
@@ -671,6 +679,14 @@
                         ]
                     },
                     "PerformAppServiceInteraction": {
+                        "hmi_levels": [
+                            "FULL",
+                            "LIMITED",
+                            "BACKGROUND",
+                            "NONE"
+                        ]
+                    },
+                    "POISearch": {
                         "hmi_levels": [
                             "FULL",
                             "LIMITED",
