@@ -1358,6 +1358,11 @@ bool EnumFromJsonString(const std::string& literal, FunctionID* result) {
     return true;
   }
 
+  if ("POISearch" == literal) {
+    *result = POISearchID;
+    return true;
+  }
+
   if ("UnpublishAppService" == literal) {
     *result = UnpublishAppServiceID;
     return true;

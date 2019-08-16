@@ -472,6 +472,11 @@ enum FunctionID {
   ShowAppMenuID = 59,
 
   /**
+   * @brief POISearchID
+   */
+  POISearchID = 60,
+
+  /**
    * @brief OnHMIStatusID.
    */
   OnHMIStatusID = 32768,

@@ -55,6 +55,11 @@
 #include "app_service_rpc_plugin/commands/hmi/on_as_app_service_data_notification.h"
 #include "app_service_rpc_plugin/commands/hmi/on_as_app_service_data_notification_from_hmi.h"
 
+#include "app_service_rpc_plugin/commands/hmi/as_poi_search_request_from_hmi.h"
+#include "app_service_rpc_plugin/commands/hmi/as_poi_search_request_to_hmi.h"
+#include "app_service_rpc_plugin/commands/hmi/as_poi_search_response_from_hmi.h"
+#include "app_service_rpc_plugin/commands/hmi/as_poi_search_response_to_hmi.h"
+
 CREATE_LOGGERPTR_GLOBAL(logger_, "AppServiceRpcPlugin")
 
 namespace app_service_rpc_plugin {
@@ -190,6 +195,18 @@ app_mngr::CommandCreator& AppServiceHmiCommandFactory::buildCommandCreator(
                        .GetCreator<commands::ASGetActiveServiceConsentRequest>()
                  : factory.GetCreator<
                        commands::ASGetActiveServiceConsentResponse>();
+    case hmi_apis::FunctionID::AppService_POISearch: {
+      if (app_mngr::commands::Command::CommandSource::SOURCE_HMI == source) {
+        return hmi_apis::messageType::request == message_type
+                   ? factory.GetCreator<commands::ASPOISearchRequestFromHMI>()
+                   : factory.GetCreator<commands::ASPOISearchResponseFromHMI>();
+      } else if (app_mngr::commands::Command::CommandSource::
+                     SOURCE_SDL_TO_HMI == source) {
+        return hmi_apis::messageType::request == message_type
+                   ? factory.GetCreator<commands::ASPOISearchRequestToHMI>()
+                   : factory.GetCreator<commands::ASPOISearchResponseToHMI>();
+      }
+    } break;
     default:
       LOG4CXX_WARN(logger_, "Unsupported HMI function_id: " << function_id);
   }

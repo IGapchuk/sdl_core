@@ -45,6 +45,10 @@
 #include "app_service_rpc_plugin/commands/mobile/perform_app_service_interaction_request_to_mobile.h"
 #include "app_service_rpc_plugin/commands/mobile/perform_app_service_interaction_response.h"
 #include "app_service_rpc_plugin/commands/mobile/perform_app_service_interaction_response_from_mobile.h"
+#include "app_service_rpc_plugin/commands/mobile/poi_search_request_from_mobile.h"
+#include "app_service_rpc_plugin/commands/mobile/poi_search_request_to_mobile.h"
+#include "app_service_rpc_plugin/commands/mobile/poi_search_response_from_mobile.h"
+#include "app_service_rpc_plugin/commands/mobile/poi_search_response_to_mobile.h"
 #include "app_service_rpc_plugin/commands/mobile/publish_app_service_request.h"
 #include "app_service_rpc_plugin/commands/mobile/publish_app_service_response.h"
 #include "app_service_rpc_plugin/commands/mobile/unpublish_app_service_request.h"
@@ -169,6 +173,19 @@ app_mngr::CommandCreator& AppServiceMobileCommandFactory::buildCommandCreator(
                          commands::PerformAppServiceInteractionResponse>();
       }
       break;
+    case mobile_apis::FunctionID::POISearchID: {
+      if (app_mngr::commands::Command::CommandSource::SOURCE_MOBILE == source) {
+        return mobile_apis::messageType::request == message_type
+                   ? factory.GetCreator<commands::POISearchRequestFromMobile>()
+                   : factory
+                         .GetCreator<commands::POISearchResponseFromMobile>();
+      } else if (app_mngr::commands::Command::CommandSource::SOURCE_SDL ==
+                 source) {
+        return mobile_apis::messageType::request == message_type
+                   ? factory.GetCreator<commands::POISearchRequestToMobile>()
+                   : factory.GetCreator<commands::POISearchResponseToMobile>();
+      }
+    } break;
     default:
       LOG4CXX_WARN(logger_, "Unsupported function_id: " << function_id);
   }
