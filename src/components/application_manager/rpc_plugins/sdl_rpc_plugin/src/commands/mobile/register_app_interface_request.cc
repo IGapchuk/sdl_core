@@ -872,9 +872,6 @@ void RegisterAppInterfaceRequest::SendRegisterAppInterfaceResponseToMobile(
                                           &(msg_params[strings::app_hmi_type]));
   }
 
-  // Default HMI level should be set before any permissions validation, since it
-  // relies on HMI level.
-  application_manager_.OnApplicationRegistered(application);
   SendOnAppRegisteredNotificationToHMI(
       application, resumption, need_restore_vr);
   (*notify_upd_manager)();

@@ -440,6 +440,13 @@ void ApplicationManagerImpl::OnApplicationRegistered(ApplicationSharedPtr app) {
         plugin.OnApplicationEvent(plugin_manager::kApplicationRegistered, app);
       };
   plugin_manager_->ForEachPlugin(on_app_registered);
+
+  // Add application to registered app list and set appropriate mark.
+  app->MarkRegistered();
+  applications_.insert(app);
+  LOG4CXX_DEBUG(logger_,
+                "App with app_id: " << app->app_id() << " has been added");
+  apps_size_ = static_cast<uint32_t>(applications_.size());
 }
 
 void ApplicationManagerImpl::OnApplicationSwitched(ApplicationSharedPtr app) {
@@ -729,14 +736,9 @@ ApplicationSharedPtr ApplicationManagerImpl::RegisterApplication(
   // Timer will be started after hmi level resumption.
   resume_controller().OnAppRegistrationStart(policy_app_id, device_mac);
 
-  // Add application to registered app list and set appropriate mark.
-  // Lock has to be released before adding app to policy DB to avoid possible
-  // deadlock with simultaneous PTU processing
-  applications_list_lock_ptr_->Acquire();
-  application->MarkRegistered();
-  applications_.insert(application);
-  apps_size_ = applications_.size();
-  applications_list_lock_ptr_->Release();
+  // Default HMI level should be set before any permissions validation, since it
+  // relies on HMI level.
+  OnApplicationRegistered(application);
 
   // Update cloud app information, in case any pending apps are unable to be
   // registered due to a mobile app taking precedence
