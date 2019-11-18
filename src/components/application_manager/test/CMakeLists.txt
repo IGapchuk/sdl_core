@@ -152,7 +152,7 @@ set(ResumptionData_SOURCES
   ${AM_TEST_DIR}/mock_message_helper.cc
 )
 
-file(COPY hmi_capabilities.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/src/appMain/hmi_capabilities.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY hmi_capabilities_sc1.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY hmi_capabilities_sc2.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY hmi_capabilities_old_apt.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

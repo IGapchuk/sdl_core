@@ -33,6 +33,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <map>
 #include <string>
 
 #include "application_manager/hmi_capabilities.h"
@@ -65,55 +66,14 @@ using ::testing::ReturnRef;
 
 using namespace application_manager;
 
-class HMICapabilitiesTest : public ::testing::Test {
- protected:
-  HMICapabilitiesTest()
-      : last_state_("app_storage_folder", "app_info_data")
-      , file_name_("hmi_capabilities.json") {}
-  virtual void SetUp() OVERRIDE {
-    EXPECT_CALL(app_mngr_, event_dispatcher())
-        .WillOnce(ReturnRef(mock_event_dispatcher));
-    EXPECT_CALL(app_mngr_, get_settings())
-        .WillRepeatedly(ReturnRef(mock_application_manager_settings_));
-    EXPECT_CALL(mock_application_manager_settings_,
-                hmi_capabilities_file_name())
-        .WillOnce(ReturnRef(file_name_));
-    EXPECT_CALL(mock_event_dispatcher, add_observer(_, _, _)).Times(1);
-    EXPECT_CALL(mock_event_dispatcher, remove_observer(_)).Times(1);
-    EXPECT_CALL(mock_application_manager_settings_, launch_hmi())
-        .WillOnce(Return(false));
-    hmi_capabilities_test =
-        std::make_shared<HMICapabilitiesForTesting>(app_mngr_);
-    hmi_capabilities_test->Init(&last_state_);
-  }
-
-  void TearDown() OVERRIDE {
-    hmi_capabilities_test.reset();
-  }
-  static void TearDownTestCase() {
-    if (file_system::FileExists("./app_info_data")) {
-      EXPECT_TRUE(::file_system::DeleteFile("./app_info_data"));
-    }
-  }
-
-  void SetCooperating();
-  MockApplicationManager app_mngr_;
-  event_engine_test::MockEventDispatcher mock_event_dispatcher;
-  resumption::LastStateImpl last_state_;
-  MockApplicationManagerSettings mock_application_manager_settings_;
-  std::shared_ptr<HMICapabilitiesForTesting> hmi_capabilities_test;
-  const std::string file_name_;
-  application_manager_test::MockRPCService mock_rpc_service_;
-};
-
-const char* const cstring_values_[] = {
+const char* const cstring_language_values_[] = {
     "EN_US", "ES_MX", "FR_CA", "DE_DE", "ES_ES", "EN_GB", "RU_RU", "TR_TR",
     "PL_PL", "FR_FR", "IT_IT", "SV_SE", "PT_PT", "NL_NL", "EN_AU", "ZH_CN",
     "ZH_TW", "JA_JP", "AR_SA", "KO_KR", "PT_BR", "CS_CZ", "DA_DK", "NO_NO",
     "NL_BE", "EL_GR", "HU_HU", "FI_FI", "SK_SK", "EN_IN", "TH_TH", "EN_SA",
     "HE_IL", "RO_RO", "UK_UA", "ID_ID", "VI_VN", "MS_MY", "HI_IN"};
 
-const hmi_apis::Common_Language::eType enum_values_[] = {
+const hmi_apis::Common_Language::eType enum_language_values_[] = {
     hmi_apis::Common_Language::EN_US, hmi_apis::Common_Language::ES_MX,
     hmi_apis::Common_Language::FR_CA, hmi_apis::Common_Language::DE_DE,
     hmi_apis::Common_Language::ES_ES, hmi_apis::Common_Language::EN_GB,
@@ -135,6 +95,105 @@ const hmi_apis::Common_Language::eType enum_values_[] = {
     hmi_apis::Common_Language::VI_VN, hmi_apis::Common_Language::MS_MY,
     hmi_apis::Common_Language::HI_IN};
 
+const std::vector<std::string> string_light_values_ = {
+    "FRONT_LEFT_HIGH_BEAM",
+    "FRONT_RIGHT_HIGH_BEAM",
+    "FRONT_LEFT_LOW_BEAM",
+    "FRONT_RIGHT_LOW_BEAM",
+    "FRONT_LEFT_PARKING_LIGHT",
+    "FRONT_RIGHT_PARKING_LIGHT",
+    "FRONT_LEFT_FOG_LIGHT",
+    "FRONT_RIGHT_FOG_LIGHT",
+    "FRONT_LEFT_DAYTIME_RUNNING_LIGHT",
+    "FRONT_RIGHT_DAYTIME_RUNNING_LIGHT",
+    "FRONT_LEFT_TURN_LIGHT",
+    "REAR_LEFT_FOG_LIGHT",
+    "REAR_RIGHT_FOG_LIGHT",
+    "REAR_LEFT_TAIL_LIGHT",
+    "REAR_RIGHT_TAIL_LIGHT",
+    "REAR_RIGHT_TAIL_LIGHT",
+    "REAR_RIGHT_BRAKE_LIGHT",
+    "REAR_LEFT_TURN_LIGHT",
+    "REAR_RIGHT_TURN_LIGHT",
+    "REAR_REGISTRATION_PLATE_LIGHT",
+    "HIGH_BEAMS",
+    "LOW_BEAMS",
+    "FOG_LIGHTS",
+    "RUNNING_LIGHTS",
+    "PARKING_LIGHTS",
+    "BRAKE_LIGHTS",
+    "REAR_REVERSING_LIGHTS",
+    "SIDE_MARKER_LIGHTS",
+    "LEFT_TURN_LIGHTS",
+    "RIGHT_TURN_LIGHTS",
+    "HAZARD_LIGHTS",
+    "AMBIENT_LIGHTS",
+    "OVERHEAD_LIGHTS",
+    "READING_LIGHTS",
+    "TRUNK_LIGHTS",
+    "EXTERIOR_FRONT_LIGHTS",
+    "EXTERIOR_REAR_LIGHTS",
+    "EXTERIOR_LEFT_LIGHTS",
+    "EXTERIOR_RIGHT_LIGHTS",
+    "REAR_CARGO_LIGHTS",
+    "REAR_TRUCK_BED_LIGHTS",
+    "REAR_TRAILER_LIGHTS",
+    "LEFT_SPOT_LIGHTS",
+    "RIGHT_SPOT_LIGHTS",
+    "LEFT_PUDDLE_LIGHTS",
+    "RIGHT_PUDDLE_LIGHTS",
+    "EXTERIOR_ALL_LIGHTS"};
+
+const hmi_apis::Common_LightName::eType enum_light_values_[] = {
+    hmi_apis::Common_LightName::eType::FRONT_LEFT_HIGH_BEAM,
+    hmi_apis::Common_LightName::eType::FRONT_RIGHT_HIGH_BEAM,
+    hmi_apis::Common_LightName::eType::FRONT_LEFT_LOW_BEAM,
+    hmi_apis::Common_LightName::eType::FRONT_RIGHT_LOW_BEAM,
+    hmi_apis::Common_LightName::eType::FRONT_LEFT_PARKING_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_RIGHT_PARKING_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_LEFT_FOG_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_RIGHT_FOG_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_LEFT_DAYTIME_RUNNING_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_RIGHT_DAYTIME_RUNNING_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_LEFT_TURN_LIGHT,
+    hmi_apis::Common_LightName::eType::FRONT_RIGHT_TURN_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_LEFT_FOG_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_RIGHT_FOG_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_LEFT_TAIL_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_RIGHT_TAIL_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_LEFT_BRAKE_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_RIGHT_BRAKE_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_LEFT_TURN_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_RIGHT_TURN_LIGHT,
+    hmi_apis::Common_LightName::eType::REAR_REGISTRATION_PLATE_LIGHT,
+    hmi_apis::Common_LightName::eType::HIGH_BEAMS,
+    hmi_apis::Common_LightName::eType::LOW_BEAMS,
+    hmi_apis::Common_LightName::eType::FOG_LIGHTS,
+    hmi_apis::Common_LightName::eType::RUNNING_LIGHTS,
+    hmi_apis::Common_LightName::eType::PARKING_LIGHTS,
+    hmi_apis::Common_LightName::eType::BRAKE_LIGHTS,
+    hmi_apis::Common_LightName::eType::REAR_REVERSING_LIGHTS,
+    hmi_apis::Common_LightName::eType::SIDE_MARKER_LIGHTS,
+    hmi_apis::Common_LightName::eType::LEFT_TURN_LIGHTS,
+    hmi_apis::Common_LightName::eType::RIGHT_TURN_LIGHTS,
+    hmi_apis::Common_LightName::eType::HAZARD_LIGHTS,
+    hmi_apis::Common_LightName::eType::REAR_CARGO_LIGHTS,
+    hmi_apis::Common_LightName::eType::REAR_TRUCK_BED_LIGHTS,
+    hmi_apis::Common_LightName::eType::REAR_TRAILER_LIGHTS,
+    hmi_apis::Common_LightName::eType::LEFT_SPOT_LIGHTS,
+    hmi_apis::Common_LightName::eType::RIGHT_SPOT_LIGHTS,
+    hmi_apis::Common_LightName::eType::LEFT_PUDDLE_LIGHTS,
+    hmi_apis::Common_LightName::eType::RIGHT_PUDDLE_LIGHTS,
+    hmi_apis::Common_LightName::eType::AMBIENT_LIGHTS,
+    hmi_apis::Common_LightName::eType::OVERHEAD_LIGHTS,
+    hmi_apis::Common_LightName::eType::READING_LIGHTS,
+    hmi_apis::Common_LightName::eType::TRUNK_LIGHTS,
+    hmi_apis::Common_LightName::eType::EXTERIOR_FRONT_LIGHTS,
+    hmi_apis::Common_LightName::eType::EXTERIOR_REAR_LIGHTS,
+    hmi_apis::Common_LightName::eType::EXTERIOR_LEFT_LIGHTS,
+    hmi_apis::Common_LightName::eType::EXTERIOR_RIGHT_LIGHTS,
+    hmi_apis::Common_LightName::eType::EXTERIOR_ALL_LIGHTS};
+
 struct CStringComparator {
   bool operator()(const char* a, const char* b) {
     return strcmp(a, b) < 0;
@@ -143,25 +202,20 @@ struct CStringComparator {
 
 typedef std::
     map<const char*, hmi_apis::Common_Language::eType, CStringComparator>
-        CStringToEnumMap;
+        CStringLanguageToEnumMap;
+typedef std::
+    map<const char*, hmi_apis::Common_LightName::eType, CStringComparator>
+        CStringLightToEnumMap;
 
-CStringToEnumMap InitCStringToEnumMap() {
-  size_t value = sizeof(cstring_values_) / sizeof(cstring_values_[0]);
-  CStringToEnumMap result;
-  for (size_t i = 0; i < value; ++i) {
-    result[cstring_values_[i]] = enum_values_[i];
-  }
-  return result;
-}
+bool StringToLightEnum(const std::string& light_name,
+                       hmi_apis::Common_LightName::eType& value) {
+  CStringLightToEnumMap result;
 
-bool StringToEnum(const char* str, hmi_apis::Common_Language::eType& value) {
-  size_t count_value = sizeof(cstring_values_) / sizeof(cstring_values_[0]);
-  CStringToEnumMap result;
-  for (size_t i = 0; i < count_value; ++i) {
-    result[cstring_values_[i]] = enum_values_[i];
+  for (size_t i = 0; i < string_light_values_.size(); ++i) {
+    result[string_light_values_[i].c_str()] = enum_light_values_[i];
   }
 
-  CStringToEnumMap::const_iterator it = result.find(str);
+  auto it = result.find(light_name.c_str());
   if (it == result.end()) {
     return false;
   }
@@ -169,28 +223,99 @@ bool StringToEnum(const char* str, hmi_apis::Common_Language::eType& value) {
   return true;
 }
 
+bool StringToLanguageEnum(const char* str,
+                          hmi_apis::Common_Language::eType& value) {
+  size_t count_value =
+      sizeof(cstring_language_values_) / sizeof(cstring_language_values_[0]);
+  CStringLanguageToEnumMap result;
+  for (size_t i = 0; i < count_value; ++i) {
+    result[cstring_language_values_[i]] = enum_language_values_[i];
+  }
+
+  CStringLanguageToEnumMap::const_iterator it = result.find(str);
+  if (it == result.end()) {
+    return false;
+  }
+  value = it->second;
+  return true;
+}
+
+hmi_apis::Common_LightName::eType TestCommonLightFromString(
+    const std::string& light_name) {
+  hmi_apis::Common_LightName::eType value;
+  if (StringToLightEnum(light_name, value)) {
+    return value;
+  }
+  return hmi_apis::Common_LightName::INVALID_ENUM;
+}
+
 hmi_apis::Common_Language::eType TestCommonLanguageFromString(
     const std::string& language) {
   hmi_apis::Common_Language::eType value;
-  if (StringToEnum(language.c_str(), value)) {
+  if (StringToLanguageEnum(language.c_str(), value)) {
     return value;
   }
   return hmi_apis::Common_Language::INVALID_ENUM;
 }
 
+class HMICapabilitiesTest : public ::testing::Test {
+ protected:
+  HMICapabilitiesTest()
+      : last_state_("app_storage_folder", "app_info_data")
+      , file_name_("hmi_capabilities.json")
+      , mock_message_helper_(*MockMessageHelper::message_helper_mock()) {}
+  virtual void SetUp() OVERRIDE {
+    EXPECT_CALL(app_mngr_, event_dispatcher())
+        .WillOnce(ReturnRef(mock_event_dispatcher));
+    EXPECT_CALL(app_mngr_, get_settings())
+        .WillRepeatedly(ReturnRef(mock_application_manager_settings_));
+    EXPECT_CALL(mock_application_manager_settings_,
+                hmi_capabilities_file_name())
+        .WillOnce(ReturnRef(file_name_));
+    EXPECT_CALL(mock_event_dispatcher, add_observer(_, _, _)).Times(1);
+    EXPECT_CALL(mock_event_dispatcher, remove_observer(_)).Times(1);
+    EXPECT_CALL(mock_application_manager_settings_, launch_hmi())
+        .WillOnce(Return(false));
+    hmi_capabilities_test =
+        std::make_shared<HMICapabilitiesForTesting>(app_mngr_);
+    ON_CALL(mock_message_helper_, CommonLanguageFromString(_))
+        .WillByDefault(Invoke(TestCommonLanguageFromString));
+    ON_CALL(mock_message_helper_, CommonLightNameFromString(_))
+        .WillByDefault(Invoke(TestCommonLightFromString));
+    hmi_capabilities_test->Init(&last_state_);
+  }
+
+  void TearDown() OVERRIDE {
+    hmi_capabilities_test.reset();
+  }
+  static void TearDownTestCase() {
+    if (file_system::FileExists("./app_info_data")) {
+      EXPECT_TRUE(::file_system::DeleteFile("./app_info_data"));
+    }
+  }
+
+  void SetCooperating();
+  MockApplicationManager app_mngr_;
+  event_engine_test::MockEventDispatcher mock_event_dispatcher;
+  resumption::LastStateImpl last_state_;
+  MockApplicationManagerSettings mock_application_manager_settings_;
+  std::shared_ptr<HMICapabilitiesForTesting> hmi_capabilities_test;
+  const std::string file_name_;
+  application_manager_test::MockRPCService mock_rpc_service_;
+  MockMessageHelper& mock_message_helper_;
+};
+
 TEST_F(HMICapabilitiesTest, LoadCapabilitiesFromFile) {
   const std::string hmi_capabilities_file = "hmi_capabilities.json";
   EXPECT_CALL(mock_application_manager_settings_, hmi_capabilities_file_name())
       .WillOnce(ReturnRef(hmi_capabilities_file));
-  EXPECT_CALL(*(MockMessageHelper::message_helper_mock()),
-              CommonLanguageFromString(_))
+  EXPECT_CALL(mock_message_helper_, CommonLanguageFromString(_))
       .WillRepeatedly(Invoke(TestCommonLanguageFromString));
 
   if (file_system::FileExists("./app_info_data")) {
     EXPECT_TRUE(::file_system::DeleteFile("./app_info_data"));
   }
   EXPECT_CALL(app_mngr_, IsSOStructValid(_, _)).WillOnce(Return(true));
-
   EXPECT_TRUE(hmi_capabilities_test->LoadCapabilitiesFromFile());
 
   // Check active languages
@@ -300,8 +425,15 @@ TEST_F(HMICapabilitiesTest, LoadCapabilitiesFromFile) {
                     .keyExists(strings::name));
     EXPECT_TRUE((display_capabilities_so[hmi_response::image_fields][i])
                     .keyExists(strings::image_type_supported));
-    if (display_capabilities_so[hmi_response::image_fields][i][strings::name] ==
-        hmi_apis::Common_ImageFieldName::locationImage) {
+    hmi_apis::Common_ImageFieldName::eType image_fields_item_name =
+        static_cast<hmi_apis::Common_ImageFieldName::eType>(
+            display_capabilities_so[hmi_response::image_fields][i]
+                                   [strings::name]
+                                       .asInt());
+    if ((image_fields_item_name ==
+         hmi_apis::Common_ImageFieldName::locationImage) ||
+        (image_fields_item_name ==
+         hmi_apis::Common_ImageFieldName::alertIcon)) {
       EXPECT_EQ(hmi_apis::Common_FileType::GRAPHIC_PNG,
                 static_cast<hmi_apis::Common_FileType::eType>(
                     display_capabilities_so[hmi_response::image_fields][i]
