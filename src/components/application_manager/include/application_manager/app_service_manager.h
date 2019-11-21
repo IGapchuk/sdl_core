@@ -38,6 +38,7 @@
 #include "interfaces/MOBILE_API.h"
 #include "resumption/last_state_wrapper.h"
 #include "smart_objects/smart_object.h"
+#include "utils/macro.h"
 
 namespace application_manager {
 
@@ -63,6 +64,9 @@ class AppServiceManager {
    */
   AppServiceManager(ApplicationManager& app_manager,
                     resumption::LastStateWrapperPtr last_state);
+
+  DEPRECATED AppServiceManager(ApplicationManager& app_manager,
+                               resumption::LastState& last_state);
 
   /**
    * @brief Class destructor
