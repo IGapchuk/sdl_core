@@ -202,7 +202,7 @@ void TestTransportManagerDefault::ExpectationsSettings_TM(
       .WillRepeatedly(ReturnRef(network_interface));
   transport_manager.Init(wrapper);
   transport_manager.Stop();
-}  // namespace transport_manager_test
+}
 
 void TestTransportManagerDefault::ExpectationsBluetooth_TA() {
   // Expectations for Mock of bluetooth transport adapter

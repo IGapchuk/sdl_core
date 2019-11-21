@@ -511,7 +511,7 @@ TEST_F(TransportAdapterTest, ConnectDevice_DeviceAdded) {
 TEST_F(TransportAdapterTest, ConnectDevice_DeviceAdded_ConnectFailedRetry) {
   MockServerConnectionFactory* server_mock = new MockServerConnectionFactory();
   MockTransportAdapterImpl transport_adapter(
-      NULL, server_mock, NULL, last_state_, transport_manager_settings);
+      NULL, server_mock, NULL, last_state_wrapper_, transport_manager_settings);
   SetDefaultExpectations(transport_adapter);
 
   EXPECT_CALL(*server_mock, Init()).WillOnce(Return(TransportAdapter::OK));
@@ -625,7 +625,7 @@ TEST_F(TransportAdapterTest, Disconnect_ConnectDoneSuccess) {
 TEST_F(TransportAdapterTest, FindPending) {
   MockServerConnectionFactory* serverMock = new MockServerConnectionFactory();
   MockTransportAdapterImpl transport_adapter(
-      NULL, serverMock, NULL, last_state_, transport_manager_settings);
+      NULL, serverMock, NULL, last_state_wrapper_, transport_manager_settings);
   SetDefaultExpectations(transport_adapter);
 
   EXPECT_CALL(*serverMock, Init()).WillOnce(Return(TransportAdapter::OK));
@@ -668,7 +668,7 @@ TEST_F(TransportAdapterTest,
        Pending_Connect_Disconnect_ConnectDoneSuccess_PendingDeviceAdded) {
   MockServerConnectionFactory* serverMock = new MockServerConnectionFactory();
   MockTransportAdapterImpl transport_adapter(
-      NULL, serverMock, NULL, last_state_, transport_manager_settings);
+      NULL, serverMock, NULL, last_state_wrapper_, transport_manager_settings);
   SetDefaultExpectations(transport_adapter);
 
   EXPECT_CALL(*serverMock, Init()).WillOnce(Return(TransportAdapter::OK));
@@ -761,7 +761,7 @@ TEST_F(TransportAdapterTest,
 TEST_F(TransportAdapterTest, WebsocketEndpointParsing_SUCCESS) {
   std::shared_ptr<CloudWebsocketTransportAdapter> cta =
       std::make_shared<CloudWebsocketTransportAdapter>(
-          last_state_, transport_manager_settings);
+          last_state_wrapper_, transport_manager_settings);
 
   for (auto protocol : kWebsocketProtocols) {
     for (auto endpoint : kValidTestEndpoints) {
@@ -789,7 +789,7 @@ TEST_F(TransportAdapterTest, WebsocketEndpointParsing_SUCCESS) {
 TEST_F(TransportAdapterTest, WebsocketEndpointParsing_INVALID) {
   std::shared_ptr<CloudWebsocketTransportAdapter> cta =
       std::make_shared<CloudWebsocketTransportAdapter>(
-          last_state_, transport_manager_settings);
+          last_state_wrapper_, transport_manager_settings);
 
   for (auto protocol : kWebsocketProtocols) {
     for (auto endpoint : kInvalidTestEndpoints) {
@@ -809,7 +809,7 @@ TEST_F(TransportAdapterTest, WebsocketEndpointParsing_INVALID) {
 TEST_F(TransportAdapterTest, WebsocketEndpointParsing_INCORRECT) {
   std::shared_ptr<CloudWebsocketTransportAdapter> cta =
       std::make_shared<CloudWebsocketTransportAdapter>(
-          last_state_, transport_manager_settings);
+          last_state_wrapper_, transport_manager_settings);
 
   for (auto protocol : kWebsocketProtocols) {
     for (auto endpoint : kIncorrectTestEndpoints) {
@@ -959,8 +959,11 @@ TEST_F(TransportAdapterTest, AbortedConnectSuccess) {
 TEST_F(TransportAdapterTest, SendData) {
   MockDeviceScanner* dev_mock = new MockDeviceScanner();
   MockServerConnectionFactory* serverMock = new MockServerConnectionFactory();
-  MockTransportAdapterImpl transport_adapter(
-      dev_mock, serverMock, NULL, last_state_, transport_manager_settings);
+  MockTransportAdapterImpl transport_adapter(dev_mock,
+                                             serverMock,
+                                             NULL,
+                                             last_state_wrapper_,
+                                             transport_manager_settings);
   SetDefaultExpectations(transport_adapter);
 
   EXPECT_CALL(*dev_mock, Init()).WillOnce(Return(TransportAdapter::OK));
@@ -1044,8 +1047,11 @@ TEST_F(TransportAdapterTest, SendData_ConnectionNotEstablished) {
 TEST_F(TransportAdapterTest, StartClientListening_ClientNotInitialized) {
   MockDeviceScanner* dev_mock = new MockDeviceScanner();
   MockClientConnectionListener* clientMock = new MockClientConnectionListener();
-  MockTransportAdapterImpl transport_adapter(
-      dev_mock, NULL, clientMock, last_state_wrapper_, transport_manager_settings);
+  MockTransportAdapterImpl transport_adapter(dev_mock,
+                                             NULL,
+                                             clientMock,
+                                             last_state_wrapper_,
+                                             transport_manager_settings);
   SetDefaultExpectations(transport_adapter);
 
   EXPECT_CALL(*dev_mock, Init()).WillOnce(Return(TransportAdapter::OK));
@@ -1067,8 +1073,11 @@ TEST_F(TransportAdapterTest, StartClientListening_ClientNotInitialized) {
 TEST_F(TransportAdapterTest, StartClientListening) {
   MockDeviceScanner* dev_mock = new MockDeviceScanner();
   MockClientConnectionListener* clientMock = new MockClientConnectionListener();
-  MockTransportAdapterImpl transport_adapter(
-      dev_mock, NULL, clientMock, last_state_wrapper_, transport_manager_settings);
+  MockTransportAdapterImpl transport_adapter(dev_mock,
+                                             NULL,
+                                             clientMock,
+                                             last_state_wrapper_,
+                                             transport_manager_settings);
   SetDefaultExpectations(transport_adapter);
 
   EXPECT_CALL(*dev_mock, Init()).WillOnce(Return(TransportAdapter::OK));
