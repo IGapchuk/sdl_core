@@ -32,9 +32,9 @@
 #include "application_manager/app_launch/app_launch_data_json.h"
 #include <algorithm>
 #include "application_manager/smart_object_keys.h"
+#include "json/json.h"
 #include "smart_objects/smart_object.h"
 #include "utils/date_time.h"
-#include "json/json.h"
 
 namespace app_launch {
 

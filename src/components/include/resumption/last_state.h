@@ -45,9 +45,9 @@ class LastState {
   virtual ~LastState() {}
 
   /**
-    * @brief SaveToFileSystem
-    * Saving dictionary to filesystem
-    */
+   * @brief SaveToFileSystem
+   * Saving dictionary to filesystem
+   */
   virtual void SaveToFileSystem() = 0;
 
   /**

@@ -35,7 +35,6 @@
 
 #include <memory>
 #include "application_manager/app_launch/app_launch_data_impl.h"
-#include "smart_objects/smart_object.h"
 #include "resumption/last_state_wrapper.h"
 #include "utils/lock.h"
 #include "utils/macro.h"
