@@ -97,6 +97,9 @@ const std::string kDisallowedParam2 = "disallowed_param2";
 const std::string kAllowedParam = "allowed_param";
 const std::string kUndefinedParam = "undefined_params";
 const std::string kMissedParam = "missed_param";
+const std::string kAppStorageFolder = "app_storage_folder";
+const std::string kAppStorageFile = "./app_info.dat";
+const std::string kAppInfoStorage = "app_info_storage";
 }  // namespace
 
 class CommandRequestImplTest
@@ -610,8 +613,8 @@ TEST_F(CommandRequestImplTest, AppNotFound_HashUpdateNotExpected) {
 
 TEST_F(CommandRequestImplTest, SendProviderRequest_ByServiceType) {
   auto last_state = std::make_shared<resumption::LastStateWrapperImpl>(
-      std::make_shared<resumption::LastStateImpl>("app_storage_folder",
-                                                  "app_info_storage"));
+      std::make_shared<resumption::LastStateImpl>(kAppStorageFolder,
+                                                  kAppInfoStorage));
 
   MockAppServiceManager app_service_manager(app_mngr_, last_state);
   MockAppPtr mock_app = CreateMockApp();
@@ -639,8 +642,8 @@ TEST_F(CommandRequestImplTest, SendProviderRequest_ByServiceType) {
 
 TEST_F(CommandRequestImplTest, SendProviderRequest_ByProviderID) {
   auto last_state = std::make_shared<resumption::LastStateWrapperImpl>(
-      std::make_shared<resumption::LastStateImpl>("app_storage_folder",
-                                                  "app_info_storage"));
+      std::make_shared<resumption::LastStateImpl>(kAppStorageFolder,
+                                                  kAppInfoStorage));
 
   MockAppServiceManager app_service_manager(app_mngr_, last_state);
   MockAppPtr mock_app = CreateMockApp();
@@ -668,8 +671,8 @@ TEST_F(CommandRequestImplTest, SendProviderRequest_ByProviderID) {
 
 TEST_F(CommandRequestImplTest, SendProviderRequestToHMI_ByProviderID) {
   auto last_state = std::make_shared<resumption::LastStateWrapperImpl>(
-      std::make_shared<resumption::LastStateImpl>("app_storage_folder",
-                                                  "app_info_storage"));
+      std::make_shared<resumption::LastStateImpl>(kAppStorageFolder,
+                                                  kAppInfoStorage));
 
   MockAppServiceManager app_service_manager(app_mngr_, last_state);
   MockAppPtr mock_app = CreateMockApp();
