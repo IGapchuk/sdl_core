@@ -91,7 +91,7 @@ class AppLaunchDataJson : public AppLaunchDataImpl {
    * @return  pointer to json list object
    */
   Json::Value& GetApplicationListAndIndex(const ApplicationData& app_data,
-                                          int32_t& founded_index,
+                                          int32_t& found_index,
                                           Json::Value& dictionary) const;
 
   DEPRECATED

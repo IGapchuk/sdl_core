@@ -80,9 +80,11 @@ LifeCycleImpl::LifeCycleImpl(const profile::Profile& profile)
 bool LifeCycleImpl::StartComponents() {
   LOG4CXX_AUTO_TRACE(logger_);
   DCHECK(!last_state_wrapper_);
-  last_state_wrapper_ = std::make_shared<resumption::LastStateWrapperImpl>(
-      std::make_shared<resumption::LastStateImpl>(profile_.app_storage_folder(),
-                                                  profile_.app_info_storage()));
+
+  auto last_state = std::make_shared<resumption::LastStateImpl>(
+      profile_.app_storage_folder(), profile_.app_info_storage());
+  last_state_wrapper_ =
+      std::make_shared<resumption::LastStateWrapperImpl>(last_state);
 
   DCHECK(!transport_manager_);
   transport_manager_ = new transport_manager::TransportManagerDefault(
