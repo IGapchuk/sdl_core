@@ -53,7 +53,6 @@
 
 #include "application_manager/mock_app_service_manager.h"
 #include "resumption/last_state_impl.h"
-#include "resumption/last_state_wrapper.h"
 #include "resumption/last_state_wrapper_impl.h"
 
 namespace test {

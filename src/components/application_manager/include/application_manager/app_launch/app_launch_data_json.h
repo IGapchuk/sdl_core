@@ -88,6 +88,7 @@ class AppLaunchDataJson : public AppLaunchDataImpl {
    * @param app_data - searching filled in object
    * @param founded_index - referenceto index of founded record
    * in case it wasn't found it'll be -1
+   * @param dictionary - data dictionary where all necessary info stored
    * @return  pointer to json list object
    */
   Json::Value& GetApplicationListAndIndex(const ApplicationData& app_data,
@@ -124,11 +125,13 @@ class AppLaunchDataJson : public AppLaunchDataImpl {
   bool DeleteOldestAppData();
 
   /**
+   * @param dictionary - data dictionary where all necessary info stored
    * @return pointer to AppLaunch data block in Json file
    */
   Json::Value& GetSavedApplicationDataList(Json::Value& dictionary) const;
 
   /**
+   * @param dictionary - data dictionary where all necessary info stored
    * @return pointer to AppLaunch records block in Json file
    */
   Json::Value& GetApplicationData(Json::Value& dictionary) const;
