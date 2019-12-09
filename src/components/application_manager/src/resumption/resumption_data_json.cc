@@ -163,18 +163,17 @@ void ResumptionDataJson::IncrementIgnOffCount() {
   resumption::LastStateAccessor accessor = last_state_wrapper_->get_accessor();
   dictionary = accessor.GetData().dictionary();
   Json::Value& saved_apps = GetSavedApplications(dictionary);
-  for (auto json_app = saved_apps.begin(); json_app != saved_apps.end();
-       ++json_app) {
-    if ((*json_app).isMember(strings::ign_off_count)) {
-      Json::Value& ign_off_count = (*json_app)[strings::ign_off_count];
+  for (auto& json_app : saved_apps) {
+    if (json_app.isMember(strings::ign_off_count)) {
+      Json::Value& ign_off_count = json_app[strings::ign_off_count];
       const uint32_t counter_value = ign_off_count.asUInt();
       ign_off_count = counter_value + 1;
     } else {
       LOG4CXX_WARN(logger_, "Unknown key among saved applications");
-      Json::Value& ign_off_count = (*json_app)[strings::ign_off_count];
+      Json::Value& ign_off_count = json_app[strings::ign_off_count];
       ign_off_count = 1;
     }
-    to_save.append(*json_app);
+    to_save.append(json_app);
   }
   SetSavedApplication(to_save, dictionary);
   SetLastIgnOffTime(time(nullptr), dictionary);
@@ -260,17 +259,15 @@ bool ResumptionDataJson::RemoveApplicationFromSaved(
   resumption::LastStateAccessor accessor = last_state_wrapper_->get_accessor();
   Json::Value dictionary = accessor.GetData().dictionary();
   Json::Value& saved_apps = GetSavedApplications(dictionary);
-  for (Json::Value::iterator it = saved_apps.begin(); it != saved_apps.end();
-       ++it) {
-    if ((*it).isMember(strings::app_id) && (*it).isMember(strings::device_id)) {
-      const std::string& saved_policy_app_id =
-          (*it)[strings::app_id].asString();
-      const std::string& saved_device_id = (*it)[strings::device_id].asString();
+  for (auto& app : saved_apps) {
+    if (app.isMember(strings::app_id) && app.isMember(strings::device_id)) {
+      const std::string& saved_policy_app_id = app[strings::app_id].asString();
+      const std::string& saved_device_id = app[strings::device_id].asString();
       if (saved_policy_app_id == policy_app_id &&
           saved_device_id == device_id) {
         result = true;
       } else {
-        temp.push_back((*it));
+        temp.push_back(app);
       }
     }
   }
@@ -282,9 +279,8 @@ bool ResumptionDataJson::RemoveApplicationFromSaved(
   }
 
   GetSavedApplications(dictionary).clear();
-  for (std::vector<Json::Value>::iterator it = temp.begin(); it != temp.end();
-       ++it) {
-    GetSavedApplications(dictionary).append((*it));
+  for (auto& app : temp) {
+    GetSavedApplications(dictionary).append(app);
   }
   LOG4CXX_TRACE(logger_, "EXIT result: " << (result ? "true" : "false"));
   accessor.GetMutableData().set_dictionary(dictionary);
