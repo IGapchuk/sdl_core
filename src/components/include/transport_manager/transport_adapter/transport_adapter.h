@@ -68,6 +68,7 @@ enum DeviceType {
   IOS_USB_HOST_MODE,
   IOS_USB_DEVICE_MODE,
   IOS_CARPLAY_WIRELESS,  // running on iAP over Carplay wireless transport
+  WEBENGINE_WEBSOCKET,
   UNKNOWN
 };
 

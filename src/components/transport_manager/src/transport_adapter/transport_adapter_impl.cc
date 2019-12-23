@@ -62,8 +62,9 @@ DeviceTypes devicesType = {
                    std::string("USB_IOS_DEVICE_MODE")),
     std::make_pair(DeviceType::IOS_CARPLAY_WIRELESS,
                    std::string("CARPLAY_WIRELESS_IOS")),
-    std::make_pair(DeviceType::CLOUD_WEBSOCKET,
-                   std::string("CLOUD_WEBSOCKET"))};
+    std::make_pair(DeviceType::CLOUD_WEBSOCKET, std::string("CLOUD_WEBSOCKET")),
+    std::make_pair(DeviceType::WEBENGINE_WEBSOCKET,
+                   std::string("WEBENGINE_WEBSOCKET"))};
 }
 
 TransportAdapterImpl::TransportAdapterImpl(

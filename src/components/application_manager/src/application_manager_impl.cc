@@ -102,7 +102,9 @@ DeviceTypes devicesType = {
     std::make_pair(std::string("CARPLAY_WIRELESS_IOS"),
                    hmi_apis::Common_TransportType::WIFI),
     std::make_pair(std::string("CLOUD_WEBSOCKET"),
-                   hmi_apis::Common_TransportType::CLOUD_WEBSOCKET)};
+                   hmi_apis::Common_TransportType::CLOUD_WEBSOCKET),
+    std::make_pair(std::string("WEBENGINE_WEBSOCKET"),
+                   hmi_apis::Common_TransportType::WEBENGINE_WEBSOCKET)};
 }
 
 /**

@@ -95,6 +95,7 @@
   <element name="USB_AOA"/>
   <element name="WIFI"/>
   <element name="CLOUD_WEBSOCKET"/>
+  <element name="WEBENGINE_WEBSOCKET"/>
 </enum>
 
 <enum name="ButtonName">
