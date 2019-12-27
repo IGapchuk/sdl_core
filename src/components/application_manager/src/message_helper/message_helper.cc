@@ -1903,6 +1903,59 @@ void MessageHelper::SendOnAppUnregNotificationToHMI(
   app_mngr.GetRPCService().ManageHMICommand(notification);
 }
 
+smart_objects::SmartObjectSPtr
+MessageHelper::GetOnAppPropertiesChangeNotification(
+    const std::string& policy_app_id, ApplicationManager& app_mngr) {
+  smart_objects::SmartObjectSPtr notification =
+      std::make_shared<smart_objects::SmartObject>(
+          smart_objects::SmartType_Map);
+
+  smart_objects::SmartObject& message = *notification;
+  message[strings::params][strings::function_id] =
+      hmi_apis::FunctionID::BasicCommunication_OnAppPropertiesChange;
+  message[strings::params][strings::message_type] = MessageType::kNotification;
+
+  policy::AppProperties app_properties;
+  app_mngr.GetPolicyHandler().GetCloudAppParameters(policy_app_id,
+                                                    app_properties);
+
+  policy::StringArray nicknames;
+  policy::StringArray app_hmi_types;
+
+  app_mngr.GetPolicyHandler().GetInitialAppData(
+      policy_app_id, &nicknames, &app_hmi_types);
+
+  smart_objects::SmartObject properties(smart_objects::SmartType_Map);
+  properties[strings::policy_app_id] = policy_app_id;
+  properties[strings::enabled] = app_properties.enabled;
+
+  if (!nicknames.empty()) {
+    smart_objects::SmartObject nicknames_array(smart_objects::SmartType_Array);
+    size_t i = 0;
+    for (std::string nickname : nicknames) {
+      nicknames_array[i++] = nickname;
+    }
+    properties[strings::nicknames] = nicknames_array;
+  }
+
+  if (!app_properties.auth_token.empty()) {
+    properties[strings::auth_token] = app_properties.auth_token;
+  }
+  if (!app_properties.transport_type.empty()) {
+    properties[strings::transport_type] = app_properties.transport_type;
+  }
+  if (!app_properties.hybrid_app_preference.empty()) {
+    properties[strings::hybrid_app_preference] =
+        app_properties.hybrid_app_preference;
+  }
+  if (!app_properties.endpoint.empty()) {
+    properties[strings::endpoint] = app_properties.endpoint;
+  }
+
+  message[strings::msg_params][strings::properties] = properties;
+  return notification;
+}
+
 smart_objects::SmartObjectSPtr MessageHelper::GetBCActivateAppRequestToHMI(
     ApplicationConstSharedPtr app,
     const policy::PolicyHandlerInterface& policy_handler,
