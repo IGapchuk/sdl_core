@@ -523,6 +523,39 @@ typedef std::set<std::pair<std::string, PermissionsCheckResult> >
  */
 typedef std::pair<uint32_t, uint32_t> AppIdURL;
 
+/**
+ * @brief The AppProperties struct contains application properties
+ */
+struct AppProperties {
+  AppProperties()
+      : endpoint()
+      , certificate()
+      , enabled(false)
+      , auth_token()
+      , transport_type()
+      , hybrid_app_preference() {}
+
+  AppProperties(std::string endpoint,
+                std::string certificate,
+                bool enabled,
+                std::string auth_token,
+                std::string transport_type,
+                std::string hybrid_app_preference)
+      : endpoint(endpoint)
+      , certificate(certificate)
+      , enabled(enabled)
+      , auth_token(auth_token)
+      , transport_type(transport_type)
+      , hybrid_app_preference(hybrid_app_preference) {}
+
+  std::string endpoint;
+  std::string certificate;
+  bool enabled;
+  std::string auth_token;
+  std::string transport_type;
+  std::string hybrid_app_preference;
+};
+
 }  //  namespace policy
 
 #endif  // SRC_COMPONENTS_POLICY_POLICY_EXTERNAL_INCLUDE_POLICY_POLICY_TYPES_H_

@@ -943,20 +943,9 @@ void ApplicationManagerImpl::DisconnectCloudApp(ApplicationSharedPtr app) {
   LOG4CXX_TRACE(logger_, "Cloud app support is disabled. Exiting function");
   return;
 #else
-  std::string endpoint;
-  std::string certificate;
-  std::string auth_token;
-  std::string cloud_transport_type;
-  std::string hybrid_app_preference;
-  bool enabled = true;
   std::string policy_app_id = app->policy_app_id();
-  GetPolicyHandler().GetCloudAppParameters(policy_app_id,
-                                           enabled,
-                                           endpoint,
-                                           certificate,
-                                           auth_token,
-                                           cloud_transport_type,
-                                           hybrid_app_preference);
+  policy::AppProperties app_properties;
+  GetPolicyHandler().GetCloudAppParameters(policy_app_id, app_properties);
   if (app->IsRegistered() && app->is_cloud_app()) {
     LOG4CXX_DEBUG(logger_, "Disabled app is registered, unregistering now");
     GetRPCService().ManageMobileCommand(
@@ -971,12 +960,12 @@ void ApplicationManagerImpl::DisconnectCloudApp(ApplicationSharedPtr app) {
   connection_handler().RemoveCloudAppDevice(app->device());
 
   transport_manager::transport_adapter::CloudAppProperties properties{
-      endpoint,
-      certificate,
-      enabled,
-      auth_token,
-      cloud_transport_type,
-      hybrid_app_preference};
+      app_properties.endpoint,
+      app_properties.certificate,
+      app_properties.enabled,
+      app_properties.auth_token,
+      app_properties.transport_type,
+      app_properties.hybrid_app_preference};
   // Create device in pending state
   LOG4CXX_DEBUG(logger_, "Re-adding the cloud app device");
   connection_handler().AddCloudAppDevice(policy_app_id, properties);
@@ -996,12 +985,6 @@ void ApplicationManagerImpl::RefreshCloudAppInformation() {
   GetPolicyHandler().GetEnabledCloudApps(enabled_apps);
   std::vector<std::string>::iterator enabled_it = enabled_apps.begin();
   std::vector<std::string>::iterator enabled_end = enabled_apps.end();
-  std::string endpoint;
-  std::string certificate;
-  std::string auth_token;
-  std::string cloud_transport_type;
-  std::string hybrid_app_preference_str;
-  bool enabled = true;
 
   // Store old device map and clear the current map
   pending_device_map_lock_ptr_->Acquire();
@@ -1009,20 +992,16 @@ void ApplicationManagerImpl::RefreshCloudAppInformation() {
   std::map<std::string, std::string> old_device_map = pending_device_map_;
   pending_device_map_ = std::map<std::string, std::string>();
   // Create a device for each newly enabled cloud app
+  policy::AppProperties app_properties;
   for (; enabled_it != enabled_end; ++enabled_it) {
-    GetPolicyHandler().GetCloudAppParameters(*enabled_it,
-                                             enabled,
-                                             endpoint,
-                                             certificate,
-                                             auth_token,
-                                             cloud_transport_type,
-                                             hybrid_app_preference_str);
+    GetPolicyHandler().GetCloudAppParameters(*enabled_it, app_properties);
 
     mobile_apis::HybridAppPreference::eType hybrid_app_preference =
         mobile_apis::HybridAppPreference::INVALID_ENUM;
     smart_objects::EnumConversionHelper<
         mobile_apis::HybridAppPreference::eType>::
-        StringToEnum(hybrid_app_preference_str, &hybrid_app_preference);
+        StringToEnum(app_properties.hybrid_app_preference,
+                     &hybrid_app_preference);
 
     auto policy_id = *enabled_it;
     policy::StringArray nicknames;
@@ -1054,22 +1033,22 @@ void ApplicationManagerImpl::RefreshCloudAppInformation() {
       }
     }
 
-    pending_device_map_.insert(
-        std::pair<std::string, std::string>(endpoint, policy_id));
+    pending_device_map_.insert(std::pair<std::string, std::string>(
+        app_properties.endpoint, policy_id));
     // Determine which endpoints were disabled by erasing all enabled apps from
     // the old device list
-    auto old_device_it = old_device_map.find(endpoint);
+    auto old_device_it = old_device_map.find(app_properties.endpoint);
     if (old_device_it != old_device_map.end()) {
       old_device_map.erase(old_device_it);
     }
 
     transport_manager::transport_adapter::CloudAppProperties properties{
-        endpoint,
-        certificate,
-        enabled,
-        auth_token,
-        cloud_transport_type,
-        hybrid_app_preference_str};
+        app_properties.endpoint,
+        app_properties.certificate,
+        app_properties.enabled,
+        app_properties.auth_token,
+        app_properties.transport_type,
+        app_properties.hybrid_app_preference};
 
     // If the device was disconnected, this will reinitialize the device
     connection_handler().AddCloudAppDevice(policy_id, properties);
@@ -1091,7 +1070,7 @@ void ApplicationManagerImpl::RefreshCloudAppInformation() {
     const std::string app_icon_dir(settings_.app_icons_folder());
     const std::string full_icon_path(app_icon_dir + "/" + policy_id);
     if (!file_system::FileExists(full_icon_path)) {
-      AppIconInfo icon_info(endpoint, false);
+      AppIconInfo icon_info(app_properties.endpoint, false);
       LOG4CXX_DEBUG(
           logger_,
           "Inserting cloud app into icon map: " << app_icon_map_.size());
@@ -1155,12 +1134,6 @@ void ApplicationManagerImpl::CreatePendingApplication(
     connection_handler::DeviceHandle device_id) {
   LOG4CXX_AUTO_TRACE(logger_);
 
-  std::string endpoint;
-  std::string certificate;
-  std::string auth_token;
-  std::string cloud_transport_type;
-  std::string hybrid_app_preference_str;
-  bool enabled = true;
   std::string name = device_info.name();
   pending_device_map_lock_ptr_->Acquire();
   auto it = pending_device_map_.find(name);
@@ -1204,34 +1177,29 @@ void ApplicationManagerImpl::CreatePendingApplication(
   if (file_system::FileExists(full_icon_path)) {
     application->set_app_icon_path(full_icon_path);
   }
-
-  GetPolicyHandler().GetCloudAppParameters(policy_app_id,
-                                           enabled,
-                                           endpoint,
-                                           certificate,
-                                           auth_token,
-                                           cloud_transport_type,
-                                           hybrid_app_preference_str);
+  policy::AppProperties app_properties;
+  GetPolicyHandler().GetCloudAppParameters(policy_app_id, app_properties);
 
   mobile_apis::HybridAppPreference::eType hybrid_app_preference_enum;
 
   bool convert_result = smart_objects::EnumConversionHelper<
       mobile_apis::HybridAppPreference::eType>::
-      StringToEnum(hybrid_app_preference_str, &hybrid_app_preference_enum);
+      StringToEnum(app_properties.hybrid_app_preference,
+                   &hybrid_app_preference_enum);
 
-  if (!hybrid_app_preference_str.empty() && !convert_result) {
-    LOG4CXX_ERROR(
-        logger_,
-        "Could not convert string to enum: " << hybrid_app_preference_str);
+  if (!app_properties.hybrid_app_preference.empty() && !convert_result) {
+    LOG4CXX_ERROR(logger_,
+                  "Could not convert string to enum: "
+                      << app_properties.hybrid_app_preference);
     return;
   }
 
   application->set_hmi_application_id(GenerateNewHMIAppID());
-  application->set_cloud_app_endpoint(endpoint);
-  application->set_auth_token(auth_token);
-  application->set_cloud_app_transport_type(cloud_transport_type);
+  application->set_cloud_app_endpoint(app_properties.endpoint);
+  application->set_auth_token(app_properties.auth_token);
+  application->set_cloud_app_transport_type(app_properties.transport_type);
   application->set_hybrid_app_preference(hybrid_app_preference_enum);
-  application->set_cloud_app_certificate(certificate);
+  application->set_cloud_app_certificate(app_properties.certificate);
 
   sync_primitives::AutoLock lock(apps_to_register_list_lock_ptr_);
   LOG4CXX_DEBUG(logger_,

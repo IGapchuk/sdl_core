@@ -1979,6 +1979,19 @@ bool PolicyHandler::CheckSystemAction(
   return false;
 }
 
+const std::vector<std::string> PolicyHandler::GetApplicationPolicyIDs() const {
+  POLICY_LIB_CHECK(std::vector<std::string>());
+  const auto all_policy_ids = policy_manager_->GetApplicationPolicyIDs();
+  std::vector<std::string> policy_app_ids;
+
+  for (const auto& id : all_policy_ids) {
+    if (kDefaultId != id && kPreDataConsentId != id && kDeviceId != id) {
+      policy_app_ids.push_back(id);
+    }
+  }
+  return policy_app_ids;
+}
+
 void PolicyHandler::GetEnabledCloudApps(
     std::vector<std::string>& enabled_apps) const {
   POLICY_LIB_CHECK_VOID();
@@ -1986,40 +1999,19 @@ void PolicyHandler::GetEnabledCloudApps(
 }
 
 bool PolicyHandler::GetCloudAppParameters(
-    const std::string& policy_app_id,
-    bool& enabled,
-    std::string& endpoint,
-    std::string& certificate,
-    std::string& auth_token,
-    std::string& cloud_transport_type,
-    std::string& hybrid_app_preference) const {
+    const std::string& policy_app_id, AppProperties& out_app_properties) const {
   POLICY_LIB_CHECK(false);
   return policy_manager_->GetCloudAppParameters(policy_app_id,
-                                                enabled,
-                                                endpoint,
-                                                certificate,
-                                                auth_token,
-                                                cloud_transport_type,
-                                                hybrid_app_preference);
+                                                out_app_properties);
 }
 
 const bool PolicyHandler::CheckCloudAppEnabled(
     const std::string& policy_app_id) const {
   POLICY_LIB_CHECK(false);
-  bool enabled = false;
-  std::string endpoint;
-  std::string auth_token;
-  std::string certificate;
-  std::string cloud_transport_type;
-  std::string hybrid_app_preference;
-  policy_manager_->GetCloudAppParameters(policy_app_id,
-                                         enabled,
-                                         endpoint,
-                                         certificate,
-                                         auth_token,
-                                         cloud_transport_type,
-                                         hybrid_app_preference);
-  return enabled;
+  AppProperties out_app_properties;
+  policy_manager_->GetCloudAppParameters(policy_app_id, out_app_properties);
+  return out_app_properties.enabled;
+}
 }
 
 void PolicyHandler::OnSetCloudAppProperties(
@@ -2093,13 +2085,10 @@ void PolicyHandler::OnSetCloudAppProperties(
   }
 
   if (auth_token_update) {
-    bool enabled;
-    std::string end, cert, ctt, hap;
-    std::string auth_token;
+    AppProperties app_properties;
 
-    policy_manager_->GetCloudAppParameters(
-        policy_app_id, enabled, end, cert, auth_token, ctt, hap);
-    OnAuthTokenUpdated(policy_app_id, auth_token);
+    policy_manager_->GetCloudAppParameters(policy_app_id, app_properties);
+    OnAuthTokenUpdated(policy_app_id, app_properties.auth_token);
   }
 }
 

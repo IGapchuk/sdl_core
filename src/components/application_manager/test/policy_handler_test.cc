@@ -2684,6 +2684,12 @@ TEST_F(PolicyHandlerTest, OnSetCloudAppProperties_AllProperties_SUCCESS) {
       mobile_apis::HybridAppPreference::CLOUD;
   std::string hybrid_app_preference_str = "CLOUD";
   std::string endpoint = "anEndpoint";
+  const policy::AppProperties app_properties(endpoint,
+                                             " ",
+                                             enabled,
+                                             auth_token,
+                                             cloud_transport_type,
+                                             hybrid_app_preference_str);
 
   StringArray nicknames_vec;
   nicknames_vec.push_back(app_name);
@@ -2717,9 +2723,8 @@ TEST_F(PolicyHandlerTest, OnSetCloudAppProperties_AllProperties_SUCCESS) {
   EXPECT_CALL(*mock_policy_manager_,
               SetHybridAppPreference(kPolicyAppId_, hybrid_app_preference_str));
   EXPECT_CALL(*mock_policy_manager_, SetAppEndpoint(kPolicyAppId_, endpoint));
-  EXPECT_CALL(*mock_policy_manager_,
-              GetCloudAppParameters(kPolicyAppId_, _, _, _, _, _, _))
-      .WillOnce(DoAll(SetArgReferee<4>(auth_token), Return(true)));
+  EXPECT_CALL(*mock_policy_manager_, GetCloudAppParameters(kPolicyAppId_, _))
+      .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
   EXPECT_CALL(app_manager_, RefreshCloudAppInformation());
   EXPECT_CALL(policy_handler_observer,
               OnAuthTokenUpdated(kPolicyAppId_, auth_token));
@@ -2737,38 +2742,29 @@ TEST_F(PolicyHandlerTest, GetCloudAppParameters_AllProperties_SUCCESS) {
   std::string hybrid_app_preference_str = "CLOUD";
   std::string endpoint = "anEndpoint";
 
+  const policy::AppProperties app_properties(endpoint,
+                                             certificate,
+                                             enabled,
+                                             auth_token,
+                                             cloud_transport_type,
+                                             hybrid_app_preference_str);
+
   application_manager_test::MockPolicyHandlerObserver policy_handler_observer;
   policy_handler_.add_listener(&policy_handler_observer);
 
-  EXPECT_CALL(*mock_policy_manager_,
-              GetCloudAppParameters(kPolicyAppId_, _, _, _, _, _, _))
-      .WillOnce(DoAll(SetArgReferee<1>(enabled),
-                      SetArgReferee<2>(endpoint),
-                      SetArgReferee<3>(certificate),
-                      SetArgReferee<4>(auth_token),
-                      SetArgReferee<5>(cloud_transport_type),
-                      SetArgReferee<6>(hybrid_app_preference_str),
-                      Return(true)));
+  EXPECT_CALL(*mock_policy_manager_, GetCloudAppParameters(kPolicyAppId_, _))
+      .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
-  bool enabled_out;
-  std::string endpoint_out;
-  std::string cert_out;
-  std::string auth_token_out;
-  std::string ctt_out;
-  std::string hap_out;
-  EXPECT_TRUE(policy_handler_.GetCloudAppParameters(kPolicyAppId_,
-                                                    enabled_out,
-                                                    endpoint_out,
-                                                    cert_out,
-                                                    auth_token_out,
-                                                    ctt_out,
-                                                    hap_out));
-  EXPECT_EQ(enabled, enabled_out);
-  EXPECT_EQ(endpoint, endpoint_out);
-  EXPECT_EQ(certificate, cert_out);
-  EXPECT_EQ(auth_token, auth_token_out);
-  EXPECT_EQ(cloud_transport_type, ctt_out);
-  EXPECT_EQ(hybrid_app_preference_str, hap_out);
+  policy::AppProperties out_app_properties;
+  EXPECT_TRUE(
+      policy_handler_.GetCloudAppParameters(kPolicyAppId_, out_app_properties));
+  EXPECT_EQ(app_properties.enabled, out_app_properties.enabled);
+  EXPECT_EQ(app_properties.endpoint, out_app_properties.endpoint);
+  EXPECT_EQ(app_properties.certificate, out_app_properties.certificate);
+  EXPECT_EQ(app_properties.auth_token, out_app_properties.auth_token);
+  EXPECT_EQ(app_properties.transport_type, out_app_properties.transport_type);
+  EXPECT_EQ(app_properties.hybrid_app_preference,
+            out_app_properties.hybrid_app_preference);
 }
 
 }  // namespace policy_handler_test

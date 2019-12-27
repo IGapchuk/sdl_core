@@ -1473,34 +1473,32 @@ void CacheManager::GetEnabledCloudApps(
 }
 
 bool CacheManager::GetCloudAppParameters(
-    const std::string& policy_app_id,
-    bool& enabled,
-    std::string& endpoint,
-    std::string& certificate,
-    std::string& auth_token,
-    std::string& cloud_transport_type,
-    std::string& hybrid_app_preference) const {
+    const std::string& policy_app_id, AppProperties& out_app_properties) const {
   const policy_table::ApplicationPolicies& policies =
       pt_->policy_table.app_policies_section.apps;
   policy_table::ApplicationPolicies::const_iterator policy_iter =
       policies.find(policy_app_id);
   if (policies.end() != policy_iter) {
     auto app_policy = (*policy_iter).second;
-    endpoint = app_policy.endpoint.is_initialized() ? *app_policy.endpoint
-                                                    : std::string();
-    auth_token = app_policy.auth_token.is_initialized() ? *app_policy.auth_token
-                                                        : std::string();
-    cloud_transport_type = app_policy.cloud_transport_type.is_initialized()
-                               ? *app_policy.cloud_transport_type
-                               : std::string();
-    certificate = app_policy.certificate.is_initialized()
-                      ? *app_policy.certificate
-                      : std::string();
-    hybrid_app_preference =
+    out_app_properties.endpoint = app_policy.endpoint.is_initialized()
+                                      ? *app_policy.endpoint
+                                      : std::string();
+    out_app_properties.auth_token = app_policy.auth_token.is_initialized()
+                                        ? *app_policy.auth_token
+                                        : std::string();
+    out_app_properties.transport_type =
+        app_policy.cloud_transport_type.is_initialized()
+            ? *app_policy.cloud_transport_type
+            : std::string();
+    out_app_properties.certificate = app_policy.certificate.is_initialized()
+                                         ? *app_policy.certificate
+                                         : std::string();
+    out_app_properties.hybrid_app_preference =
         app_policy.hybrid_app_preference.is_initialized()
             ? EnumToJsonString(*app_policy.hybrid_app_preference)
             : std::string();
-    enabled = app_policy.enabled.is_initialized() && *app_policy.enabled;
+    out_app_properties.enabled =
+        app_policy.enabled.is_initialized() && *app_policy.enabled;
     return true;
   }
   return false;

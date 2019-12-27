@@ -575,6 +575,14 @@ class PolicyManager : public usage_statistics::StatisticsManager,
    * @return policy_table as json object
    */
   virtual Json::Value GetPolicyTableData() const = 0;
+
+  /**
+   * @brief Get a list of policy app ids
+   * @param apps list filled with the policy app ids of each
+   * application
+   */
+  virtual const std::vector<std::string> GetApplicationPolicyIDs() const = 0;
+
   /**
    * @brief Get a list of enabled cloud applications
    * @param enabled_apps List filled with the policy app id of each enabled
@@ -601,12 +609,7 @@ class PolicyManager : public usage_statistics::StatisticsManager,
    */
   virtual bool GetCloudAppParameters(
       const std::string& policy_app_id,
-      bool& enabled,
-      std::string& endpoint,
-      std::string& certificate,
-      std::string& auth_token,
-      std::string& cloud_transport_type,
-      std::string& hybrid_app_preference) const = 0;
+      AppProperties& out_app_properties) const = 0;
 
   /**
    * @ brief Initialize new cloud app in the policy table

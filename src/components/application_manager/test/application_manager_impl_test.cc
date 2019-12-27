@@ -129,6 +129,12 @@ const mobile_api::HybridAppPreference::eType kHybridAppPreference =
     mobile_api::HybridAppPreference::CLOUD;
 const std::string kHybridAppPreferenceStr = "CLOUD";
 const bool kEnabled = true;
+const policy::AppProperties app_properties(kEndpoint2,
+                                           kCertificate,
+                                           kEnabled,
+                                           kAuthToken,
+                                           kTransportType,
+                                           kHybridAppPreferenceStr);
 #endif  // CLOUD_APP_WEBSOCKET_TRANSPORT_SUPPORT
 }  // namespace
 
@@ -1664,14 +1670,8 @@ void ApplicationManagerImplTest::AddCloudAppToPendingDeviceMap() {
   std::vector<std::string> enabled_apps{"1234"};
   EXPECT_CALL(*mock_policy_handler_, GetEnabledCloudApps(_))
       .WillOnce(SetArgReferee<0>(enabled_apps));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _, _, _, _, _, _))
-      .WillOnce(DoAll(SetArgReferee<1>(kEnabled),
-                      SetArgReferee<2>(kEndpoint2),
-                      SetArgReferee<3>(kCertificate),
-                      SetArgReferee<4>(kAuthToken),
-                      SetArgReferee<5>(kTransportType),
-                      SetArgReferee<6>(kHybridAppPreferenceStr),
-                      Return(true)));
+  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+      .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   std::vector<std::string> nicknames{"CloudApp"};
   EXPECT_CALL(*mock_policy_handler_, GetInitialAppData(_, _, _))
@@ -1696,14 +1696,8 @@ void ApplicationManagerImplTest::CreatePendingApplication() {
   EXPECT_CALL(*mock_policy_handler_, GetStatisticManager())
       .WillOnce(Return(std::shared_ptr<usage_statistics::StatisticsManager>(
           new usage_statistics_test::MockStatisticsManager())));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _, _, _, _, _, _))
-      .WillOnce(DoAll(SetArgReferee<1>(kEnabled),
-                      SetArgReferee<2>(kEndpoint2),
-                      SetArgReferee<3>(kCertificate),
-                      SetArgReferee<4>(kAuthToken),
-                      SetArgReferee<5>(kTransportType),
-                      SetArgReferee<6>(kHybridAppPreferenceStr),
-                      Return(true)));
+  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+      .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
   // Expect Update app list
   EXPECT_CALL(*mock_rpc_service_, ManageHMICommand(_, _)).Times(1);
   app_manager_impl_->CreatePendingApplication(1, device_info, 1);
@@ -1733,14 +1727,8 @@ TEST_F(ApplicationManagerImplTest, SetPendingState) {
 
   EXPECT_CALL(*mock_policy_handler_, GetEnabledCloudApps(_))
       .WillOnce(SetArgReferee<0>(enabled_apps));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _, _, _, _, _, _))
-      .WillOnce(DoAll(SetArgReferee<1>(kEnabled),
-                      SetArgReferee<2>(kEndpoint2),
-                      SetArgReferee<3>(kCertificate),
-                      SetArgReferee<4>(kAuthToken),
-                      SetArgReferee<5>(kTransportType),
-                      SetArgReferee<6>(kHybridAppPreferenceStr),
-                      Return(true)));
+  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+      .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   std::vector<std::string> nicknames{"CloudApp"};
   EXPECT_CALL(*mock_policy_handler_, GetInitialAppData(_, _, _))
@@ -1883,14 +1871,8 @@ TEST_F(ApplicationManagerImplTest, PolicyIDByIconUrl_Success) {
   std::vector<std::string> enabled_apps{"1234"};
   EXPECT_CALL(*mock_policy_handler_, GetEnabledCloudApps(_))
       .WillOnce(SetArgReferee<0>(enabled_apps));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _, _, _, _, _, _))
-      .WillOnce(DoAll(SetArgReferee<1>(kEnabled),
-                      SetArgReferee<2>(kEndpoint2),
-                      SetArgReferee<3>(kCertificate),
-                      SetArgReferee<4>(kAuthToken),
-                      SetArgReferee<5>(kTransportType),
-                      SetArgReferee<6>(kHybridAppPreferenceStr),
-                      Return(true)));
+  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+      .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   std::vector<std::string> nicknames{"CloudApp"};
   EXPECT_CALL(*mock_policy_handler_, GetInitialAppData(_, _, _))

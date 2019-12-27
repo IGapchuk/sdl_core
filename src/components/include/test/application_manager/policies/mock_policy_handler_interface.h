@@ -242,18 +242,14 @@ class MockPolicyHandlerInterface : public policy::PolicyHandlerInterface {
                      const std::vector<std::string>(
                          const transport_manager::DeviceHandle& device_handle,
                          const std::string& policy_app_id));
+  MOCK_CONST_METHOD0(GetApplicationPolicyIDs, const std::vector<std::string>());
   MOCK_CONST_METHOD1(GetEnabledCloudApps,
                      void(std::vector<std::string>& enabled_apps));
   MOCK_CONST_METHOD1(CheckCloudAppEnabled,
                      const bool(const std::string& policy_app_id));
-  MOCK_CONST_METHOD7(GetCloudAppParameters,
+  MOCK_CONST_METHOD2(GetCloudAppParameters,
                      bool(const std::string& policy_app_id,
-                          bool& enabled,
-                          std::string& endpoint,
-                          std::string& certificate,
-                          std::string& auth_token,
-                          std::string& cloud_transport_type,
-                          std::string& hybrid_app_preference));
+                          policy::AppProperties& app_properties));
   MOCK_METHOD1(OnSetCloudAppProperties,
                void(const smart_objects::SmartObject& message));
   MOCK_CONST_METHOD2(

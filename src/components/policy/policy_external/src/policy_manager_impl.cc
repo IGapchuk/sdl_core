@@ -820,20 +820,8 @@ void PolicyManagerImpl::GetEnabledCloudApps(
 }
 
 bool PolicyManagerImpl::GetCloudAppParameters(
-    const std::string& policy_app_id,
-    bool& enabled,
-    std::string& endpoint,
-    std::string& certificate,
-    std::string& auth_token,
-    std::string& cloud_transport_type,
-    std::string& hybrid_app_preference) const {
-  return cache_->GetCloudAppParameters(policy_app_id,
-                                       enabled,
-                                       endpoint,
-                                       certificate,
-                                       auth_token,
-                                       cloud_transport_type,
-                                       hybrid_app_preference);
+    const std::string& policy_app_id, AppProperties& out_app_properties) const {
+  return cache_->GetCloudAppParameters(policy_app_id, out_app_properties);
 }
 
 void PolicyManagerImpl::InitCloudApp(const std::string& policy_app_id) {
@@ -2433,11 +2421,9 @@ void PolicyManagerImpl::SendAppPermissionsChanged(
 
 void PolicyManagerImpl::SendAuthTokenUpdated(const std::string policy_app_id) {
   bool enabled = false;
-  std::string end, cert, ctt, hap;
-  std::string auth_token;
-  cache_->GetCloudAppParameters(
-      policy_app_id, enabled, end, cert, auth_token, ctt, hap);
-  listener_->OnAuthTokenUpdated(policy_app_id, auth_token);
+  AppProperties app_properties;
+  cache_->GetCloudAppParameters(policy_app_id, app_properties);
+  listener_->OnAuthTokenUpdated(policy_app_id, app_properties.auth_token);
 }
 
 void PolicyManagerImpl::OnPrimaryGroupsChanged(

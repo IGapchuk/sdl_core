@@ -201,12 +201,7 @@ class CacheManager : public CacheManagerInterface {
    * cloud application set by the user
    */
   virtual bool GetCloudAppParameters(const std::string& policy_app_id,
-                                     bool& enabled,
-                                     std::string& endpoint,
-                                     std::string& certificate,
-                                     std::string& auth_token,
-                                     std::string& cloud_transport_type,
-                                     std::string& hybrid_app_preference) const;
+                                     AppProperties& out_app_properties) const;
 
   /**
    * Initializes a new cloud application with default policies

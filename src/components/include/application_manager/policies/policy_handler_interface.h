@@ -478,6 +478,13 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
       const std::string& policy_app_id) const = 0;
 
   /**
+   * @brief Get a list of policy app ids
+   * @param apps list filled with the policy app ids of each
+   * application
+   */
+  virtual const std::vector<std::string> GetApplicationPolicyIDs() const = 0;
+
+  /**
    * @brief Get a list of enabled cloud applications
    * @param enabled_apps List filled with the policy app id of each enabled
    * cloud application
@@ -512,12 +519,8 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
    */
   virtual bool GetCloudAppParameters(
       const std::string& policy_app_id,
-      bool& enabled,
-      std::string& endpoint,
-      std::string& certificate,
-      std::string& auth_token,
-      std::string& cloud_transport_type,
-      std::string& hybrid_app_preference) const = 0;
+      AppProperties& out_app_properties) const = 0;
+
 
   /**
    * @brief Callback for when a SetCloudAppProperties message is received from a
