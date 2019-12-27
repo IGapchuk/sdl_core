@@ -28,49 +28,29 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#pragma once
+#ifndef TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_H
+#define TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_H
 
-#include <algorithm>
-#include <boost/asio/bind_executor.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <boost/asio/strand.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-#include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <queue>
-#include <string>
-#include <thread>
-#include <vector>
 #include "transport_manager/transport_adapter/connection.h"
 #include "transport_manager/websocket/websocket_secure_session.h"
 #include "utils/message_queue.h"
 #include "utils/threads/thread.h"
 
-using tcp = boost::asio::ip::tcp;  // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;  // from <boost/asio/ssl.hpp>
-namespace websocket =
-    boost::beast::websocket;  // from <boost/beast/websocket.hpp>
+namespace transport_manager {
+namespace transport_adapter {
 
 using ::utils::MessageQueue;
 
 typedef ::protocol_handler::RawMessagePtr Message;
 typedef std::queue<Message> AsyncQueue;
 
-namespace transport_manager {
-namespace transport_adapter {
-
 CREATE_LOGGERPTR_GLOBAL(wsc_logger_, "WebSocketConnection")
 
 class TransportAdapterController;
 
-template <class Layer = tcp::socket>
+template <typename Session = WebSocketSession<> >
 class WebSocketConnection
-    : public std::enable_shared_from_this<WebSocketConnection<Layer> >,
+    : public std::enable_shared_from_this<WebSocketConnection<Session> >,
       public Connection {
  public:
   WebSocketConnection(const DeviceUID& device_uid,
@@ -86,29 +66,20 @@ class WebSocketConnection
 
   ~WebSocketConnection();
 
-  void Accept();
-
-  void Shutdown();
-
-  bool IsShuttingDown();
-
-  void Recv(boost::system::error_code ec);
+  TransportAdapter::Error Disconnect() OVERRIDE;
 
   TransportAdapter::Error SendData(
-      ::protocol_handler::RawMessagePtr message) OVERRIDE;
-  TransportAdapter::Error Disconnect() OVERRIDE {
-    return TransportAdapter::OK;
-  }
+      protocol_handler::RawMessagePtr message) OVERRIDE;
 
-  void Read(boost::system::error_code ec, std::size_t bytes_transferred);
+  void DataReceive(protocol_handler::RawMessagePtr frame);
+  void Run();
+  void Shutdown();
+  bool IsShuttingDown();
 
  private:
   const DeviceUID device_uid_;
   const ApplicationHandle app_handle_;
-  std::unique_ptr<tcp::socket> socket_;
-  websocket::stream<Layer> ws_;
-  boost::asio::strand<boost::asio::io_context::executor_type> strand_;
-  boost::beast::multi_buffer buffer_;
+  std::shared_ptr<Session> session_;
   TransportAdapterController* controller_;
 
   std::atomic_bool shutdown_;
@@ -118,7 +89,7 @@ class WebSocketConnection
   class LoopThreadDelegate : public threads::ThreadDelegate {
    public:
     LoopThreadDelegate(MessageQueue<Message, AsyncQueue>* message_queue,
-                       WebSocketConnection<Layer>* handler);
+                       DataWriteCallback dataWrite);
 
     virtual void threadMain() OVERRIDE;
     virtual void exitThreadMain() OVERRIDE;
@@ -130,7 +101,7 @@ class WebSocketConnection
    private:
     void DrainQueue();
     MessageQueue<Message, AsyncQueue>& message_queue_;
-    WebSocketConnection<Layer>& handler_;
+    DataWriteCallback dataWrite_;
     std::atomic_bool shutdown_;
   };
 
@@ -138,8 +109,7 @@ class WebSocketConnection
   threads::Thread* thread_;
 };
 
-template class WebSocketConnection<ssl::stream<tcp::socket&> >;
-template class WebSocketConnection<tcp::socket>;
-
 }  // namespace transport_adapter
 }  // namespace transport_manager
+
+#endif  // TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_H

@@ -12,15 +12,20 @@ WebSocketListener::WebSocketListener(TransportAdapterController* controller,
     , ctx_(ssl::context::sslv23)
     , acceptor_(ioc_)
     , socket_(ioc_)
-    , io_pool_(num_threads - 1)
+    , io_pool_(num_threads)
     , shutdown_(false) {}
 
 WebSocketListener::~WebSocketListener() {
-  Shutdown();
+  Terminate();
 }
 
 TransportAdapter::Error WebSocketListener::Init() {
   return StartListening();
+}
+
+void WebSocketListener::Terminate() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  Shutdown();
 }
 
 TransportAdapter::Error WebSocketListener::StartListening() {
@@ -78,7 +83,6 @@ bool WebSocketListener::Run() {
   LOG4CXX_AUTO_TRACE(logger_);
   if (WaitForConnection()) {
     boost::asio::post(io_pool_, [&]() { ioc_.run(); });
-    ioc_.run();
     return true;
   }
   LOG4CXX_ERROR(logger_, "Connection is shutdown or acceptor isn't open");
@@ -108,12 +112,12 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
     return;
   }
 
-  auto connection = std::make_shared<WebSocketConnection<> >(
+  auto connection = std::make_shared<WebSocketConnection<WebSocketSession<> > >(
       "", 1, std::move(socket_), controller_);
 
   controller_->ConnectionCreated(connection, "", 1);
 
-  connection->Accept();
+  connection->Run();
 
   mConnectionListLock.Acquire();
   mConnectionList.push_back(connection);
@@ -128,7 +132,6 @@ void WebSocketListener::Shutdown() {
     socket_.close();
     boost::system::error_code ec;
     acceptor_.close(ec);
-    ioc_.stop();
     io_pool_.stop();
     io_pool_.join();
   }

@@ -33,7 +33,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#ifndef TRANSPORT_ADAPTER_WEBSOCKET_TRANSPORT_ADAPTER_H
+#define TRANSPORT_ADAPTER_WEBSOCKET_TRANSPORT_ADAPTER_H
 
 #include "transport_manager/transport_adapter/transport_adapter_impl.h"
 
@@ -103,3 +104,5 @@ class WebSocketTransportAdapter : public TransportAdapterImpl {
 
 }  // namespace transport_adapter
 }  // namespace transport_manager
+
+#endif  // TRANSPORT_ADAPTER_WEBSOCKET_TRANSPORT_ADAPTER_H

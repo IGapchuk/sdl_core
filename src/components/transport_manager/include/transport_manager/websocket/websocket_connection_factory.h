@@ -33,7 +33,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#ifndef TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_FACTORY_H
+#define TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_FACTORY_H
 
 #include "transport_manager/transport_adapter/server_connection_factory.h"
 
@@ -96,3 +97,5 @@ class WebSocketConnectionFactory : public ServerConnectionFactory {
 
 }  // namespace transport_adapter
 }  // namespace transport_manager
+
+#endif  // TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_FACTORY_H

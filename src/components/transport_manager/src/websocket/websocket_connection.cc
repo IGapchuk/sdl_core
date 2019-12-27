@@ -38,24 +38,30 @@ namespace transport_adapter {
 using namespace boost::beast::websocket;
 
 template <>
-WebSocketConnection<tcp::socket>::WebSocketConnection(
+WebSocketConnection<WebSocketSession<> >::WebSocketConnection(
     const DeviceUID& device_uid,
     const ApplicationHandle& app_handle,
     boost::asio::ip::tcp::socket socket,
     TransportAdapterController* controller)
     : device_uid_(device_uid)
     , app_handle_(app_handle)
-    , ws_(std::move(socket))
-    , strand_(ws_.get_executor())
+    , session_(new WebSocketSession<>(
+          std::move(socket),
+          std::bind(
+              &WebSocketConnection::DataReceive, this, std::placeholders::_1)))
     , controller_(controller)
     , shutdown_(false)
-    , thread_delegate_(new LoopThreadDelegate(&message_queue_, this))
+    , thread_delegate_(
+          new LoopThreadDelegate(&message_queue_,
+                                 std::bind(&WebSocketSession<>::WriteDown,
+                                           session_.get(),
+                                           std::placeholders::_1)))
     , thread_(threads::CreateThread("WS Async Send", thread_delegate_)) {
   thread_->start(threads::ThreadOptions());
 }
 
 template <>
-WebSocketConnection<ssl::stream<tcp::socket&> >::WebSocketConnection(
+WebSocketConnection<WebSocketSecureSession<> >::WebSocketConnection(
     const DeviceUID& device_uid,
     const ApplicationHandle& app_handle,
     boost::asio::ip::tcp::socket socket,
@@ -63,69 +69,36 @@ WebSocketConnection<ssl::stream<tcp::socket&> >::WebSocketConnection(
     TransportAdapterController* controller)
     : device_uid_(device_uid)
     , app_handle_(app_handle)
-    , socket_(new tcp::socket(std::move(socket)))
-    , ws_(*socket_.get(), ctx)
-    , strand_(ws_.get_executor())
+    , session_(new WebSocketSecureSession<>(
+          std::move(socket),
+          ctx,
+          std::bind(
+              &WebSocketConnection::DataReceive, this, std::placeholders::_1)))
     , controller_(controller)
     , shutdown_(false)
-    , thread_delegate_(new LoopThreadDelegate(&message_queue_, this))
+    , thread_delegate_(
+          new LoopThreadDelegate(&message_queue_,
+                                 std::bind(&WebSocketSecureSession<>::WriteDown,
+                                           session_.get(),
+                                           std::placeholders::_1)))
     , thread_(threads::CreateThread("WS Async Send", thread_delegate_)) {
   thread_->start(threads::ThreadOptions());
 }
 
-template <class Layer>
-WebSocketConnection<Layer>::~WebSocketConnection() {}
-
-template <class Layer>
-void WebSocketConnection<Layer>::Accept() {
-  ws_.async_accept(
-      boost::asio::bind_executor(strand_,
-                                 std::bind(&WebSocketConnection::Recv,
-                                           this->shared_from_this(),
-                                           std::placeholders::_1)));
+template <typename Session>
+WebSocketConnection<Session>::~WebSocketConnection() {
+  Shutdown();
 }
 
-template <class Layer>
-void WebSocketConnection<Layer>::Shutdown() {
-  shutdown_ = true;
-  thread_delegate_->SetShutdown();
-  thread_->join();
-  delete thread_delegate_;
-  threads::DeleteThread(thread_);
-}
-
-template <class Layer>
-bool WebSocketConnection<Layer>::IsShuttingDown() {
-  return shutdown_;
-}
-
-template <class Layer>
-void WebSocketConnection<Layer>::Recv(boost::system::error_code ec) {
+template <typename Session>
+TransportAdapter::Error WebSocketConnection<Session>::Disconnect() {
   LOG4CXX_AUTO_TRACE(wsc_logger_);
-  if (shutdown_) {
-    return;
-  }
-
-  if (ec) {
-    auto str_err = "ErrorMessage: " + ec.message();
-    LOG4CXX_ERROR(wsc_logger_, str_err);
-    shutdown_ = true;
-    thread_delegate_->SetShutdown();
-    // controller_->deleteController(this);
-    return;
-  }
-
-  ws_.async_read(
-      buffer_,
-      boost::asio::bind_executor(strand_,
-                                 std::bind(&WebSocketConnection::Read,
-                                           this->shared_from_this(),
-                                           std::placeholders::_1,
-                                           std::placeholders::_2)));
+  Shutdown();
+  return TransportAdapter::OK;
 }
 
-template <class Layer>
-TransportAdapter::Error WebSocketConnection<Layer>::SendData(
+template <typename Session>
+TransportAdapter::Error WebSocketConnection<Session>::SendData(
     ::protocol_handler::RawMessagePtr message) {
   if (shutdown_) {
     return TransportAdapter::BAD_STATE;
@@ -136,46 +109,44 @@ TransportAdapter::Error WebSocketConnection<Layer>::SendData(
   return TransportAdapter::OK;
 }
 
-template <class Layer>
-void WebSocketConnection<Layer>::Read(boost::system::error_code ec,
-                                      std::size_t bytes_transferred) {
-  LOG4CXX_AUTO_TRACE(wsc_logger_);
-  boost::ignore_unused(bytes_transferred);
-  if (ec) {
-    auto str_err = "ErrorMessage: " + ec.message();
-    LOG4CXX_ERROR(wsc_logger_, str_err);
-    shutdown_ = true;
-    thread_delegate_->SetShutdown();
-    // controller_->deleteController(this);
-    buffer_.consume(buffer_.size());
-    return;
-  }
-
-  auto size = (ssize_t)buffer_.size();
-  const auto data = boost::asio::buffer_cast<const uint8_t*>(
-      boost::beast::buffers_front(buffer_.data()));
-
-  LOG4CXX_DEBUG(
-      wsc_logger_,
-      "Read Msg: " << boost::beast::buffers_to_string(buffer_.data()));
-
-  ::protocol_handler::RawMessagePtr frame(
-      new protocol_handler::RawMessage(0, 0, data, size, false));
-
+template <typename Session>
+void WebSocketConnection<Session>::DataReceive(
+    protocol_handler::RawMessagePtr frame) {
   controller_->DataReceiveDone(device_uid_, app_handle_, frame);
-
-  buffer_.consume(buffer_.size());
-  Recv(ec);
 }
 
-template <class Layer>
-WebSocketConnection<Layer>::LoopThreadDelegate::LoopThreadDelegate(
-    MessageQueue<Message, AsyncQueue>* message_queue,
-    WebSocketConnection* handler)
-    : message_queue_(*message_queue), handler_(*handler), shutdown_(false) {}
+template <typename Session>
+void WebSocketConnection<Session>::Run() {
+  session_->AsyncAccept();
+}
 
-template <class Layer>
-void WebSocketConnection<Layer>::LoopThreadDelegate::threadMain() {
+template <typename Session>
+void WebSocketConnection<Session>::Shutdown() {
+  LOG4CXX_AUTO_TRACE(wsc_logger_);
+  shutdown_ = true;
+  if (thread_delegate_) {
+    thread_delegate_->SetShutdown();
+    thread_->join();
+    delete thread_delegate_;
+    thread_delegate_ = nullptr;
+    threads::DeleteThread(thread_);
+    thread_ = nullptr;
+  }
+}
+
+template <typename Session>
+bool WebSocketConnection<Session>::IsShuttingDown() {
+  return shutdown_;
+}
+
+template <typename Session>
+WebSocketConnection<Session>::LoopThreadDelegate::LoopThreadDelegate(
+    MessageQueue<Message, AsyncQueue>* message_queue,
+    DataWriteCallback dataWrite)
+    : message_queue_(*message_queue), dataWrite_(dataWrite), shutdown_(false) {}
+
+template <typename Session>
+void WebSocketConnection<Session>::LoopThreadDelegate::threadMain() {
   while (!message_queue_.IsShuttingDown() && !shutdown_) {
     DrainQueue();
     message_queue_.wait();
@@ -183,35 +154,32 @@ void WebSocketConnection<Layer>::LoopThreadDelegate::threadMain() {
   DrainQueue();
 }
 
-template <class Layer>
-void WebSocketConnection<Layer>::LoopThreadDelegate::exitThreadMain() {
+template <typename Session>
+void WebSocketConnection<Session>::LoopThreadDelegate::exitThreadMain() {
   shutdown_ = true;
   if (!message_queue_.IsShuttingDown()) {
     message_queue_.Shutdown();
   }
 }
 
-template <class Layer>
-void WebSocketConnection<Layer>::LoopThreadDelegate::DrainQueue() {
+template <typename Session>
+void WebSocketConnection<Session>::LoopThreadDelegate::DrainQueue() {
   Message message_ptr;
   while (!shutdown_ && message_queue_.pop(message_ptr)) {
-    boost::system::error_code ec;
-    handler_.ws_.write(
-        boost::asio::buffer(message_ptr->data(), message_ptr->data_size()), ec);
-    if (ec) {
-      LOG4CXX_ERROR(wsc_logger_,
-                    "A system error has occurred: " << ec.message());
-    }
+    dataWrite_(message_ptr);
   }
 }
 
-template <class Layer>
-void WebSocketConnection<Layer>::LoopThreadDelegate::SetShutdown() {
+template <typename Session>
+void WebSocketConnection<Session>::LoopThreadDelegate::SetShutdown() {
   shutdown_ = true;
   if (!message_queue_.IsShuttingDown()) {
     message_queue_.Shutdown();
   }
 }
+
+template class WebSocketConnection<WebSocketSession<> >;
+template class WebSocketConnection<WebSocketSecureSession<> >;
 
 }  // namespace transport_adapter
 }  // namespace transport_manager

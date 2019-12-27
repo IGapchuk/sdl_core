@@ -33,30 +33,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#ifndef TRANSPORT_ADAPTER_WEBSOCKET_SERVER_LISTENER_H
+#define TRANSPORT_ADAPTER_WEBSOCKET_SERVER_LISTENER_H
 
-#include <algorithm>
-#include <boost/asio/bind_executor.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <boost/asio/strand.hpp>
 #include <boost/asio/thread_pool.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
-#include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <thread>
-#include <vector>
-
-using tcp = boost::asio::ip::tcp;  // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;  // from <boost/asio/ssl.hpp>
-namespace websocket =
-    boost::beast::websocket;  // from <boost/beast/websocket.hpp>
-
 #include "transport_manager/transport_adapter/client_connection_listener.h"
 #include "transport_manager/websocket/websocket_connection.h"
 
@@ -84,7 +64,7 @@ class WebSocketListener : public ClientConnectionListener {
   ~WebSocketListener();
 
   TransportAdapter::Error Init() OVERRIDE;
-  void Terminate() OVERRIDE {}
+  void Terminate() OVERRIDE;
   bool IsInitialised() const OVERRIDE {
     return true;
   }
@@ -126,3 +106,5 @@ class WebSocketListener : public ClientConnectionListener {
 
 }  // namespace transport_adapter
 }  // namespace transport_manager
+
+#endif  // TRANSPORT_ADAPTER_WEBSOCKET_SERVER_LISTENER_H
