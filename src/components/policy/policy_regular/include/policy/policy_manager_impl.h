@@ -671,6 +671,7 @@ class PolicyManagerImpl : public PolicyManager {
    * @return policy_table as json object
    */
   Json::Value GetPolicyTableData() const OVERRIDE;
+
   /**
    * @brief Get a list of enabled cloud applications
    * @param enabled_apps List filled with the policy app id of each enabled
@@ -871,6 +872,10 @@ class PolicyManagerImpl : public PolicyManager {
            int32_t timespan_seconds) OVERRIDE;
   // Interface StatisticsManager (end)
 
+  void OnWebAppAdded() OVERRIDE;
+
+  bool IsNewApplication(const std::string& application_id) const OVERRIDE;
+
  protected:
 #ifdef USE_HMI_PTU_DECRYPTION
   /**
@@ -975,13 +980,6 @@ class PolicyManagerImpl : public PolicyManager {
    */
   void PromoteExistedApplication(const std::string& application_id,
                                  DeviceConsent device_consent);
-
-  /**
-   * @brief Check if certain application already in policy db.
-   * @param policy application id.
-   * @return true if application presents false otherwise.
-   */
-  bool IsNewApplication(const std::string& application_id) const;
 
   /**
    * Checks existing and permissions of AppStorageFolder

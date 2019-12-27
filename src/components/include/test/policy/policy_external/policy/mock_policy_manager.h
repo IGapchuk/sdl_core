@@ -231,6 +231,8 @@ class MockPolicyManager : public PolicyManager {
   MOCK_CONST_METHOD2(GetCloudAppParameters,
                      bool(const std::string& policy_app_id,
                           AppProperties& out_app_properties));
+  MOCK_CONST_METHOD1(IsNewApplication, bool(const std::string& application_id));
+  MOCK_METHOD0(OnWebAppAdded, void());
   MOCK_METHOD1(InitCloudApp, void(const std::string& policy_app_id));
   MOCK_METHOD2(SetCloudAppEnabled,
                void(const std::string& policy_app_id, const bool enabled));

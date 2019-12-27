@@ -456,6 +456,16 @@ class PolicyHandler : public PolicyHandlerInterface,
   void OnAuthTokenUpdated(const std::string& policy_app_id,
                           const std::string& auth_token) OVERRIDE;
 
+  void OnSetAppProperties(
+      const smart_objects::SmartObject& properties) OVERRIDE;
+
+  bool IsAppPropertiesChanged(
+      const smart_objects::SmartObject& properties) const OVERRIDE;
+
+  bool IsNewApplication(const std::string& policy_app_id) const OVERRIDE;
+
+  void OnWebAppAdded() OVERRIDE;
+
   /**
    * @brief Callback for when a SetCloudAppProperties message is received
    * from a mobile app

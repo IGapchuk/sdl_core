@@ -250,6 +250,13 @@ class MockPolicyHandlerInterface : public policy::PolicyHandlerInterface {
   MOCK_CONST_METHOD2(GetCloudAppParameters,
                      bool(const std::string& policy_app_id,
                           policy::AppProperties& app_properties));
+
+  MOCK_METHOD1(OnSetAppProperties,
+               void(const smart_objects::SmartObject& message));
+  MOCK_CONST_METHOD1(IsAppPropertiesChanged,
+                     bool(const smart_objects::SmartObject& properties));
+  MOCK_CONST_METHOD1(IsNewApplication, bool(const std::string& application_id));
+  MOCK_METHOD0(OnWebAppAdded, void());
   MOCK_METHOD1(OnSetCloudAppProperties,
                void(const smart_objects::SmartObject& message));
   MOCK_CONST_METHOD2(

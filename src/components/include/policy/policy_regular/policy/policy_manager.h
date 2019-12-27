@@ -788,6 +788,18 @@ class PolicyManager : public usage_statistics::StatisticsManager,
   virtual AppIdURL RetrySequenceUrl(const struct RetrySequenceURL& rs,
                                     const EndpointUrls& urls) const = 0;
 
+  /**
+   * @brief OnWebAppAdded triggers PTU
+   */
+  virtual void OnWebAppAdded() = 0;
+
+  /**
+   * @brief Check if certain application already in policy db.
+   * @param policy application id.
+   * @return true if application presents false otherwise.
+   */
+  virtual bool IsNewApplication(const std::string& application_id) const = 0;
+
  protected:
   /**
    * @brief Checks is PT exceeded IgnitionCycles

@@ -916,6 +916,10 @@ class PolicyManagerImpl : public PolicyManager {
    */
   void OnSystemRequestReceived() OVERRIDE;
 
+  void OnWebAppAdded() OVERRIDE;
+
+  bool IsNewApplication(const std::string& application_id) const OVERRIDE;
+
  protected:
   /**
    * @brief Parse policy table content and convert to PT object
@@ -1030,13 +1034,6 @@ class PolicyManagerImpl : public PolicyManager {
   void PromoteExistedApplication(const std::string& device_id,
                                  const std::string& application_id,
                                  DeviceConsent device_consent);
-
-  /**
-   * @brief Check if certain application already in policy db.
-   * @param policy application id.
-   * @return true if application presents false otherwise.
-   */
-  bool IsNewApplication(const std::string& application_id) const;
 
   /**
    * Checks existing and permissions of AppStorageFolder

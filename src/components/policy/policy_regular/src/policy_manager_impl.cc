@@ -679,6 +679,12 @@ void PolicyManagerImpl::OnAppsSearchCompleted(const bool trigger_ptu) {
   }
 }
 
+void PolicyManagerImpl::OnWebAppAdded() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  update_status_manager_.ScheduleUpdate();
+  StartPTExchange();
+}
+
 void PolicyManagerImpl::OnAppRegisteredOnMobile(
     const std::string& device_id, const std::string& application_id) {
   StartPTExchange();

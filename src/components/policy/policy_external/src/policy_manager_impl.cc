@@ -1188,6 +1188,12 @@ void PolicyManagerImpl::AddDevice(const std::string& device_id,
   }
 }
 
+void PolicyManagerImpl::OnWebAppAdded() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  update_status_manager_.ScheduleUpdate();
+  StartPTExchange();
+}
+
 void PolicyManagerImpl::SetDeviceInfo(const std::string& device_id,
                                       const DeviceInfo& device_info) {
   LOG4CXX_AUTO_TRACE(logger_);

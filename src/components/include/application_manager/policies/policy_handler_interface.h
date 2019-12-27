@@ -521,6 +521,34 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
       const std::string& policy_app_id,
       AppProperties& out_app_properties) const = 0;
 
+  /**
+   * @brief Callback for when a BC.SetAppProperties message is
+   * received from the HMI
+   * @param message The BC.SetAppProperties message
+   */
+  virtual void OnSetAppProperties(
+      const smart_objects::SmartObject& properties) = 0;
+
+  /**
+   * @brief Checks if the application properties have changed. Compares the
+   * properties received from the HMI with the stored properties in the database
+   * @param properties new app properties
+   * @return true if properties have changed, otherwise - false
+   */
+  virtual bool IsAppPropertiesChanged(
+      const smart_objects::SmartObject& properties) const = 0;
+
+  /**
+   * @brief Check if certain application already in policy db.
+   * @param policy application id.
+   * @return true if application presents false otherwise.
+   */
+  virtual bool IsNewApplication(const std::string& application_id) const = 0;
+
+  /**
+   * @brief OnWebAppAdded triggers PTU
+   */
+  virtual void OnWebAppAdded() = 0;
 
   /**
    * @brief Callback for when a SetCloudAppProperties message is received from a
