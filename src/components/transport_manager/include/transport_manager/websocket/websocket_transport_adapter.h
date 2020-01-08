@@ -74,7 +74,7 @@ class WebSocketTransportAdapter : public TransportAdapterImpl {
    *
    * @return String with device type.
    */
-  virtual DeviceType GetDeviceType() const;
+  DeviceType GetDeviceType() const OVERRIDE;
 
   /**
    * @brief Store adapter state in last state singleton

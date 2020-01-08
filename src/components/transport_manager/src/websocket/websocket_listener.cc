@@ -1,5 +1,6 @@
 #include "transport_manager/websocket/websocket_listener.h"
 #include "transport_manager/transport_adapter/transport_adapter_controller.h"
+#include "transport_manager/websocket/websocket_device.h"
 
 namespace transport_manager {
 namespace transport_adapter {
@@ -112,10 +113,28 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
     return;
   }
 
-  auto connection = std::make_shared<WebSocketConnection<WebSocketSession<> > >(
-      "", 1, std::move(socket_), controller_);
+  const ApplicationHandle app_handle = socket_.native_handle();
 
-  controller_->ConnectionCreated(connection, "", 1);
+  tcp::endpoint endpoint = socket_.remote_endpoint();
+  const auto address = endpoint.address().to_string();
+  const auto port = std::to_string(endpoint.port());
+  const auto device_uid =
+      address + ":" + port + ":" + std::to_string(app_handle);
+
+  auto websocket_device =
+      std::make_shared<WebSocketDevice>(address, port, device_uid);
+
+  DeviceSptr device = controller_->AddDevice(websocket_device);
+
+  LOG4CXX_INFO(logger_, "Connected client: " << device->name());
+
+  auto connection = std::make_shared<WebSocketConnection<WebSocketSession<> > >(
+      device->unique_device_id(), app_handle, std::move(socket_), controller_);
+
+  controller_->ConnectionCreated(
+      connection, device->unique_device_id(), app_handle);
+
+  controller_->ConnectDone(device->unique_device_id(), app_handle);
 
   connection->Run();
 
