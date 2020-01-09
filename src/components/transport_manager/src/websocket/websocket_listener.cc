@@ -48,14 +48,8 @@ TransportAdapter::Error WebSocketListener::StartListening() {
   tcp::endpoint secure_endpoint = {address,
                                    settings_.websocket_secured_server_port()};
 
-  LOG4CXX_DEBUG(logger_,
-                "address: " << address << " server port: "
-                            << settings_.websocket_server_port()
-                            << " secured server_port: "
-                            << settings_.websocket_secured_server_port());
-
-  auto init_acceptor = [](tcp::acceptor& acceptor,
-                          const tcp::endpoint& endpoint) {
+  auto init_acceptor = [&address](tcp::acceptor& acceptor,
+                                  const tcp::endpoint& endpoint) {
     boost::system::error_code ec;
     // Open the acceptor
     acceptor.open(endpoint.protocol(), ec);

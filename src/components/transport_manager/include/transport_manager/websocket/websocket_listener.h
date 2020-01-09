@@ -38,6 +38,7 @@
 
 #include <boost/asio/thread_pool.hpp>
 #include "transport_manager/transport_adapter/client_connection_listener.h"
+#include "transport_manager/transport_manager_settings.h"
 #include "transport_manager/websocket/websocket_connection.h"
 
 namespace transport_manager {
@@ -56,6 +57,7 @@ class WebSocketListener : public ClientConnectionListener {
    * @param number of threads for listen incoming connections
    */
   WebSocketListener(TransportAdapterController* controller,
+                    const TransportManagerSettings& settings,
                     const int num_threads = 1);
 
   /**
@@ -108,6 +110,7 @@ class WebSocketListener : public ClientConnectionListener {
   std::atomic_bool shutdown_;
   std::vector<std::shared_ptr<Connection> > mConnectionList;
   sync_primitives::Lock mConnectionListLock;
+  const TransportManagerSettings& settings_;
 };
 
 }  // namespace transport_adapter

@@ -51,9 +51,11 @@ CREATE_LOGGERPTR_GLOBAL(logger_, "WebSocketTransportAdapter")
 
 WebSocketTransportAdapter::WebSocketTransportAdapter(
     resumption::LastState& last_state, const TransportManagerSettings& settings)
-    : TransportAdapterImpl(
-          nullptr, nullptr, new WebSocketListener(this), last_state, settings) {
-}
+    : TransportAdapterImpl(nullptr,
+                           nullptr,
+                           new WebSocketListener(this, settings),
+                           last_state,
+                           settings) {}
 
 WebSocketTransportAdapter::~WebSocketTransportAdapter() {}
 
