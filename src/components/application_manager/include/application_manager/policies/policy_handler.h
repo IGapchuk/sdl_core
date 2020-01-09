@@ -462,6 +462,9 @@ class PolicyHandler : public PolicyHandlerInterface,
   bool IsAppPropertiesChanged(
       const smart_objects::SmartObject& properties) const OVERRIDE;
 
+  bool IsAppPropertiesChangedFromMobile(
+      const smart_objects::SmartObject& properties) const OVERRIDE;
+
   bool IsNewApplication(const std::string& policy_app_id) const OVERRIDE;
 
   void OnWebAppAdded() OVERRIDE;

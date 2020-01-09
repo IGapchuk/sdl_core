@@ -539,6 +539,16 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
       const smart_objects::SmartObject& properties) const = 0;
 
   /**
+   * @brief Checks if the application properties have changed from the .
+   * Compares the properties received from the mobile with the stored properties
+   * in the database
+   * @param properties new app properties
+   * @return true if properties have changed, otherwise - false
+   */
+  virtual bool IsAppPropertiesChangedFromMobile(
+      const smart_objects::SmartObject& properties) const = 0;
+
+  /**
    * @brief Check if certain application already in policy db.
    * @param policy application id.
    * @return true if application presents false otherwise.
