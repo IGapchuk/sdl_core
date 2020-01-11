@@ -87,20 +87,26 @@ WebSocketConnection<WebSocketSecureSession<> >::WebSocketConnection(
 
 template <typename Session>
 WebSocketConnection<Session>::~WebSocketConnection() {
-  Shutdown();
+  if (!IsShuttingDown()) {
+    Shutdown();
+  }
 }
 
 template <typename Session>
 TransportAdapter::Error WebSocketConnection<Session>::Disconnect() {
   LOG4CXX_AUTO_TRACE(wsc_logger_);
-  Shutdown();
-  return TransportAdapter::OK;
+  if (!IsShuttingDown()) {
+    Shutdown();
+    controller_->DisconnectDone(device_uid_, app_handle_);
+    return TransportAdapter::OK;
+  }
+  return TransportAdapter::BAD_STATE;
 }
 
 template <typename Session>
 TransportAdapter::Error WebSocketConnection<Session>::SendData(
     ::protocol_handler::RawMessagePtr message) {
-  if (shutdown_) {
+  if (IsShuttingDown()) {
     return TransportAdapter::BAD_STATE;
   }
 
@@ -125,6 +131,7 @@ void WebSocketConnection<Session>::Shutdown() {
   LOG4CXX_AUTO_TRACE(wsc_logger_);
   shutdown_ = true;
   if (thread_delegate_) {
+    session_->Shutdown();
     thread_delegate_->SetShutdown();
     thread_->join();
     delete thread_delegate_;
@@ -143,11 +150,11 @@ template <typename Session>
 WebSocketConnection<Session>::LoopThreadDelegate::LoopThreadDelegate(
     MessageQueue<Message, AsyncQueue>* message_queue,
     DataWriteCallback dataWrite)
-    : message_queue_(*message_queue), dataWrite_(dataWrite), shutdown_(false) {}
+    : message_queue_(*message_queue), dataWrite_(dataWrite) {}
 
 template <typename Session>
 void WebSocketConnection<Session>::LoopThreadDelegate::threadMain() {
-  while (!message_queue_.IsShuttingDown() && !shutdown_) {
+  while (!message_queue_.IsShuttingDown()) {
     DrainQueue();
     message_queue_.wait();
   }
@@ -156,7 +163,6 @@ void WebSocketConnection<Session>::LoopThreadDelegate::threadMain() {
 
 template <typename Session>
 void WebSocketConnection<Session>::LoopThreadDelegate::exitThreadMain() {
-  shutdown_ = true;
   if (!message_queue_.IsShuttingDown()) {
     message_queue_.Shutdown();
   }
@@ -165,14 +171,13 @@ void WebSocketConnection<Session>::LoopThreadDelegate::exitThreadMain() {
 template <typename Session>
 void WebSocketConnection<Session>::LoopThreadDelegate::DrainQueue() {
   Message message_ptr;
-  while (!shutdown_ && message_queue_.pop(message_ptr)) {
+  while (!message_queue_.IsShuttingDown() && message_queue_.pop(message_ptr)) {
     dataWrite_(message_ptr);
   }
 }
 
 template <typename Session>
 void WebSocketConnection<Session>::LoopThreadDelegate::SetShutdown() {
-  shutdown_ = true;
   if (!message_queue_.IsShuttingDown()) {
     message_queue_.Shutdown();
   }

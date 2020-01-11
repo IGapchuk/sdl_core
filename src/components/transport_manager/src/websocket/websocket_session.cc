@@ -110,10 +110,7 @@ void WebSocketSession<ExecutorType>::Read(boost::system::error_code ec,
   LOG4CXX_AUTO_TRACE(ws_logger_);
   boost::ignore_unused(bytes_transferred);
   if (ec) {
-    auto str_err = "ErrorMessage: " + ec.message();
-    LOG4CXX_ERROR(ws_logger_, str_err);
-    // shutdown_ = true;
-    // thread_delegate_->SetShutdown();
+    LOG4CXX_ERROR(ws_logger_, ec.message());
     buffer_.consume(buffer_.size());
     return;
   }
@@ -133,6 +130,19 @@ void WebSocketSession<ExecutorType>::Read(boost::system::error_code ec,
 
   buffer_.consume(buffer_.size());
   AsyncRead(ec);
+}
+
+template <typename ExecutorType>
+bool WebSocketSession<ExecutorType>::Shutdown() {
+  LOG4CXX_AUTO_TRACE(ws_logger_);
+  boost::system::error_code ec;
+  socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_send, ec);
+  buffer_.consume(buffer_.size());
+  if (ec) {
+    LOG4CXX_ERROR(ws_logger_, ec.message());
+    return false;
+  }
+  return true;
 }
 
 template class WebSocketSession<tcp::socket&>;

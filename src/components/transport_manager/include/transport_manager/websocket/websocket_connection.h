@@ -73,8 +73,10 @@ class WebSocketConnection
 
   void DataReceive(protocol_handler::RawMessagePtr frame);
   void Run();
-  void Shutdown();
   bool IsShuttingDown();
+
+ protected:
+  void Shutdown();
 
  private:
   const DeviceUID device_uid_;
@@ -102,7 +104,6 @@ class WebSocketConnection
     void DrainQueue();
     MessageQueue<Message, AsyncQueue>& message_queue_;
     DataWriteCallback dataWrite_;
-    std::atomic_bool shutdown_;
   };
 
   LoopThreadDelegate* thread_delegate_;

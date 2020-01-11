@@ -249,9 +249,11 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
 void WebSocketListener::Shutdown() {
   LOG4CXX_AUTO_TRACE(logger_);
   if (false == shutdown_.exchange(true)) {
-    auto shutdown = [](tcp::socket& socket,
+    auto shutdown = [](boost::asio::io_context& ioc,
+                       tcp::socket& socket,
                        tcp::acceptor& acceptor,
                        boost::asio::thread_pool& thread_pool) {
+      ioc.stop();
       socket.close();
       boost::system::error_code ec;
       acceptor.close(ec);
@@ -263,8 +265,9 @@ void WebSocketListener::Shutdown() {
       thread_pool.stop();
       thread_pool.join();
     };
-    shutdown(socket_, acceptor_, io_pool_);
-    shutdown(secure_socket_, secure_acceptor_, secure_io_pool_);
+
+    shutdown(ioc_, socket_, acceptor_, io_pool_);
+    shutdown(secure_ioc_, secure_socket_, secure_acceptor_, secure_io_pool_);
   }
 }
 
