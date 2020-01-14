@@ -89,18 +89,24 @@ class WebSocketListener : public ClientConnectionListener {
  protected:
   bool Run();
   bool WaitForConnection();
+  bool WaitForSecureConnection();
   void StartSession(boost::system::error_code ec);
+  void StartSecureSession(boost::system::error_code ec);
   void Shutdown();
 
  private:
   TransportAdapterController* controller_;
   boost::asio::io_context ioc_;
+  boost::asio::io_context secure_ioc_;
   ssl::context ctx_;
   tcp::acceptor acceptor_;
   tcp::socket socket_;
+  tcp::acceptor secure_acceptor_;
+  tcp::socket secure_socket_;
   boost::asio::thread_pool io_pool_;
+  boost::asio::thread_pool secure_io_pool_;
   std::atomic_bool shutdown_;
-  std::vector<std::shared_ptr<WebSocketConnection<> > > mConnectionList;
+  std::vector<std::shared_ptr<Connection> > mConnectionList;
   sync_primitives::Lock mConnectionListLock;
 };
 

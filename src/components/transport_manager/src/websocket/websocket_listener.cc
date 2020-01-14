@@ -7,14 +7,19 @@ namespace transport_adapter {
 CREATE_LOGGERPTR_GLOBAL(logger_, "WebSocketListener")
 
 WebSocketListener::WebSocketListener(TransportAdapterController* controller,
+                                     const TransportManagerSettings& settings,
                                      const int num_threads)
     : controller_(controller)
     , ioc_(num_threads)
     , ctx_(ssl::context::sslv23)
     , acceptor_(ioc_)
     , socket_(ioc_)
+    , secure_acceptor_(secure_ioc_)
+    , secure_socket_(secure_ioc_)
     , io_pool_(num_threads)
-    , shutdown_(false) {}
+    , secure_io_pool_(num_threads)
+    , shutdown_(false)
+    , settings_(settings) {}
 
 WebSocketListener::~WebSocketListener() {
   Terminate();
@@ -37,39 +42,67 @@ TransportAdapter::Error WebSocketListener::StartListening() {
 
   boost::system::error_code ec;
 
-  auto const address = boost::asio::ip::make_address("127.0.0.1");
-  auto const port = 2134;
-  tcp::endpoint endpoint = {address, port};
+  auto const address =
+      boost::asio::ip::make_address(settings_.websocket_server_address());
+  tcp::endpoint endpoint = {address, settings_.websocket_server_port()};
+  tcp::endpoint secure_endpoint = {address,
+                                   settings_.websocket_secured_server_port()};
 
-  // Open the acceptor
-  acceptor_.open(endpoint.protocol(), ec);
-  if (ec) {
-    auto str_err = "ErrorOpen: " + ec.message();
-    LOG4CXX_ERROR(logger_, str_err << " host/port: " << address << "/" << port);
-    return TransportAdapter::FAIL;
-  }
+  LOG4CXX_DEBUG(logger_,
+                "address: " << address << " server port: "
+                            << settings_.websocket_server_port()
+                            << " secured server_port: "
+                            << settings_.websocket_secured_server_port());
 
-  acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
-  if (ec) {
-    std::string str_err = "ErrorSetOption: " + ec.message();
-    LOG4CXX_ERROR(logger_, str_err << " host/port: " << address << "/" << port);
-    return TransportAdapter::FAIL;
-    ;
-  }
+  auto init_acceptor = [](tcp::acceptor& acceptor,
+                          const tcp::endpoint& endpoint) {
+    boost::system::error_code ec;
+    // Open the acceptor
+    acceptor.open(endpoint.protocol(), ec);
+    if (ec) {
+      auto str_err = "ErrorOpen: " + ec.message();
+      LOG4CXX_ERROR(logger_,
+                    str_err << " host/port: " << endpoint.address().to_string()
+                            << "/" << endpoint.port());
+      return TransportAdapter::FAIL;
+    }
 
-  // Bind to the server address
-  acceptor_.bind(endpoint, ec);
-  if (ec) {
-    std::string str_err = "ErrorBind: " + ec.message();
-    LOG4CXX_ERROR(logger_, str_err << " host/port: " << address << "/" << port);
-    return TransportAdapter::FAIL;
-  }
+    acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
+    if (ec) {
+      std::string str_err = "ErrorSetOption: " + ec.message();
+      LOG4CXX_ERROR(logger_,
+                    str_err << " host/port: " << endpoint.address().to_string()
+                            << "/" << endpoint.port());
+      return TransportAdapter::FAIL;
+      ;
+    }
 
-  // Start listening for connections
-  acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
-  if (ec) {
-    std::string str_err = "ErrorListen: " + ec.message();
-    LOG4CXX_ERROR(logger_, str_err << " host/port: " << address << "/" << port);
+    // Bind to the server address
+    acceptor.bind(endpoint, ec);
+    if (ec) {
+      std::string str_err = "ErrorBind: " + ec.message();
+      LOG4CXX_ERROR(logger_,
+                    str_err << " host/port: " << endpoint.address().to_string()
+                            << "/" << endpoint.port());
+      return TransportAdapter::FAIL;
+    }
+
+    // Start listening for connections
+    acceptor.listen(boost::asio::socket_base::max_listen_connections, ec);
+    if (ec) {
+      std::string str_err = "ErrorListen: " + ec.message();
+      LOG4CXX_ERROR(logger_,
+                    str_err << " host/port: " << endpoint.address().to_string()
+                            << "/" << endpoint.port());
+      return TransportAdapter::FAIL;
+    }
+
+    return TransportAdapter::OK;
+  };
+
+  if (TransportAdapter::OK != init_acceptor(acceptor_, endpoint) ||
+      TransportAdapter::OK !=
+          init_acceptor(secure_acceptor_, secure_endpoint)) {
     return TransportAdapter::FAIL;
   }
 
@@ -82,12 +115,23 @@ TransportAdapter::Error WebSocketListener::StartListening() {
 
 bool WebSocketListener::Run() {
   LOG4CXX_AUTO_TRACE(logger_);
-  if (WaitForConnection()) {
+
+  bool is_connection_open = WaitForConnection();
+  if (is_connection_open) {
     boost::asio::post(io_pool_, [&]() { ioc_.run(); });
-    return true;
+  } else {
+    LOG4CXX_ERROR(logger_, "Connection is shutdown or acceptor isn't open");
   }
-  LOG4CXX_ERROR(logger_, "Connection is shutdown or acceptor isn't open");
-  return false;
+
+  bool is_secure_connection_open = WaitForSecureConnection();
+  if (is_secure_connection_open) {
+    boost::asio::post(secure_io_pool_, [&]() { secure_ioc_.run(); });
+  } else {
+    LOG4CXX_ERROR(logger_,
+                  "Secure connection is shutdown or acceptor isn't open");
+  }
+
+  return is_connection_open && is_secure_connection_open;
 }
 
 bool WebSocketListener::WaitForConnection() {
@@ -99,6 +143,69 @@ bool WebSocketListener::WaitForConnection() {
     return true;
   }
   return false;
+}
+
+bool WebSocketListener::WaitForSecureConnection() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  if (!shutdown_ && secure_acceptor_.is_open()) {
+    secure_acceptor_.async_accept(
+        secure_socket_,
+        std::bind(&WebSocketListener::StartSecureSession,
+                  this,
+                  std::placeholders::_1));
+    return true;
+  }
+  return false;
+}
+
+void WebSocketListener::StartSecureSession(boost::system::error_code ec) {
+  LOG4CXX_AUTO_TRACE(logger_);
+
+  if (ec) {
+    std::string str_err = "ErrorSecureAccept: " + ec.message();
+    LOG4CXX_ERROR(logger_, str_err);
+    return;
+  }
+
+  if (shutdown_) {
+    return;
+  }
+
+  const ApplicationHandle app_handle = secure_socket_.native_handle();
+
+  tcp::endpoint endpoint = secure_socket_.remote_endpoint();
+  const auto address = endpoint.address().to_string();
+  const auto port = std::to_string(endpoint.port());
+  const auto device_uid =
+      address + ":" + port + ":" + std::to_string(app_handle);
+
+  auto websocket_device =
+      std::make_shared<WebSocketDevice>(address, port, device_uid);
+
+  DeviceSptr device = controller_->AddDevice(websocket_device);
+
+  LOG4CXX_INFO(logger_, "Connected client: " << device->name());
+
+  auto connection =
+      std::make_shared<WebSocketConnection<WebSocketSecureSession<> > >(
+          device->unique_device_id(),
+          app_handle,
+          std::move(secure_socket_),
+          ctx_,
+          controller_);
+
+  controller_->ConnectionCreated(
+      connection, device->unique_device_id(), app_handle);
+
+  controller_->ConnectDone(device->unique_device_id(), app_handle);
+
+  connection->Run();
+
+  mConnectionListLock.Acquire();
+  mConnectionList.push_back(connection);
+  mConnectionListLock.Release();
+
+  WaitForSecureConnection();
 }
 
 void WebSocketListener::StartSession(boost::system::error_code ec) {
@@ -148,11 +255,22 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
 void WebSocketListener::Shutdown() {
   LOG4CXX_AUTO_TRACE(logger_);
   if (false == shutdown_.exchange(true)) {
-    socket_.close();
-    boost::system::error_code ec;
-    acceptor_.close(ec);
-    io_pool_.stop();
-    io_pool_.join();
+    auto shutdown = [](tcp::socket& socket,
+                       tcp::acceptor& acceptor,
+                       boost::asio::thread_pool& thread_pool) {
+      socket.close();
+      boost::system::error_code ec;
+      acceptor.close(ec);
+
+      if (ec) {
+        LOG4CXX_ERROR(logger_, "Acceptor closed with error: " << ec);
+      }
+
+      thread_pool.stop();
+      thread_pool.join();
+    };
+    shutdown(socket_, acceptor_, io_pool_);
+    shutdown(secure_socket_, secure_acceptor_, secure_io_pool_);
   }
 }
 
