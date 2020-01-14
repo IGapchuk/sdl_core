@@ -2021,8 +2021,10 @@ const bool PolicyHandler::CheckCloudAppEnabled(
   return out_app_properties.enabled;
 }
 
-bool PolicyHandler::IsAppPropertiesChangedFromMobile(
+PolicyHandler::AppPropertiesChange
+PolicyHandler::GetAppPropertiesChangeStatusFromMobile(
     const smart_objects::SmartObject& properties) const {
+  using AppPropertiesChange = PolicyHandler::AppPropertiesChange;
   LOG4CXX_AUTO_TRACE(logger_);
 
   const auto app_id(properties[strings::app_id].asString());
@@ -2039,7 +2041,7 @@ bool PolicyHandler::IsAppPropertiesChangedFromMobile(
                   "\"enabled\" has changed from: "
                       << app_properties.enabled
                       << " to: " << properties[strings::enabled].asBool());
-    return true;
+    return AppPropertiesChange::ENABLED_FLAG_SWITCH;
   }
   if (properties.keyExists(strings::auth_token) &&
       app_properties.auth_token != properties[strings::auth_token].asString()) {
@@ -2047,7 +2049,7 @@ bool PolicyHandler::IsAppPropertiesChangedFromMobile(
                   "\"auth_token\" has changed from: "
                       << app_properties.auth_token
                       << " to: " << properties[strings::auth_token].asString());
-    return true;
+    return AppPropertiesChange::AUTH_TOKEN_CHANGE;
   }
   if (properties.keyExists(strings::cloud_transport_type) &&
       app_properties.transport_type !=
@@ -2056,7 +2058,7 @@ bool PolicyHandler::IsAppPropertiesChangedFromMobile(
                   "\"transport_type\" has changed from: "
                       << app_properties.transport_type << " to: "
                       << properties[strings::cloud_transport_type].asString());
-    return true;
+    return AppPropertiesChange::TRANSPORT_TYPE_CHANGE;
   }
   if (properties.keyExists(strings::endpoint) &&
       app_properties.endpoint != properties[strings::endpoint].asString()) {
@@ -2064,7 +2066,7 @@ bool PolicyHandler::IsAppPropertiesChangedFromMobile(
                   "\"endpoint\" has changed from: "
                       << app_properties.endpoint
                       << " to: " << properties[strings::endpoint].asString());
-    return true;
+    return AppPropertiesChange::ENDPOINT_CHANGE;
   }
   if (properties.keyExists(strings::nicknames)) {
     const smart_objects::SmartArray* nicknames_array =
@@ -2080,7 +2082,7 @@ bool PolicyHandler::IsAppPropertiesChangedFromMobile(
         LOG4CXX_DEBUG(
             logger_,
             "\"nicknames\" has changed, new value: " << (*it_begin).asString());
-        return true;
+        return AppPropertiesChange::NICKNAMES_CHANGED;
       }
     }
   }
@@ -2098,13 +2100,13 @@ bool PolicyHandler::IsAppPropertiesChangedFromMobile(
           "\"hybrid_app_preferenc\"e has changed from: "
               << app_properties.hybrid_app_preference << " to: "
               << properties[strings::hybrid_app_preference].asString());
-      return true;
+      return AppPropertiesChange::HYBRYD_APP_PROPERTIES_CHANGED;
     }
   }
-  return false;
+  return AppPropertiesChange::NO_APP_PROPERTIES_CHANGES;
 }
 
-bool PolicyHandler::IsAppPropertiesChanged(
+PolicyHandler::AppPropertiesChange PolicyHandler::GetAppPropertiesChangeStatus(
     const smart_objects::SmartObject& properties) const {
   LOG4CXX_AUTO_TRACE(logger_);
   const std::string policy_app_id(
@@ -2122,7 +2124,7 @@ bool PolicyHandler::IsAppPropertiesChanged(
                   "\"enabled\" has changed from: "
                       << app_properties.enabled
                       << " to: " << properties[strings::enabled].asBool());
-    return true;
+    return AppPropertiesChange::ENABLED_FLAG_SWITCH;
   }
   if (properties.keyExists(strings::auth_token) &&
       app_properties.auth_token != properties[strings::auth_token].asString()) {
@@ -2130,7 +2132,7 @@ bool PolicyHandler::IsAppPropertiesChanged(
                   "\"auth_token\" has changed from: "
                       << app_properties.auth_token
                       << " to: " << properties[strings::auth_token].asString());
-    return true;
+    return AppPropertiesChange::AUTH_TOKEN_CHANGE;
   }
   if (properties.keyExists(strings::transport_type) &&
       app_properties.transport_type !=
@@ -2139,7 +2141,7 @@ bool PolicyHandler::IsAppPropertiesChanged(
                   "\"transport_type\" has changed from: "
                       << app_properties.transport_type << " to: "
                       << properties[strings::transport_type].asString());
-    return true;
+    return AppPropertiesChange::TRANSPORT_TYPE_CHANGE;
   }
   if (properties.keyExists(strings::endpoint) &&
       app_properties.endpoint != properties[strings::endpoint].asString()) {
@@ -2147,7 +2149,7 @@ bool PolicyHandler::IsAppPropertiesChanged(
                   "\"endpoint\" has changed from: "
                       << app_properties.endpoint
                       << " to: " << properties[strings::endpoint].asString());
-    return true;
+    return AppPropertiesChange::ENDPOINT_CHANGE;
   }
   if (properties.keyExists(strings::nicknames)) {
     const smart_objects::SmartArray* nicknames_array =
@@ -2163,7 +2165,7 @@ bool PolicyHandler::IsAppPropertiesChanged(
         LOG4CXX_DEBUG(
             logger_,
             "\"nicknames\" has changed, new value: " << (*it_begin).asString());
-        return true;
+        return AppPropertiesChange::NICKNAMES_CHANGED;
       }
     }
   }
@@ -2181,10 +2183,10 @@ bool PolicyHandler::IsAppPropertiesChanged(
           "\"hybrid_app_preferenc\"e has changed from: "
               << app_properties.hybrid_app_preference << " to: "
               << properties[strings::hybrid_app_preference].asString());
-      return true;
+      return AppPropertiesChange::HYBRYD_APP_PROPERTIES_CHANGED;
     }
   }
-  return false;
+  return AppPropertiesChange::NO_APP_PROPERTIES_CHANGES;
 }
 
 bool PolicyHandler::IsNewApplication(const std::string& policy_app_id) const {

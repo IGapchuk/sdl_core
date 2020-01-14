@@ -532,13 +532,23 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
   virtual void OnSetAppProperties(
       const smart_objects::SmartObject& properties) = 0;
 
+  enum class AppPropertiesChange {
+    NO_APP_PROPERTIES_CHANGES,
+    ENABLED_FLAG_SWITCH,
+    AUTH_TOKEN_CHANGE,
+    TRANSPORT_TYPE_CHANGE,
+    ENDPOINT_CHANGE,
+    NICKNAMES_CHANGED,
+    HYBRYD_APP_PROPERTIES_CHANGED
+  };
+
   /**
    * @brief Checks if the application properties have changed. Compares the
    * properties received from the HMI with the stored properties in the database
    * @param properties new app properties
    * @return true if properties have changed, otherwise - false
    */
-  virtual bool IsAppPropertiesChanged(
+  virtual AppPropertiesChange GetAppPropertiesChangeStatus(
       const smart_objects::SmartObject& properties) const = 0;
 
   /**
@@ -548,7 +558,7 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
    * @param properties new app properties
    * @return true if properties have changed, otherwise - false
    */
-  virtual bool IsAppPropertiesChangedFromMobile(
+  virtual AppPropertiesChange GetAppPropertiesChangeStatusFromMobile(
       const smart_objects::SmartObject& properties) const = 0;
 
   /**

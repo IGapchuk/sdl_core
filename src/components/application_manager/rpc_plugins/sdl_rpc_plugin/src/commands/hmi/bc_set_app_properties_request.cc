@@ -58,8 +58,14 @@ void BCSetAppPropertiesRequest::Run() {
   const smart_objects::SmartObject& properties =
       (*message_)[strings::msg_params][strings::properties];
 
+  const auto properties_change_status =
+      policy_handler_.GetAppPropertiesChangeStatus(properties);
+
+  using AppPropertiesChange =
+      policy::PolicyHandlerInterface::AppPropertiesChange;
   const bool is_properties_changed =
-      policy_handler_.IsAppPropertiesChanged(properties);
+      AppPropertiesChange::NO_APP_PROPERTIES_CHANGES !=
+      properties_change_status;
 
   std::string policy_app_id(properties[strings::policy_app_id].asString());
   const bool is_new_app = policy_handler_.IsNewApplication(policy_app_id);
@@ -81,6 +87,21 @@ void BCSetAppPropertiesRequest::Run() {
                   "Message contains unknow policyAppId: "
                       << policy_app_id << ", PTU will be triggered");
     policy_handler_.OnWebAppAdded();
+  }
+
+  auto app_enabled = [this]() -> bool {
+    auto& properties = (*message_)[strings::msg_params][strings::properties];
+    if (properties.keyExists(strings::enabled)) {
+      return properties[strings::enabled].asBool();
+    }
+    return false;
+  };
+
+  const bool enable_flag_switch =
+      AppPropertiesChange::ENABLED_FLAG_SWITCH == properties_change_status;
+  if (enable_flag_switch || (is_new_app && app_enabled())) {
+    application_manager_.CreatePendingApplication(policy_app_id);
+    application_manager_.SendUpdateAppList();
   }
 }
 

@@ -34,8 +34,14 @@ void SetCloudAppPropertiesRequest::Run() {
   const smart_objects::SmartObject& properties =
       (*message_)[strings::msg_params][strings::properties];
 
+  const auto properties_change_status =
+      policy_handler_.GetAppPropertiesChangeStatusFromMobile(properties);
+
+  using AppPropertiesChange =
+      policy::PolicyHandlerInterface::AppPropertiesChange;
   const bool is_properties_changed =
-      policy_handler_.IsAppPropertiesChangedFromMobile(properties);
+      AppPropertiesChange::NO_APP_PROPERTIES_CHANGES !=
+      properties_change_status;
 
   const auto app_id(properties[strings::app_id].asString());
   const bool is_new_app = policy_handler_.IsNewApplication(app_id);
