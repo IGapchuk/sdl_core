@@ -531,6 +531,9 @@ class PolicyHandler : public PolicyHandlerInterface,
       const std::string& device_id,
       const std::string& policy_app_id) const OVERRIDE;
 
+  virtual void SendOnAppPropertiesChanged(
+      const std::string& policy_app_id) const OVERRIDE;
+
   virtual void OnPTExchangeNeeded() OVERRIDE;
 
   virtual void GetAvailableApps(std::queue<std::string>& apps) OVERRIDE;

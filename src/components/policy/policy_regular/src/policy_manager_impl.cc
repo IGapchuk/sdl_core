@@ -464,6 +464,10 @@ void PolicyManagerImpl::ProcessActionsForAppPolicies(
       continue;
     }
 
+    if (it_actions->second.is_send_on_app_properties_to_hmi) {
+      app_properties_changed_list_.push_back(app_policy->first);
+    }
+
     const auto devices_ids = listener()->GetDevicesIds(app_policy->first);
     for (const auto& device_id : devices_ids) {
       if (it_actions->second.is_consent_needed) {
@@ -491,6 +495,12 @@ void PolicyManagerImpl::ProcessActionsForAppPolicies(
   }
 }
 
+void PolicyManagerImpl::SendOnAppPropertiesChanged(
+    const std::string& policy_app_id) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  listener_->SendOnAppPropertiesChanged(policy_app_id);
+}
+
 void PolicyManagerImpl::ResumePendingAppPolicyActions() {
   LOG4CXX_AUTO_TRACE(logger_);
 
@@ -503,6 +513,11 @@ void PolicyManagerImpl::ResumePendingAppPolicyActions() {
     SendPermissionsToApp(send_permissions_params.first,
                          send_permissions_params.second);
   }
+
+  for (auto& app : app_properties_changed_list_) {
+    SendOnAppPropertiesChanged(app);
+  }
+
   send_permissions_list_.clear();
 }
 

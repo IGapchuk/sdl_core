@@ -158,6 +158,9 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
       const std::string& device_id,
       const std::string& policy_app_id) const = 0;
 
+  virtual void SendOnAppPropertiesChanged(
+      const std::string& policy_app_id) const = 0;
+
   /**
    * @brief CheckSystemAction allows to check whether certain system
    * action is enabled.

@@ -206,6 +206,8 @@ class MockPolicyHandlerInterface : public policy::PolicyHandlerInterface {
                      void(const policy::AppPermissions& permissions,
                           const std::string& device_id,
                           const std::string& policy_app_id));
+  MOCK_CONST_METHOD1(SendOnAppPropertiesChanged,
+                     void(const std::string& policy_app_id));
   MOCK_METHOD0(OnPTExchangeNeeded, void());
   MOCK_METHOD1(GetAvailableApps, void(std::queue<std::string>& apps));
   MOCK_METHOD3(

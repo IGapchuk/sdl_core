@@ -443,11 +443,13 @@ struct ApplicationPolicyActions {
   ApplicationPolicyActions()
       : is_notify_system(false)
       , is_send_permissions_to_app(false)
-      , is_consent_needed(false) {}
+      , is_consent_needed(false)
+      , is_send_on_app_properties_to_hmi(false) {}
 
   bool is_notify_system;
   bool is_send_permissions_to_app;
   bool is_consent_needed;
+  bool is_send_on_app_properties_to_hmi;
 };
 
 /**
@@ -507,7 +509,8 @@ enum PermissionsCheckResult {
   RESULT_PERMISSIONS_REVOKED_AND_CONSENT_NEEDED,
   RESULT_REQUEST_TYPE_CHANGED,
   RESULT_REQUEST_SUBTYPE_CHANGED,
-  RESULT_ENCRYPTION_REQUIRED_FLAG_CHANGED
+  RESULT_ENCRYPTION_REQUIRED_FLAG_CHANGED,
+  RESULT_APP_PROPERTIES_CHANGED
 };
 
 /**

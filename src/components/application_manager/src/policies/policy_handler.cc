@@ -548,6 +548,14 @@ void PolicyHandler::SendOnAppPermissionsChanged(
       app->app_id(), permissions, application_manager_);
 }
 
+void PolicyHandler::SendOnAppPropertiesChanged(
+    const std::string& policy_app_id) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  const auto notification = MessageHelper::GetOnAppPropertiesChangeNotification(
+      policy_app_id, application_manager_);
+  application_manager_.GetRPCService().ManageHMICommand(notification);
+}
+
 void PolicyHandler::OnPTExchangeNeeded() {
   LOG4CXX_AUTO_TRACE(logger_);
   POLICY_LIB_CHECK_VOID();

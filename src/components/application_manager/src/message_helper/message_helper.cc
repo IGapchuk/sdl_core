@@ -1906,6 +1906,7 @@ void MessageHelper::SendOnAppUnregNotificationToHMI(
 smart_objects::SmartObjectSPtr
 MessageHelper::GetOnAppPropertiesChangeNotification(
     const std::string& policy_app_id, ApplicationManager& app_mngr) {
+  LOG4CXX_AUTO_TRACE(logger_);
   smart_objects::SmartObjectSPtr notification =
       std::make_shared<smart_objects::SmartObject>(
           smart_objects::SmartType_Map);

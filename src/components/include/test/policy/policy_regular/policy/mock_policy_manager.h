@@ -193,6 +193,8 @@ class MockPolicyManager : public PolicyManager {
   MOCK_METHOD2(SendAppPermissionsChanged,
                void(const std::string& device_id,
                     const std::string& application_id));
+  MOCK_CONST_METHOD1(SendOnAppPropertiesChanged,
+                     void(const std::string& application_id));
   MOCK_CONST_METHOD2(GetModuleTypes,
                      bool(const std::string& policy_app_id,
                           std::vector<std::string>* modules));
