@@ -781,6 +781,9 @@ class PolicyManager : public usage_statistics::StatisticsManager,
   virtual void SendAppPermissionsChanged(const std::string& device_id,
                                          const std::string& application_id) = 0;
 
+  virtual void SendOnAppPropertiesChanged(
+      const std::string& policy_app_id) const = 0;
+
   /**
    * @brief Gets all allowed module types
    * @param policy_app_id unique identifier of application

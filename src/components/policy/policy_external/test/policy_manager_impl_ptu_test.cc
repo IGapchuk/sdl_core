@@ -146,9 +146,6 @@ TEST_F(PolicyManagerImplTest2, IsAppRevoked_SetRevokedAppID_ExpectAppRevoked) {
   // Arrange
   CreateLocalPT(preloaded_pt_filename_);
 
-  EXPECT_CALL(listener_, GetDevicesIds(app_id_1_))
-      .WillRepeatedly(Return(transport_manager::DeviceList()));
-
   policy_manager_->AddApplication(
       device_id_1_, app_id_1_, HmiTypes(policy_table::AHT_DEFAULT));
 
@@ -224,8 +221,10 @@ TEST_F(PolicyManagerImplTest2,
 
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(_, app_id_1_))
       .Times(0);
-  EXPECT_CALL(listener_, GetDevicesIds(app_id_1_))
-      .WillRepeatedly(Return(transport_manager::DeviceList(1, device_id_1_)));
+  EXPECT_CALL(listener_, GetDevicesIds(_))
+      .Times(2)
+      .WillOnce(Return(transport_manager::DeviceList()))
+      .WillOnce(Return(transport_manager::DeviceList(1, device_id_1_)));
 
   policy_manager_->SetUserConsentForDevice(device_id_1_, true);
   // Add app from consented device. App will be assigned with default policies
@@ -289,8 +288,12 @@ TEST_F(PolicyManagerImplTest2,
                                    "Bluetooth"));
   EXPECT_CALL(listener_, OnCurrentDeviceIdUpdateRequired(_, application_id_))
       .Times(0);
-  EXPECT_CALL(listener_, GetDevicesIds(application_id_))
-      .WillRepeatedly(Return(transport_manager::DeviceList(1, device_id_1_)));
+
+  EXPECT_CALL(listener_, GetDevicesIds(_))
+      .Times(2)
+      .WillOnce(Return(transport_manager::DeviceList()))
+      .WillOnce(Return(transport_manager::DeviceList(1, device_id_1_)));
+
   policy_manager_->SetUserConsentForDevice(device_id_1_, true);
   // Add app from consented device. App will be assigned with default policies
   policy_manager_->AddApplication(

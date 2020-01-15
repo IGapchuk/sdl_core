@@ -621,6 +621,10 @@ void PolicyManagerImpl::ProcessActionsForAppPolicies(
       continue;
     }
 
+    if (action.second.is_send_on_app_properties_to_hmi) {
+      app_properties_changed_list_.push_back(app_policy->first);
+    }
+
     const auto devices_ids = listener()->GetDevicesIds(app_policy->first);
     for (const auto& device_id : devices_ids) {
       if (action.second.is_consent_needed) {
@@ -1688,6 +1692,12 @@ void PolicyManagerImpl::UpdateAppConsentWithExternalConsent(
   cache_->SetExternalConsentForApp(updated_external_consent_permissions);
 }
 
+void PolicyManagerImpl::SendOnAppPropertiesChanged(
+    const std::string& policy_app_id) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  listener_->SendOnAppPropertiesChanged(policy_app_id);
+}
+
 void PolicyManagerImpl::ResumePendingAppPolicyActions() {
   LOG4CXX_AUTO_TRACE(logger_);
 
@@ -1699,6 +1709,10 @@ void PolicyManagerImpl::ResumePendingAppPolicyActions() {
   for (auto& send_permissions_params : send_permissions_list_) {
     SendPermissionsToApp(send_permissions_params.first,
                          send_permissions_params.second);
+  }
+
+  for (auto& app : app_properties_changed_list_) {
+    SendOnAppPropertiesChanged(app);
   }
   send_permissions_list_.clear();
 }
@@ -2426,7 +2440,6 @@ void PolicyManagerImpl::SendAppPermissionsChanged(
 }
 
 void PolicyManagerImpl::SendAuthTokenUpdated(const std::string policy_app_id) {
-  bool enabled = false;
   AppProperties app_properties;
   cache_->GetCloudAppParameters(policy_app_id, app_properties);
   listener_->OnAuthTokenUpdated(policy_app_id, app_properties.auth_token);

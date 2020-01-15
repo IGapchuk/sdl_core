@@ -1116,6 +1116,9 @@ class PolicyManagerImpl : public PolicyManager {
   void SendAppPermissionsChanged(const std::string& device_id,
                                  const std::string& application_id) OVERRIDE;
 
+  void SendOnAppPropertiesChanged(
+      const std::string& policy_app_id) const OVERRIDE;
+
   /**
    * @brief notify listener of updated auth token for a given policy id
    * @param policy_app_id the app id that has an updated auth token
@@ -1330,6 +1333,8 @@ class PolicyManagerImpl : public PolicyManager {
    * @brief Flag for notifying that PTU was started
    */
   bool send_on_update_sent_out_;
+
+  std::vector<std::string> app_properties_changed_list_;
 
   /**
    * @brief Flag for notifying that invalid PTU should be triggered
