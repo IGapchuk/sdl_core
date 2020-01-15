@@ -115,7 +115,7 @@ void WebSocketSession<ExecutorType>::Read(boost::system::error_code ec,
     return;
   }
 
-  auto size = (ssize_t)buffer_.size();
+  auto size = buffer_.size();
   const auto data = boost::asio::buffer_cast<const uint8_t*>(
       boost::beast::buffers_front(buffer_.data()));
 

@@ -38,20 +38,30 @@
 #ifndef TRANSPORT_ADAPTER_WEBSOCKET_DEVICE_H
 #define TRANSPORT_ADAPTER_WEBSOCKET_DEVICE_H
 
+#include <boost/beast/websocket.hpp>
 #include "transport_manager/transport_adapter/device.h"
 
 namespace transport_manager {
 namespace transport_adapter {
 
+using tcp = boost::asio::ip::tcp;  // from <boost/asio/ip/tcp.hpp>
+using protocol_type = boost::asio::basic_stream_socket<tcp>::protocol_type;
+
 class WebSocketDevice : public Device {
  public:
-  WebSocketDevice(const std::string& host,
-                  const std::string& port,
-                  const std::string& name);
+  WebSocketDevice(
+      const std::string& host,
+      const std::string& port,
+      const std::string& name,
+      const bool is_secure_connect,
+      const boost::asio::basic_stream_socket<tcp>::protocol_type& protocol);
 
   virtual const std::string& GetHost() const;
   virtual const std::string& GetPort() const;
   virtual const std::string GetTarget() const;
+  virtual void AddApplication(const ApplicationHandle& app_handle);
+  virtual bool IsSecure();
+  virtual const protocol_type& GetProtocol();
 
  protected:
   bool IsSameAs(const Device* other_device) const OVERRIDE;
@@ -60,6 +70,9 @@ class WebSocketDevice : public Device {
  private:
   std::string host_;
   std::string port_;
+  bool is_secure_connect_;
+  protocol_type protocol_;
+  ApplicationList app_list_;
 };
 
 }  // namespace transport_adapter

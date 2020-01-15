@@ -173,8 +173,8 @@ void WebSocketListener::StartSecureSession(boost::system::error_code ec) {
   const auto device_uid =
       address + ":" + port + ":" + std::to_string(app_handle);
 
-  auto websocket_device =
-      std::make_shared<WebSocketDevice>(address, port, device_uid);
+  auto websocket_device = std::make_shared<WebSocketDevice>(
+      address, port, device_uid, true, endpoint.protocol());
 
   DeviceSptr device = controller_->AddDevice(websocket_device);
 
@@ -222,8 +222,8 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
   const auto device_uid =
       address + ":" + port + ":" + std::to_string(app_handle);
 
-  auto websocket_device =
-      std::make_shared<WebSocketDevice>(address, port, device_uid);
+  auto websocket_device = std::make_shared<WebSocketDevice>(
+      address, port, device_uid, false, endpoint.protocol());
 
   DeviceSptr device = controller_->AddDevice(websocket_device);
 

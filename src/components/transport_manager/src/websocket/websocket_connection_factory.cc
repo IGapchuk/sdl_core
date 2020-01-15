@@ -33,6 +33,7 @@
 #include "transport_manager/websocket/websocket_connection_factory.h"
 #include "transport_manager/transport_adapter/transport_adapter_controller.h"
 #include "transport_manager/websocket/websocket_connection.h"
+#include "transport_manager/websocket/websocket_device.h"
 
 #include "utils/logger.h"
 
@@ -55,17 +56,56 @@ TransportAdapter::Error WebSocketConnectionFactory::CreateConnection(
   LOG4CXX_DEBUG(
       logger_,
       "DeviceUID: " << &device_uid << ", ApplicationHandle: " << &app_handle);
-  // auto connection = std::make_shared<WebSocketConnection>(
-  //         device_uid, app_handle, controller_);
-  // controller_->ConnectionCreated(connection, device_uid, app_handle);
-  // const auto error = connection->StartListing();
-  // if (TransportAdapter::OK != error) {
-  //   LOG4CXX_ERROR(logger_,
-  //                 "WesWebSocketConnectionFactory::Start() failed with error:
-  //                 "
-  //                     << error);
-  // }
-  // return error;
+
+  DeviceSptr device = controller_->FindDevice(device_uid);
+  if (device.use_count() == 0) {
+    LOG4CXX_ERROR(logger_, "device " << device_uid << " not found");
+    LOG4CXX_TRACE(logger_,
+                  "exit with TransportAdapter::BAD_PARAM. Condition: "
+                  "device.use_count() == 0");
+    return TransportAdapter::BAD_PARAM;
+  }
+
+  boost::asio::io_context ioc;
+  WebSocketDevice* websocket_device =
+      static_cast<WebSocketDevice*>(device.get());
+  if (websocket_device->IsSecure()) {
+    ssl::context ctx(ssl::context::sslv23);  // temporarily for compilation only
+    tcp::socket secure_socket(ioc);
+    secure_socket.assign(websocket_device->GetProtocol(), app_handle);
+    auto connection =
+        std::make_shared<WebSocketConnection<WebSocketSecureSession<> > >(
+            websocket_device->unique_device_id(),
+            app_handle,
+            std::move(secure_socket),
+            ctx,
+            controller_);
+
+    controller_->ConnectionCreated(
+        connection, device->unique_device_id(), app_handle);
+
+    controller_->ConnectDone(device->unique_device_id(), app_handle);
+
+    connection->Run();
+
+  } else {
+    tcp::socket socket(ioc);
+    socket.assign(websocket_device->GetProtocol(), app_handle);
+    auto connection =
+        std::make_shared<WebSocketConnection<WebSocketSession<> > >(
+            device->unique_device_id(),
+            app_handle,
+            std::move(socket),
+            controller_);
+
+    controller_->ConnectionCreated(
+        connection, device->unique_device_id(), app_handle);
+
+    controller_->ConnectDone(device->unique_device_id(), app_handle);
+
+    connection->Run();
+  }
+
   return TransportAdapter::OK;
 }
 
