@@ -1,6 +1,7 @@
 #include "transport_manager/websocket/websocket_listener.h"
 #include "transport_manager/transport_adapter/transport_adapter_controller.h"
 #include "transport_manager/websocket/websocket_device.h"
+#include "utils/file_system.h"
 
 namespace transport_manager {
 namespace transport_adapter {
@@ -14,10 +15,7 @@ WebSocketListener::WebSocketListener(TransportAdapterController* controller,
     , ctx_(ssl::context::sslv23)
     , acceptor_(ioc_)
     , socket_(ioc_)
-    , secure_acceptor_(secure_ioc_)
-    , secure_socket_(secure_ioc_)
     , io_pool_(num_threads)
-    , secure_io_pool_(num_threads)
     , shutdown_(false)
     , settings_(settings) {}
 
@@ -45,58 +43,82 @@ TransportAdapter::Error WebSocketListener::StartListening() {
   auto const address =
       boost::asio::ip::make_address(settings_.websocket_server_address());
   tcp::endpoint endpoint = {address, settings_.websocket_server_port()};
-  tcp::endpoint secure_endpoint = {address,
-                                   settings_.websocket_secured_server_port()};
 
-  auto init_acceptor = [&address](tcp::acceptor& acceptor,
-                                  const tcp::endpoint& endpoint) {
-    boost::system::error_code ec;
-    // Open the acceptor
-    acceptor.open(endpoint.protocol(), ec);
-    if (ec) {
-      auto str_err = "ErrorOpen: " + ec.message();
-      LOG4CXX_ERROR(logger_,
-                    str_err << " host/port: " << endpoint.address().to_string()
-                            << "/" << endpoint.port());
-      return TransportAdapter::FAIL;
+  const auto cert_path = settings_.ws_server_cert_path();
+  LOG4CXX_DEBUG(logger_, "Path to certificate : " << cert_path);
+  const auto key_path = settings_.ws_server_key_path();
+  LOG4CXX_DEBUG(logger_, "Path to key : " << key_path);
+  const auto ca_cert_path = settings_.ws_server_ca_cert_path();
+  LOG4CXX_DEBUG(logger_, "Path to ca cert : " << ca_cert_path);
+  start_secure_ =
+      !cert_path.empty() && !key_path.empty() && !ca_cert_path.empty();
+
+  if (start_secure_ && (!file_system::FileExists(cert_path) ||
+                        !file_system::FileExists(key_path) ||
+                        !file_system::FileExists(ca_cert_path))) {
+    LOG4CXX_ERROR(logger_, "Certificate or key not found");
+    return TransportAdapter::FAIL;
+  }
+
+  if (start_secure_) {
+    LOG4CXX_INFO(logger_, "WebSocket server will start secure connection");
+    ctx_.add_verify_path(cert_path);
+    ctx_.set_options(boost::asio::ssl::context::default_workarounds);
+    using context = boost::asio::ssl::context_base;
+    ctx_.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
+    boost::system::error_code sec_ec;
+    ctx_.use_certificate_chain_file(cert_path, sec_ec);
+    ctx_.load_verify_file(ca_cert_path);
+    if (sec_ec) {
+      LOG4CXX_ERROR(
+          logger_,
+          "Loading WS server certificate failed: " << sec_ec.message());
     }
-
-    acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
-    if (ec) {
-      std::string str_err = "ErrorSetOption: " + ec.message();
+    sec_ec.clear();
+    ctx_.use_private_key_file(key_path, context::pem, sec_ec);
+    if (sec_ec) {
       LOG4CXX_ERROR(logger_,
-                    str_err << " host/port: " << endpoint.address().to_string()
-                            << "/" << endpoint.port());
-      return TransportAdapter::FAIL;
-      ;
+                    "Loading WS server key failed: " << sec_ec.message());
     }
+  }
 
-    // Bind to the server address
-    acceptor.bind(endpoint, ec);
-    if (ec) {
-      std::string str_err = "ErrorBind: " + ec.message();
-      LOG4CXX_ERROR(logger_,
-                    str_err << " host/port: " << endpoint.address().to_string()
-                            << "/" << endpoint.port());
-      return TransportAdapter::FAIL;
-    }
+  // Open the acceptor
+  acceptor_.open(endpoint.protocol(), ec);
+  if (ec) {
+    auto str_err = "ErrorOpen: " + ec.message();
+    LOG4CXX_ERROR(logger_,
+                  str_err << " host/port: " << endpoint.address().to_string()
+                          << "/" << endpoint.port());
+    return TransportAdapter::FAIL;
+  }
 
-    // Start listening for connections
-    acceptor.listen(boost::asio::socket_base::max_listen_connections, ec);
-    if (ec) {
-      std::string str_err = "ErrorListen: " + ec.message();
-      LOG4CXX_ERROR(logger_,
-                    str_err << " host/port: " << endpoint.address().to_string()
-                            << "/" << endpoint.port());
-      return TransportAdapter::FAIL;
-    }
+  acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+  if (ec) {
+    std::string str_err = "ErrorSetOption: " + ec.message();
+    LOG4CXX_ERROR(logger_,
+                  str_err << " host/port: " << endpoint.address().to_string()
+                          << "/" << endpoint.port());
+    return TransportAdapter::FAIL;
+    ;
+  }
 
-    return TransportAdapter::OK;
-  };
+  // Bind to the server address
+  acceptor_.bind(endpoint, ec);
+  if (ec) {
+    std::string str_err = "ErrorBind: " + ec.message();
+    LOG4CXX_ERROR(logger_,
+                  str_err << " host/port: " << endpoint.address().to_string()
+                          << "/" << endpoint.port());
+    return TransportAdapter::FAIL;
+  }
 
-  if (TransportAdapter::OK != init_acceptor(acceptor_, endpoint) ||
-      TransportAdapter::OK !=
-          init_acceptor(secure_acceptor_, secure_endpoint)) {
+  // Start listening for connections
+  acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
+  if (ec) {
+    std::string str_err = "ErrorListen: " + ec.message();
+    LOG4CXX_ERROR(logger_,
+                  str_err << " host/port: " << endpoint.address().to_string()
+                          << "/" << endpoint.port());
     return TransportAdapter::FAIL;
   }
 
@@ -117,18 +139,11 @@ bool WebSocketListener::Run() {
     LOG4CXX_ERROR(logger_, "Connection is shutdown or acceptor isn't open");
   }
 
-  bool is_secure_connection_open = WaitForSecureConnection();
-  if (is_secure_connection_open) {
-    boost::asio::post(secure_io_pool_, [&]() { secure_ioc_.run(); });
-  } else {
-    LOG4CXX_ERROR(logger_,
-                  "Secure connection is shutdown or acceptor isn't open");
-  }
-
-  return is_connection_open && is_secure_connection_open;
+  return is_connection_open;
 }
 
 bool WebSocketListener::WaitForConnection() {
+  LOG4CXX_AUTO_TRACE(logger_);
   if (!shutdown_ && acceptor_.is_open()) {
     acceptor_.async_accept(
         socket_,
@@ -139,55 +154,12 @@ bool WebSocketListener::WaitForConnection() {
   return false;
 }
 
-bool WebSocketListener::WaitForSecureConnection() {
+template <>
+void WebSocketListener::ProcessConnection(
+    std::shared_ptr<WebSocketConnection<WebSocketSession<> > > connection,
+    const DeviceSptr device,
+    const ApplicationHandle app_handle) {
   LOG4CXX_AUTO_TRACE(logger_);
-  if (!shutdown_ && secure_acceptor_.is_open()) {
-    secure_acceptor_.async_accept(
-        secure_socket_,
-        std::bind(&WebSocketListener::StartSecureSession,
-                  this,
-                  std::placeholders::_1));
-    return true;
-  }
-  return false;
-}
-
-void WebSocketListener::StartSecureSession(boost::system::error_code ec) {
-  LOG4CXX_AUTO_TRACE(logger_);
-
-  if (ec) {
-    std::string str_err = "ErrorSecureAccept: " + ec.message();
-    LOG4CXX_ERROR(logger_, str_err);
-    return;
-  }
-
-  if (shutdown_) {
-    return;
-  }
-
-  const ApplicationHandle app_handle = secure_socket_.native_handle();
-
-  tcp::endpoint endpoint = secure_socket_.remote_endpoint();
-  const auto address = endpoint.address().to_string();
-  const auto port = std::to_string(endpoint.port());
-  const auto device_uid =
-      address + ":" + port + ":" + std::to_string(app_handle);
-
-  auto websocket_device = std::make_shared<WebSocketDevice>(
-      address, port, device_uid, true, endpoint.protocol());
-
-  DeviceSptr device = controller_->AddDevice(websocket_device);
-
-  LOG4CXX_INFO(logger_, "Connected client: " << device->name());
-
-  auto connection =
-      std::make_shared<WebSocketConnection<WebSocketSecureSession<> > >(
-          device->unique_device_id(),
-          app_handle,
-          std::move(secure_socket_),
-          ctx_,
-          controller_);
-
   controller_->ConnectionCreated(
       connection, device->unique_device_id(), app_handle);
 
@@ -199,7 +171,27 @@ void WebSocketListener::StartSecureSession(boost::system::error_code ec) {
   mConnectionList.push_back(connection);
   mConnectionListLock.Release();
 
-  WaitForSecureConnection();
+  WaitForConnection();
+}
+
+template <>
+void WebSocketListener::ProcessConnection(
+    std::shared_ptr<WebSocketConnection<WebSocketSecureSession<> > > connection,
+    const DeviceSptr device,
+    const ApplicationHandle app_handle) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  controller_->ConnectionCreated(
+      connection, device->unique_device_id(), app_handle);
+
+  controller_->ConnectDone(device->unique_device_id(), app_handle);
+
+  connection->Run();
+
+  mConnectionListLock.Acquire();
+  mConnectionList.push_back(connection);
+  mConnectionListLock.Release();
+
+  WaitForConnection();
 }
 
 void WebSocketListener::StartSession(boost::system::error_code ec) {
@@ -229,45 +221,33 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
 
   LOG4CXX_INFO(logger_, "Connected client: " << device->name());
 
-  auto connection = std::make_shared<WebSocketConnection<WebSocketSession<> > >(
-      device->unique_device_id(), app_handle, std::move(socket_), controller_);
-
-  controller_->ConnectionCreated(
-      connection, device->unique_device_id(), app_handle);
-
-  controller_->ConnectDone(device->unique_device_id(), app_handle);
-
-  connection->Run();
-
-  mConnectionListLock.Acquire();
-  mConnectionList.push_back(connection);
-  mConnectionListLock.Release();
-
-  WaitForConnection();
+  if (start_secure_) {
+    auto connection =
+        std::make_shared<WebSocketConnection<WebSocketSecureSession<> > >(
+            device_uid, app_handle, std::move(socket_), ctx_, controller_);
+    ProcessConnection(connection, device, app_handle);
+  } else {
+    auto connection =
+        std::make_shared<WebSocketConnection<WebSocketSession<> > >(
+            device_uid, app_handle, std::move(socket_), controller_);
+    ProcessConnection(connection, device, app_handle);
+  }
 }
 
 void WebSocketListener::Shutdown() {
   LOG4CXX_AUTO_TRACE(logger_);
   if (false == shutdown_.exchange(true)) {
-    auto shutdown = [](boost::asio::io_context& ioc,
-                       tcp::socket& socket,
-                       tcp::acceptor& acceptor,
-                       boost::asio::thread_pool& thread_pool) {
-      ioc.stop();
-      socket.close();
-      boost::system::error_code ec;
-      acceptor.close(ec);
+    ioc_.stop();
+    socket_.close();
+    boost::system::error_code ec;
+    acceptor_.close(ec);
 
-      if (ec) {
-        LOG4CXX_ERROR(logger_, "Acceptor closed with error: " << ec);
-      }
+    if (ec) {
+      LOG4CXX_ERROR(logger_, "Acceptor closed with error: " << ec);
+    }
 
-      thread_pool.stop();
-      thread_pool.join();
-    };
-
-    shutdown(ioc_, socket_, acceptor_, io_pool_);
-    shutdown(secure_ioc_, secure_socket_, secure_acceptor_, secure_io_pool_);
+    io_pool_.stop();
+    io_pool_.join();
   }
 }
 

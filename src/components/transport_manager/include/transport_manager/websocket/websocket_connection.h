@@ -44,8 +44,6 @@ using ::utils::MessageQueue;
 typedef ::protocol_handler::RawMessagePtr Message;
 typedef std::queue<Message> AsyncQueue;
 
-CREATE_LOGGERPTR_GLOBAL(wsc_logger_, "WebSocketConnection")
-
 class TransportAdapterController;
 
 template <typename Session = WebSocketSession<> >

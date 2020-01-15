@@ -50,11 +50,9 @@ void WebSocketSecureSession<ExecutorType>::AsyncAccept() {
       ssl::stream_base::server,
       boost::asio::bind_executor(
           WebSocketSecureSession<ExecutorType>::strand_,
-          std::bind(
-              &WebSocketSecureSession::AsyncHandshake,
-              std::enable_shared_from_this<
-                  WebSocketSecureSession<ExecutorType> >::shared_from_this(),
-              std::placeholders::_1)));
+          std::bind(&WebSocketSecureSession::AsyncHandshake,
+                    this->shared_from_this(),
+                    std::placeholders::_1)));
 }
 
 template <typename ExecutorType>

@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace transport_manager {
 namespace transport_adapter {
 
+CREATE_LOGGERPTR_GLOBAL(wsc_logger_, "WebSocketConnection")
+
 using namespace boost::beast::websocket;
 
 template <>
@@ -123,6 +125,7 @@ void WebSocketConnection<Session>::DataReceive(
 
 template <typename Session>
 void WebSocketConnection<Session>::Run() {
+  LOG4CXX_AUTO_TRACE(wsc_logger_);
   session_->AsyncAccept();
 }
 
