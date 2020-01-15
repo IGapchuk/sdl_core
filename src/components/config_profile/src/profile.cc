@@ -136,8 +136,11 @@ const char* kAudioStreamFileKey = "AudioStreamFile";
 const char* kSecurityProtocolKey = "Protocol";
 const char* kSecurityCertificatePathKey = "CertificatePath";
 const char* kSecurityCACertificatePathKey = "CACertificatePath";
+const char* kWSServerCertificatePathKey = "WSServerCertificatePath";
+const char* kWSServerCACertificaePathKey = "WSServerCACertificatePath";
 const char* kSecuritySSLModeKey = "SSLMode";
 const char* kSecurityKeyPathKey = "KeyPath";
+const char* kWSServerKeyPathKey = "WSServerKeyPath";
 const char* kSecurityCipherListKey = "CipherList";
 const char* kSecurityVerifyPeerKey = "VerifyPeer";
 const char* kBeforeUpdateHours = "UpdateBeforeHours";
@@ -310,7 +313,7 @@ const char* kDefaultPoliciesSnapshotFileName = "sdl_snapshot.json";
 const char* kDefaultHmiCapabilitiesFileName = "hmi_capabilities.json";
 const char* kDefaultPreloadedPTFileName = "sdl_preloaded_pt.json";
 const char* kDefaultServerAddress = "127.0.0.1";
-const char* kDefaultWebsocketServerAddress = "127.0.0.1";
+const char* kDefaultWebsocketServerAddress = "0.0.0.0";
 const char* kDefaultAppInfoFileName = "app_info.dat";
 const char* kDefaultSystemFilesPath = "/tmp/fs/mp/images/ivsu_cache";
 const char* kDefaultPluginsPath = "plugins";
@@ -1063,6 +1066,18 @@ const std::string& Profile::ca_cert_path() const {
   return ca_cert_path_;
 }
 
+const std::string& Profile::ws_server_cert_path() const {
+  return ws_server_cert_path_;
+}
+
+const std::string& Profile::ws_server_key_path() const {
+  return ws_server_key_path_;
+}
+
+const std::string& Profile::ws_server_ca_cert_path() const {
+  return ws_server_ca_cert_path_;
+}
+
 const std::string& Profile::ssl_mode() const {
   return ssl_mode_;
 }
@@ -1263,6 +1278,7 @@ void Profile::UpdateValues() {
 
   ReadStringValue(
       &cert_path_, "", kSecuritySection, kSecurityCertificatePathKey);
+
   ReadStringValue(
       &ca_cert_path_, "", kSecuritySection, kSecurityCACertificatePathKey);
 
@@ -1909,6 +1925,30 @@ void Profile::UpdateValues() {
 
   LOG_UPDATED_VALUE(websocket_server_port_,
                     kWebSocketServerPortKey,
+                    kTransportManagerSection);
+
+  ReadStringValue(&ws_server_cert_path_,
+                  "",
+                  kTransportManagerSection,
+                  kWSServerCertificatePathKey);
+
+  LOG_UPDATED_VALUE(ws_server_cert_path_,
+                    kWSServerCertificatePathKey,
+                    kTransportManagerSection);
+
+  ReadStringValue(
+      &ws_server_key_path_, "", kTransportManagerSection, kWSServerKeyPathKey);
+
+  LOG_UPDATED_VALUE(
+      ws_server_key_path_, kWSServerKeyPathKey, kTransportManagerSection);
+
+  ReadStringValue(&ws_server_ca_cert_path_,
+                  "",
+                  kTransportManagerSection,
+                  kWSServerCACertificaePathKey);
+
+  LOG_UPDATED_VALUE(ws_server_ca_cert_path_,
+                    kWSServerCACertificaePathKey,
                     kTransportManagerSection);
 
   // Websocket secured server port
