@@ -200,6 +200,8 @@ void TestTransportManagerDefault::ExpectationsSettings_TM(
   EXPECT_CALL(transport_manager_settings,
               transport_manager_tcp_adapter_network_interface())
       .WillRepeatedly(ReturnRef(network_interface));
+  EXPECT_CALL(transport_manager_settings, bluetooth_uuid())
+      .WillRepeatedly(Return(kBTUUID.data()));
   transport_manager.Init(wrapper);
   transport_manager.Stop();
 }
