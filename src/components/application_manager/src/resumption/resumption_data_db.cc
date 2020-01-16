@@ -368,6 +368,7 @@ uint32_t ResumptionDataDB::GetIgnOffTime() const {
 
 uint32_t ResumptionDataDB::GetGlobalIgnOnCounter() const {
   LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock autolock(resumption_lock_);
 
   utils::dbms::SQLQuery query(db());
   if (!query.Prepare(kSelectGlobalIgnOnCounter)) {
@@ -389,6 +390,7 @@ uint32_t ResumptionDataDB::GetGlobalIgnOnCounter() const {
 
 void ResumptionDataDB::IncrementGlobalIgnOnCounter() {
   LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock autolock(resumption_lock_);
 
   db_->BeginTransaction();
   utils::dbms::SQLQuery query_update_global_ign_on_count(db());
@@ -404,6 +406,7 @@ void ResumptionDataDB::IncrementGlobalIgnOnCounter() {
 
 void ResumptionDataDB::ResetGlobalIgnOnCount() {
   LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock autolock(resumption_lock_);
 
   LOG4CXX_DEBUG(logger_, "Global IGN ON counter resetting");
 
