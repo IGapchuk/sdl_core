@@ -59,11 +59,12 @@ BluetoothTransportAdapter::~BluetoothTransportAdapter() {}
 BluetoothTransportAdapter::BluetoothTransportAdapter(
     resumption::LastStateWrapperPtr last_state_wrapper,
     const TransportManagerSettings& settings)
-    : TransportAdapterImpl(new BluetoothDeviceScanner(this, true, 0),
-                           new BluetoothConnectionFactory(this),
-                           NULL,
-                           last_state_wrapper,
-                           settings) {}
+    : TransportAdapterImpl(
+          new BluetoothDeviceScanner(this, true, 0, settings.bluetooth_uuid()),
+          new BluetoothConnectionFactory(this),
+          NULL,
+          last_state_wrapper,
+          settings) {}
 
 DeviceType BluetoothTransportAdapter::GetDeviceType() const {
   return BLUETOOTH;
