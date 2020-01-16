@@ -53,6 +53,11 @@ class TransportManager {
    **/
   virtual ~TransportManager() {}
 
+  DEPRECATED
+  virtual int Init(resumption::LastState&) {
+    return 1;
+  }
+
   /**
    * @brief Initialize transport manager.
    * @return Error code.
