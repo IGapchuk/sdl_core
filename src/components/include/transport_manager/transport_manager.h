@@ -215,6 +215,10 @@ class TransportManager {
    */
   virtual int PerformActionOnClients(
       const TransportAction required_action) const = 0;
+
+  virtual void CreateWebEngineDevice(const std::string& vin_code) = 0;
+
+  virtual const DeviceInfo& GetWebEngineDevice() const = 0;
 };
 }  // namespace transport_manager
 #endif  // SRC_COMPONENTS_INCLUDE_TRANSPORT_MANAGER_TRANSPORT_MANAGER_H_

@@ -75,7 +75,8 @@ ConnectionHandlerImpl::ConnectionHandlerImpl(
     , connection_list_deleter_(&connection_list_)
     , start_service_context_map_lock_()
     , start_service_context_map_()
-    , ending_connection_(NULL) {}
+    , ending_connection_(NULL)
+    , vin_code_("") {}
 
 ConnectionHandlerImpl::~ConnectionHandlerImpl() {
   LOG4CXX_AUTO_TRACE(logger_);
@@ -839,6 +840,15 @@ void ConnectionHandlerImpl::OnSecondaryTransportEnded(
       SetSecondaryTransportID(session_id, 0);
     }
   }
+}
+
+void ConnectionHandlerImpl::CreateWebEngineDevice(const std::string& vin_code) {
+  transport_manager_.CreateWebEngineDevice(vin_code);
+}
+
+const transport_manager::DeviceInfo& ConnectionHandlerImpl::GetWebEngineDevice()
+    const {
+  return transport_manager_.GetWebEngineDevice();
 }
 
 const std::string

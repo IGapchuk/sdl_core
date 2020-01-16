@@ -2204,8 +2204,6 @@ void PolicyHandler::OnSetAppProperties(
   if (properties.keyExists(strings::enabled)) {
     const bool enabled = properties[strings::enabled].asBool();
     policy_manager_->SetCloudAppEnabled(policy_app_id, enabled);
-    auth_token_update = enabled;
-    application_manager_.RefreshCloudAppInformation();
   }
   if (properties.keyExists(strings::auth_token)) {
     const std::string auth_token = properties[strings::auth_token].asString();

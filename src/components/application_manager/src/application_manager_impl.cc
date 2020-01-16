@@ -66,6 +66,7 @@
 #include <time.h>
 #include <boost/filesystem.hpp>
 #include "application_manager/application_impl.h"
+#include "encryption/hashing.h"
 #include "interfaces/HMI_API_schema.h"
 #include "media_manager/media_manager.h"
 #include "policy/usage_statistics/counter.h"
@@ -996,6 +997,10 @@ void ApplicationManagerImpl::RefreshCloudAppInformation() {
   for (; enabled_it != enabled_end; ++enabled_it) {
     GetPolicyHandler().GetCloudAppParameters(*enabled_it, app_properties);
 
+    if (app_properties.endpoint.empty()) {
+      continue;
+    }
+
     mobile_apis::HybridAppPreference::eType hybrid_app_preference =
         mobile_apis::HybridAppPreference::INVALID_ENUM;
     smart_objects::EnumConversionHelper<
@@ -1226,13 +1231,14 @@ void ApplicationManagerImpl::CreatePendingApplication(
   }
 
   const std::string display_name = nicknames[0];
+
+  const auto web_engine_device = connection_handler_->GetWebEngineDevice();
+
   ApplicationSharedPtr application(
       new ApplicationImpl(0,
                           policy_app_id,
-                          "mack adress for localhost",
-                          // TODO (WebEngine): Get mac for localhost
-                          0,
-                          // TODO (WebEngine): Generage device id for web engine
+                          web_engine_device.mac_address(),
+                          web_engine_device.device_handle(),
                           custom_str::CustomString(display_name),
                           GetPolicyHandler().GetStatisticManager(),
                           *this));
@@ -4311,6 +4317,11 @@ void ApplicationManagerImpl::ApplyFunctorForEachPlugin(
     std::function<void(plugin_manager::RPCPlugin&)> functor) {
   LOG4CXX_AUTO_TRACE(logger_);
   plugin_manager_->ForEachPlugin(functor);
+}
+
+void ApplicationManagerImpl::SetVINCode(const std::string& vin_code) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  connection_handler_->CreateWebEngineDevice(vin_code);
 }
 
 event_engine::EventDispatcher& ApplicationManagerImpl::event_dispatcher() {

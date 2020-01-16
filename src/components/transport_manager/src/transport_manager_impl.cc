@@ -104,7 +104,8 @@ TransportManagerImpl::TransportManagerImpl(
               this, &TransportManagerImpl::ReconnectionTimeout))
     , events_processing_is_active_(true)
     , events_processing_lock_()
-    , events_processing_cond_var_() {
+    , events_processing_cond_var_()
+    , web_engine_device_(0, "", "Web engine", "") {
   LOG4CXX_TRACE(logger_, "TransportManager has created");
 }
 
@@ -643,6 +644,20 @@ int TransportManagerImpl::PerformActionOnClients(
 
   LOG4CXX_TRACE(logger_, "exit with E_SUCCESS");
   return E_SUCCESS;
+}
+
+void TransportManagerImpl::CreateWebEngineDevice(const std::string& vin_code) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  DeviceHandle device_handle =
+      converter_.UidToHandle(vin_code, "WEBENGINE_WEBSOCKET");
+  web_engine_device_ =
+      DeviceInfo(device_handle, vin_code, "Web Engine", "WEBENGINE_WEBSOCKET");
+  RaiseEvent(&TransportManagerListener::OnDeviceAdded, web_engine_device_);
+}
+
+const DeviceInfo& TransportManagerImpl::GetWebEngineDevice() const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  return web_engine_device_;
 }
 
 void TransportManagerImpl::UpdateDeviceList(TransportAdapter* ta) {

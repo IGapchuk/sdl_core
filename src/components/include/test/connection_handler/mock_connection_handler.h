@@ -133,6 +133,9 @@ class MockConnectionHandler : public connection_handler::ConnectionHandler {
       OnSecondaryTransportEnded,
       void(const transport_manager::ConnectionUID primary_connection_handle,
            const transport_manager::ConnectionUID secondary_connection_handle));
+
+  MOCK_CONST_METHOD1(GetWebEngineDevice,
+                     transport_manager::DeviceInfo&(std::string vin));
 };
 
 }  // namespace connection_handler_test

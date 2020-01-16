@@ -312,6 +312,10 @@ class ConnectionHandler {
       const transport_manager::ConnectionUID primary_connection_handle,
       const transport_manager::ConnectionUID secondary_connection_handle) = 0;
 
+  virtual void CreateWebEngineDevice(const std::string& vin_code) = 0;
+
+  virtual const transport_manager::DeviceInfo& GetWebEngineDevice() const = 0;
+
  protected:
   /**
    * \brief Destructor

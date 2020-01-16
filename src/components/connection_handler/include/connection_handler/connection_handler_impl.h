@@ -606,6 +606,10 @@ class ConnectionHandlerImpl
       const transport_manager::ConnectionUID secondary_connection_handle)
       OVERRIDE;
 
+  void CreateWebEngineDevice(const std::string& vin_code) OVERRIDE;
+
+  const transport_manager::DeviceInfo& GetWebEngineDevice() const OVERRIDE;
+
  private:
   /**
    * \brief Disconnect application.
@@ -684,6 +688,8 @@ class ConnectionHandlerImpl
    * @brief connection object as it's being closed
    */
   Connection* ending_connection_;
+
+  std::string vin_code_;
 
 #ifdef BUILD_TESTS
   // Methods for test usage
