@@ -83,11 +83,8 @@ void HMILanguageHandler::set_language_for(
       "Setting language " << language << " for interface " << interface);
   resumption::LastStateAccessor accessor = last_state_wrapper_->get_accessor();
   Json::Value dictionary = accessor.GetData().dictionary();
-  if (dictionary.isMember(LanguagesKey)) {
-    dictionary[LanguagesKey][key] = static_cast<int32_t>(language);
-    accessor.GetMutableData().set_dictionary(dictionary);
-  }
-  return;
+  dictionary[LanguagesKey][key] = static_cast<int32_t>(language);
+  accessor.GetMutableData().set_dictionary(dictionary);
 }
 
 hmi_apis::Common_Language::eType HMILanguageHandler::get_language_for(
