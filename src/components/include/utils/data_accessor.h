@@ -61,10 +61,6 @@ class DataAccessor {
     return data_;
   }
 
-  T& GetMutableData() const {
-    return const_cast<T&>(data_);
-  }
-
  private:
   void* operator new(size_t size);
   const T& data_;

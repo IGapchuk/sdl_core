@@ -36,12 +36,12 @@
 #include <memory>
 
 #include "resumption/last_state.h"
-#include "utils/data_accessor.h"
+#include "utils/mutable_data_accessor.h"
 
 namespace resumption {
 class LastStateWrapper;
 typedef std::shared_ptr<LastStateWrapper> LastStateWrapperPtr;
-typedef DataAccessor<LastState> LastStateAccessor;
+typedef MutableDataAccessor<LastState> LastStateAccessor;
 
 class LastStateWrapper {
  public:

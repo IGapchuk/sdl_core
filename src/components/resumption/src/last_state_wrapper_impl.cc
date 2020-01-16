@@ -43,7 +43,7 @@ LastStateWrapperImpl::LastStateWrapperImpl(
 
 LastStateAccessor LastStateWrapperImpl::get_accessor() const {
   LOG4CXX_AUTO_TRACE(logger_);
-  return DataAccessor<LastState>(*last_state_, lock_);
+  return MutableDataAccessor<LastState>(*last_state_, lock_);
 }
 
 }  // namespace resumption

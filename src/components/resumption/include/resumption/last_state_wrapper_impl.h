@@ -35,11 +35,10 @@
 
 #include <memory>
 
-#include "resumption/last_state.h"
 #include "resumption/last_state_wrapper.h"
-#include "utils/data_accessor.h"
 #include "utils/lock.h"
 #include "utils/macro.h"
+#include "utils/mutable_data_accessor.h"
 
 namespace resumption {
 
