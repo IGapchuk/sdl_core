@@ -60,7 +60,26 @@ TransportAdapter::Error WebSocketListener::StartListening() {
     return TransportAdapter::FAIL;
   }
 
-  if (start_secure_) {
+  if (!start_secure_) {
+    auto check_config = [](const std::string& config,
+                           const std::string config_name) {
+      bool start_unsecure = config.empty();
+      if (!start_unsecure) {
+        LOG4CXX_ERROR(logger_,
+                      "Configuration for secure WS is incomplete. "
+                          << config_name
+                          << " config is "
+                             "present, meanwhile others may be missing. Please "
+                             "check INI file");
+      }
+      return start_unsecure;
+    };
+    if (!check_config(cert_path, "Server cert") ||
+        !check_config(key_path, "Server key") ||
+        !check_config(ca_cert_path, "CA cert")) {
+      return TransportAdapter::FAIL;
+    }
+  } else {
     LOG4CXX_INFO(logger_, "WebSocket server will start secure connection");
     ctx_.add_verify_path(cert_path);
     ctx_.set_options(boost::asio::ssl::context::default_workarounds);
