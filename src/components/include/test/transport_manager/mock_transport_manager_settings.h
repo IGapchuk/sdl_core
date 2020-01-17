@@ -75,6 +75,9 @@ class MockTransportManagerSettings
   MOCK_CONST_METHOD0(aoa_filter_version, const std::string&());
   MOCK_CONST_METHOD0(aoa_filter_uri, const std::string&());
   MOCK_CONST_METHOD0(aoa_filter_serial_number, const std::string&());
+  MOCK_CONST_METHOD0(ws_server_cert_path, const std::string&());
+  MOCK_CONST_METHOD0(ws_server_key_path, const std::string&());
+  MOCK_CONST_METHOD0(ws_server_ca_cert_path, const std::string&());
 };
 
 }  // namespace transport_manager_test
