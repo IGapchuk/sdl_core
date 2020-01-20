@@ -54,6 +54,7 @@
 #include "transport_manager/transport_adapter/transport_adapter_event.h"
 #include "transport_manager/transport_manager_listener.h"
 #include "transport_manager/transport_manager_listener_empty.h"
+#include "transport_manager/websocket/websocket_device.h"
 #include "utils/timer_task_impl.h"
 
 using ::transport_manager::transport_adapter::TransportAdapter;
@@ -652,6 +653,16 @@ void TransportManagerImpl::CreateWebEngineDevice(const std::string& vin_code) {
       converter_.UidToHandle(vin_code, "WEBENGINE_WEBSOCKET");
   web_engine_device_ =
       DeviceInfo(device_handle, vin_code, "Web Engine", "WEBENGINE_WEBSOCKET");
+  auto ta = transport_adapters_.begin();
+  for (; ta != transport_adapters_.end(); ++ta) {
+    if (transport_adapter::DeviceType::WEBENGINE_WEBSOCKET ==
+        (*ta)->GetDeviceType()) {
+      (*ta)->AddDevice(std::make_shared<transport_adapter::WebSocketDevice>(
+          web_engine_device_.name(), web_engine_device_.mac_address()));
+      device_list_.push_back(std::make_pair(*ta, web_engine_device_));
+    }
+  }
+
   RaiseEvent(&TransportManagerListener::OnDeviceAdded, web_engine_device_);
 }
 

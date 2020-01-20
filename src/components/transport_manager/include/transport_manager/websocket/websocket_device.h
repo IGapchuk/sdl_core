@@ -56,12 +56,26 @@ class WebSocketDevice : public Device {
       const bool is_secure_connect,
       const boost::asio::basic_stream_socket<tcp>::protocol_type& protocol);
 
+  WebSocketDevice(const std::string& name, const DeviceUID& unique_device_id);
+
   virtual const std::string& GetHost() const;
   virtual const std::string& GetPort() const;
   virtual const std::string GetTarget() const;
   virtual void AddApplication(const ApplicationHandle& app_handle);
   virtual bool IsSecure();
   virtual const protocol_type& GetProtocol();
+
+  std::string host() const;
+  void setHost(const std::string& host);
+
+  std::string port() const;
+  void setPort(const std::string& port);
+
+  bool is_secure_connect() const;
+  void setIs_secure_connect(bool is_secure_connect);
+
+  protocol_type protocol() const;
+  void setProtocol(const protocol_type& protocol);
 
  protected:
   bool IsSameAs(const Device* other_device) const OVERRIDE;

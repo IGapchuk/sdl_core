@@ -226,30 +226,29 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
 
   const ApplicationHandle app_handle = socket_.native_handle();
 
-  tcp::endpoint endpoint = socket_.remote_endpoint();
-  const auto address = endpoint.address().to_string();
-  const auto port = std::to_string(endpoint.port());
-  const auto device_uid =
-      address + ":" + port + ":" + std::to_string(app_handle);
-
-  auto websocket_device = std::make_shared<WebSocketDevice>(
-      address, port, device_uid, false, endpoint.protocol());
-
-  DeviceSptr device = controller_->AddDevice(websocket_device);
-
-  LOG4CXX_INFO(logger_, "Connected client: " << device->name());
+  std::shared_ptr<WebSocketDevice> device =
+      std::static_pointer_cast<WebSocketDevice>(
+          controller_->GetWebEngineDevice());
 
   if (start_secure_) {
     auto connection =
         std::make_shared<WebSocketConnection<WebSocketSecureSession<> > >(
-            device_uid, app_handle, std::move(socket_), ctx_, controller_);
+            device->unique_device_id(),
+            app_handle,
+            std::move(socket_),
+            ctx_,
+            controller_);
     ProcessConnection(connection, device, app_handle);
   } else {
     auto connection =
         std::make_shared<WebSocketConnection<WebSocketSession<> > >(
-            device_uid, app_handle, std::move(socket_), controller_);
+            device->unique_device_id(),
+            app_handle,
+            std::move(socket_),
+            controller_);
     ProcessConnection(connection, device, app_handle);
   }
+  LOG4CXX_INFO(logger_, "Connected client: " << app_handle);
 }
 
 void WebSocketListener::Shutdown() {

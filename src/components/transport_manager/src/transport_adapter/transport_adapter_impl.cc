@@ -40,6 +40,7 @@
 #include "transport_manager/transport_adapter/server_connection_factory.h"
 #include "transport_manager/transport_adapter/transport_adapter_impl.h"
 #include "transport_manager/transport_adapter/transport_adapter_listener.h"
+#include "transport_manager/websocket/websocket_device.h"
 
 namespace transport_manager {
 namespace transport_adapter {
@@ -481,6 +482,22 @@ DeviceList TransportAdapterImpl::GetDeviceList() const {
   LOG4CXX_TRACE(logger_,
                 "exit with DeviceList. It's' size = " << devices.size());
   return devices;
+}
+
+DeviceSptr TransportAdapterImpl::GetWebEngineDevice() const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock locker(devices_mutex_);
+  for (DeviceMap::const_iterator it = devices_.begin(); it != devices_.end();
+       ++it) {
+    LOG4CXX_TRACE(logger_,
+                  "exit with DeviceList. It's' size = " << it->second->name());
+    if ("Web Engine" == it->second->name()) {
+      return it->second;
+    }
+  }
+
+  LOG4CXX_ERROR(logger_, "WebEngine device not found!");
+  return std::make_shared<transport_adapter::WebSocketDevice>("", "");
 }
 
 DeviceSptr TransportAdapterImpl::AddDevice(DeviceSptr device) {

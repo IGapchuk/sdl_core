@@ -510,6 +510,8 @@ class TransportAdapterImpl : public TransportAdapter,
   TMTelemetryObserver* GetTelemetryObserver() OVERRIDE;
 #endif  // TELEMETRY_MONITOR
 
+  DeviceSptr GetWebEngineDevice() const OVERRIDE;
+
  protected:
   /**
    * @brief Store adapter state where applicable
