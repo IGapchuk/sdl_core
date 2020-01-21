@@ -118,7 +118,6 @@ TransportAdapter::Error WebSocketListener::StartListening() {
                   str_err << " host/port: " << endpoint.address().to_string()
                           << "/" << endpoint.port());
     return TransportAdapter::FAIL;
-    ;
   }
 
   // Bind to the server address
@@ -151,7 +150,7 @@ TransportAdapter::Error WebSocketListener::StartListening() {
 bool WebSocketListener::Run() {
   LOG4CXX_AUTO_TRACE(logger_);
 
-  bool is_connection_open = WaitForConnection();
+  const bool is_connection_open = WaitForConnection();
   if (is_connection_open) {
     boost::asio::post(io_pool_, [&]() { ioc_.run(); });
   } else {
@@ -186,9 +185,9 @@ void WebSocketListener::ProcessConnection(
 
   connection->Run();
 
-  mConnectionListLock.Acquire();
-  mConnectionList.push_back(connection);
-  mConnectionListLock.Release();
+  connection_list_lock.Acquire();
+  connection_list_.push_back(connection);
+  connection_list_lock.Release();
 
   WaitForConnection();
 }
@@ -206,9 +205,9 @@ void WebSocketListener::ProcessConnection(
 
   connection->Run();
 
-  mConnectionListLock.Acquire();
-  mConnectionList.push_back(connection);
-  mConnectionListLock.Release();
+  connection_list_lock.Acquire();
+  connection_list_.push_back(connection);
+  connection_list_lock.Release();
 
   WaitForConnection();
 }

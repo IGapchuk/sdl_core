@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 Livio, Inc.
+Copyright (c) 2020 Livio, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef TRANSPORT_ADAPTER_WEBSOCKET_SERVER_SESSION_H
-#define TRANSPORT_ADAPTER_WEBSOCKET_SERVER_SESSION_H
+#ifndef SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_SESSION_H
+#define SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_SESSION_H
 
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/strand.hpp>
@@ -87,10 +87,10 @@ class WebSocketSession
   websocket::stream<ExecutorType> ws_;
   boost::asio::strand<boost::asio::io_context::executor_type> strand_;
   boost::beast::flat_buffer buffer_;
-  DataReceiveCallback dataReceive_;
+  DataReceiveCallback data_receive_;
 };
 
 }  // namespace transport_adapter
 }  // namespace transport_manager
 
-#endif  // TRANSPORT_ADAPTER_WEBSOCKET_SERVER_SESSION_H
+#endif  // SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_SESSION_H

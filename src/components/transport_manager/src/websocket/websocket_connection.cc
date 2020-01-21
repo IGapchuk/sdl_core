@@ -152,8 +152,8 @@ bool WebSocketConnection<Session>::IsShuttingDown() {
 template <typename Session>
 WebSocketConnection<Session>::LoopThreadDelegate::LoopThreadDelegate(
     MessageQueue<Message, AsyncQueue>* message_queue,
-    DataWriteCallback dataWrite)
-    : message_queue_(*message_queue), dataWrite_(dataWrite) {}
+    DataWriteCallback data_write)
+    : message_queue_(*message_queue), data_write_(data_write) {}
 
 template <typename Session>
 void WebSocketConnection<Session>::LoopThreadDelegate::threadMain() {
@@ -175,7 +175,7 @@ template <typename Session>
 void WebSocketConnection<Session>::LoopThreadDelegate::DrainQueue() {
   Message message_ptr;
   while (!message_queue_.IsShuttingDown() && message_queue_.pop(message_ptr)) {
-    dataWrite_(message_ptr);
+    data_write_(message_ptr);
   }
 }
 

@@ -2,7 +2,7 @@
  * \file websocket_transport_adapter.h
  * \brief WebSocketTransportAdapter class header file.
  *
- * Copyright (c) 2019, Ford Motor Company
+ * Copyright (c) 2020, Ford Motor Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TRANSPORT_ADAPTER_WEBSOCKET_TRANSPORT_ADAPTER_H
-#define TRANSPORT_ADAPTER_WEBSOCKET_TRANSPORT_ADAPTER_H
+#ifndef SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_TRANSPORT_ADAPTER_H
+#define SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_TRANSPORT_ADAPTER_H
 
 #include "transport_manager/transport_adapter/transport_adapter_impl.h"
 
@@ -42,7 +42,8 @@ namespace transport_manager {
 namespace transport_adapter {
 
 /**
- * @brief Transport adapter that use WebSocket transport. */
+ * @brief Transport adapter that uses WebSocket transport.
+ */
 class WebSocketTransportAdapter : public TransportAdapterImpl {
  public:
   /**
@@ -105,4 +106,4 @@ class WebSocketTransportAdapter : public TransportAdapterImpl {
 }  // namespace transport_adapter
 }  // namespace transport_manager
 
-#endif  // TRANSPORT_ADAPTER_WEBSOCKET_TRANSPORT_ADAPTER_H
+#endif  // SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_TRANSPORT_ADAPTER_H

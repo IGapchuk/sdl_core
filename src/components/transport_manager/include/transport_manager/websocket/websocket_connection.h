@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 Livio, Inc.
+Copyright (c) 2020 Livio, Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_H
-#define TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_H
+#ifndef SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_CONNECTION_H
+#define SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_CONNECTION_H
 
 #include "transport_manager/transport_adapter/connection.h"
 #include "transport_manager/websocket/websocket_secure_session.h"
@@ -89,7 +89,7 @@ class WebSocketConnection
   class LoopThreadDelegate : public threads::ThreadDelegate {
    public:
     LoopThreadDelegate(MessageQueue<Message, AsyncQueue>* message_queue,
-                       DataWriteCallback dataWrite);
+                       DataWriteCallback data_write);
 
     virtual void threadMain() OVERRIDE;
     virtual void exitThreadMain() OVERRIDE;
@@ -101,7 +101,7 @@ class WebSocketConnection
    private:
     void DrainQueue();
     MessageQueue<Message, AsyncQueue>& message_queue_;
-    DataWriteCallback dataWrite_;
+    DataWriteCallback data_write_;
   };
 
   LoopThreadDelegate* thread_delegate_;
@@ -111,4 +111,4 @@ class WebSocketConnection
 }  // namespace transport_adapter
 }  // namespace transport_manager
 
-#endif  // TRANSPORT_ADAPTER_WEBSOCKET_SERVER_CONNECTION_H
+#endif  // SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_CONNECTION_H
