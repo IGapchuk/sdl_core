@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Livio
+ * Copyright (c) 2020, Livio
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
  * \brief WebSocketDevice class header file.
  */
 
-#ifndef TRANSPORT_ADAPTER_WEBSOCKET_DEVICE_H
-#define TRANSPORT_ADAPTER_WEBSOCKET_DEVICE_H
+#ifndef SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_DEVICE_H
+#define SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_DEVICE_H
 
 #include <boost/beast/websocket.hpp>
 #include "transport_manager/transport_adapter/device.h"
@@ -78,4 +78,4 @@ class WebSocketDevice : public Device {
 }  // namespace transport_adapter
 }  // namespace transport_manager
 
-#endif  // TRANSPORT_ADAPTER_WEBSOCKET_DEVICE_H
+#endif  // SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_DEVICE_H
