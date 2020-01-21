@@ -121,6 +121,7 @@ class MockTransportAdapterController : public TransportAdapterController {
   MOCK_METHOD1(TransportConfigUpdated,
                void(const transport_manager::transport_adapter::TransportConfig&
                         new_config));
+  MOCK_CONST_METHOD0(GetWebEngineDevice, DeviceSptr());
 };
 
 class MockNetworkInterfaceListener : public NetworkInterfaceListener {
