@@ -81,11 +81,6 @@ class TransportManagerSettings : public TransportManagerMMESettings {
   virtual uint16_t websocket_server_port() const = 0;
 
   /**
-   * @brief Returns port for websocket secured server
-   */
-  virtual uint16_t websocket_secured_server_port() const = 0;
-
-  /**
    * @brief Returns retry timeout for cloud app connections
    */
   virtual uint32_t cloud_app_retry_timeout() const = 0;

@@ -163,7 +163,6 @@ const char* kTCPAdapterNetworkInterfaceKey = "TCPAdapterNetworkInterface";
 
 const char* kWebSocketServerAddressKey = "WebSocketServerAddress";
 const char* kWebSocketServerPortKey = "WebSocketServerPort";
-const char* kWebSocketSecuredServerPortKey = "WebSocketSecuredServerPort";
 
 const char* kCloudAppRetryTimeoutKey = "CloudAppRetryTimeout";
 const char* kCloudAppMaxRetryAttemptsKey = "CloudAppMaxRetryAttempts";
@@ -508,7 +507,6 @@ Profile::Profile()
     , transport_manager_tcp_adapter_port_(kDefautTransportManagerTCPPort)
     , websocket_server_address_(kDefaultWebsocketServerAddress)
     , websocket_server_port_(kDefaultWebSocketServerPort)
-    , websocket_secured_server_port_(kDefaultWebSocketSecuredServerPort)
     , cloud_app_retry_timeout_(kDefaultCloudAppRetryTimeout)
     , cloud_app_max_retry_attempts_(kDefaultCloudAppMaxRetryAttempts)
     , tts_delimiter_(kDefaultTtsDelimiter)
@@ -851,10 +849,6 @@ const std::string& Profile::websocket_server_address() const {
 
 uint16_t Profile::websocket_server_port() const {
   return websocket_server_port_;
-}
-
-uint16_t Profile::websocket_secured_server_port() const {
-  return websocket_secured_server_port_;
 }
 
 uint32_t Profile::cloud_app_retry_timeout() const {
@@ -1949,16 +1943,6 @@ void Profile::UpdateValues() {
 
   LOG_UPDATED_VALUE(ws_server_ca_cert_path_,
                     kWSServerCACertificaePathKey,
-                    kTransportManagerSection);
-
-  // Websocket secured server port
-  ReadUIntValue(&websocket_secured_server_port_,
-                kDefaultWebSocketSecuredServerPort,
-                kTransportManagerSection,
-                kWebSocketSecuredServerPortKey);
-
-  LOG_UPDATED_VALUE(websocket_secured_server_port_,
-                    kWebSocketSecuredServerPortKey,
                     kTransportManagerSection);
 
   ReadUIntValue(&cloud_app_retry_timeout_,
