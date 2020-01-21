@@ -4701,6 +4701,7 @@
       <element name="GENERIC_ERROR"/>
       <element name="DISALLOWED"/>
       <element name="WARNINGS"/>
+      <element name="DATA_NOT_AVAILABLE"/>
     </param>
   </function>
   
@@ -4731,6 +4732,7 @@
       <element name="GENERIC_ERROR"/>
       <element name="DISALLOWED"/>
       <element name="WARNINGS"/>
+      <element name="DATA_NOT_AVAILABLE"/>
     </param>
   </function>
   
