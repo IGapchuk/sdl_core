@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2019, Ford Motor Company, Livio
+ Copyright (c) 2020, Ford Motor Company, Livio
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  */
 
 #include "sdl_rpc_plugin/commands/hmi/bc_get_app_properties_request.h"
-#include "application_manager/application_impl.h"
 #include "application_manager/policies/policy_handler_interface.h"
 #include "application_manager/rpc_service.h"
 #include "interfaces/MOBILE_API.h"
@@ -52,20 +51,19 @@ BCGetAppPropertiesRequest::BCGetAppPropertiesRequest(
                      hmi_capabilities,
                      policy_handler) {}
 
-bool BCGetAppPropertiesRequest::FillAppProperties(
+void BCGetAppPropertiesRequest::FillAppProperties(
     const std::string& policy_app_id,
     smart_objects::SmartObject& out_properties) const {
   LOG4CXX_AUTO_TRACE(logger_);
 
   policy::AppProperties app_properties;
   const bool result =
-      policy_handler_.GetCloudAppParameters(policy_app_id, app_properties);
+      policy_handler_.GetAppProperties(policy_app_id, app_properties);
 
   if (!result) {
     LOG4CXX_DEBUG(
         logger_,
         "Failed to get app parameters for policy_app_id: " << policy_app_id);
-    return false;
   }
 
   out_properties[strings::policy_app_id] = policy_app_id;
@@ -98,7 +96,6 @@ bool BCGetAppPropertiesRequest::FillAppProperties(
   if (!app_properties.endpoint.empty()) {
     out_properties[strings::endpoint] = app_properties.endpoint;
   }
-  return true;
 }
 
 void BCGetAppPropertiesRequest::Run() {

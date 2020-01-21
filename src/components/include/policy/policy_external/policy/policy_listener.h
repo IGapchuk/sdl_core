@@ -109,7 +109,7 @@ class PolicyListener {
       const std::string& device_id,
       const std::string& policy_app_id) const = 0;
 
-  virtual void SendOnAppPropertiesChanged(
+  virtual void SendOnAppPropertiesChangeNotification(
       const std::string& policy_app_id) const = 0;
 
   /**

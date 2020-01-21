@@ -603,7 +603,7 @@ class PolicyManager : public usage_statistics::StatisticsManager,
 
   /**
    * @brief Get a list of policy app ids
-   * @param apps list filled with the policy app ids of each
+   * @return apps list filled with the policy app ids of each
    * application
    */
   virtual const std::vector<std::string> GetApplicationPolicyIDs() const = 0;
@@ -632,9 +632,8 @@ class PolicyManager : public usage_statistics::StatisticsManager,
    * @param hybrid_app_preference Filled with the hybrid app preference for the
    * cloud application set by the user
    */
-  virtual bool GetCloudAppParameters(
-      const std::string& policy_app_id,
-      AppProperties& out_app_properties) const = 0;
+  virtual bool GetAppProperties(const std::string& policy_app_id,
+                                AppProperties& out_app_properties) const = 0;
 
   /**
    * @ brief Initialize new cloud app in the policy table
@@ -781,7 +780,7 @@ class PolicyManager : public usage_statistics::StatisticsManager,
   virtual void SendAppPermissionsChanged(const std::string& device_id,
                                          const std::string& application_id) = 0;
 
-  virtual void SendOnAppPropertiesChanged(
+  virtual void SendOnAppPropertiesChangeNotification(
       const std::string& policy_app_id) const = 0;
 
   /**
@@ -836,9 +835,9 @@ class PolicyManager : public usage_statistics::StatisticsManager,
   virtual ExternalConsentStatus GetExternalConsentStatus() = 0;
 
   /**
-   * @brief OnWebAppAdded triggers PTU
+   * @brief OnLocalAppAdded triggers PTU
    */
-  virtual void OnWebAppAdded() = 0;
+  virtual void OnLocalAppAdded() = 0;
 
   /**
    * @brief Check if certain application already in policy db.

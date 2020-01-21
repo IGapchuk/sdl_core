@@ -35,13 +35,11 @@ void SetCloudAppPropertiesRequest::Run() {
       (*message_)[strings::msg_params][strings::properties];
 
   const auto properties_change_status =
-      policy_handler_.GetAppPropertiesChangeStatusFromMobile(properties);
+      policy_handler_.GetCloudAppPropertiesStatus(properties);
 
-  using AppPropertiesChange =
-      policy::PolicyHandlerInterface::AppPropertiesChange;
+  using AppPropertiesState = policy::PolicyHandlerInterface::AppPropertiesState;
   const bool is_properties_changed =
-      AppPropertiesChange::NO_APP_PROPERTIES_CHANGES !=
-      properties_change_status;
+      AppPropertiesState::NO_CHANGES != properties_change_status;
 
   const auto app_id(properties[strings::app_id].asString());
   const bool is_new_app = policy_handler_.IsNewApplication(app_id);
@@ -51,7 +49,7 @@ void SetCloudAppPropertiesRequest::Run() {
 
   if (is_properties_changed || is_new_app) {
     const auto notification =
-        MessageHelper::GetOnAppPropertiesChangeNotification(
+        MessageHelper::CreateOnAppPropertiesChangeNotification(
             app_id, application_manager_);
     application_manager_.GetRPCService().ManageHMICommand(notification);
   }

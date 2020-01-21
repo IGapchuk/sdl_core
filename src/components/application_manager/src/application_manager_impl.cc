@@ -946,7 +946,7 @@ void ApplicationManagerImpl::DisconnectCloudApp(ApplicationSharedPtr app) {
 #else
   std::string policy_app_id = app->policy_app_id();
   policy::AppProperties app_properties;
-  GetPolicyHandler().GetCloudAppParameters(policy_app_id, app_properties);
+  GetPolicyHandler().GetAppProperties(policy_app_id, app_properties);
   if (app->IsRegistered() && app->is_cloud_app()) {
     LOG4CXX_DEBUG(logger_, "Disabled app is registered, unregistering now");
     GetRPCService().ManageMobileCommand(
@@ -995,7 +995,7 @@ void ApplicationManagerImpl::RefreshCloudAppInformation() {
   // Create a device for each newly enabled cloud app
   policy::AppProperties app_properties;
   for (; enabled_it != enabled_end; ++enabled_it) {
-    GetPolicyHandler().GetCloudAppParameters(*enabled_it, app_properties);
+    GetPolicyHandler().GetAppProperties(*enabled_it, app_properties);
 
     if (app_properties.endpoint.empty()) {
       continue;
@@ -1183,11 +1183,11 @@ void ApplicationManagerImpl::CreatePendingApplication(
     application->set_app_icon_path(full_icon_path);
   }
   policy::AppProperties app_properties;
-  GetPolicyHandler().GetCloudAppParameters(policy_app_id, app_properties);
+  GetPolicyHandler().GetAppProperties(policy_app_id, app_properties);
 
   mobile_apis::HybridAppPreference::eType hybrid_app_preference_enum;
 
-  bool convert_result = smart_objects::EnumConversionHelper<
+  const bool convert_result = smart_objects::EnumConversionHelper<
       mobile_apis::HybridAppPreference::eType>::
       StringToEnum(app_properties.hybrid_app_preference,
                    &hybrid_app_preference_enum);
@@ -1249,10 +1249,10 @@ void ApplicationManagerImpl::CreatePendingApplication(
     application->set_app_icon_path(full_icon_path);
   }
   policy::AppProperties app_properties;
-  GetPolicyHandler().GetCloudAppParameters(policy_app_id, app_properties);
+  GetPolicyHandler().GetAppProperties(policy_app_id, app_properties);
 
   mobile_apis::HybridAppPreference::eType hybrid_app_preference_enum;
-  bool convert_result = smart_objects::EnumConversionHelper<
+  const bool convert_result = smart_objects::EnumConversionHelper<
       mobile_apis::HybridAppPreference::eType>::
       StringToEnum(app_properties.hybrid_app_preference,
                    &hybrid_app_preference_enum);

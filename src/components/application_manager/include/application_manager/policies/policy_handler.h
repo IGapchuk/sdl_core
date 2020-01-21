@@ -425,7 +425,7 @@ class PolicyHandler : public PolicyHandlerInterface,
   custom_str::CustomString GetAppName(
       const std::string& policy_app_id) OVERRIDE;
 
-  const std::vector<std::string> GetApplicationPolicyIDs() const OVERRIDE;
+  std::vector<std::string> GetApplicationPolicyIDs() const OVERRIDE;
 
   /**
    * @brief Get a list of enabled cloud applications
@@ -449,9 +449,8 @@ class PolicyHandler : public PolicyHandlerInterface,
    * given app will be filled with empty strings
    * @param app_properties application properties
    */
-  bool GetCloudAppParameters(
-      const std::string& policy_app_id,
-      policy::AppProperties& app_properties) const OVERRIDE;
+  bool GetAppProperties(const std::string& policy_app_id,
+                        policy::AppProperties& app_properties) const OVERRIDE;
 
   void OnAuthTokenUpdated(const std::string& policy_app_id,
                           const std::string& auth_token) OVERRIDE;
@@ -459,15 +458,15 @@ class PolicyHandler : public PolicyHandlerInterface,
   void OnSetAppProperties(
       const smart_objects::SmartObject& properties) OVERRIDE;
 
-  AppPropertiesChange GetAppPropertiesChangeStatus(
+  AppPropertiesState GetAppPropertiesStatus(
       const smart_objects::SmartObject& properties) const OVERRIDE;
 
-  AppPropertiesChange GetAppPropertiesChangeStatusFromMobile(
+  AppPropertiesState GetCloudAppPropertiesStatus(
       const smart_objects::SmartObject& properties) const OVERRIDE;
 
   bool IsNewApplication(const std::string& policy_app_id) const OVERRIDE;
 
-  void OnWebAppAdded() OVERRIDE;
+  void OnLocalAppAdded() OVERRIDE;
 
   /**
    * @brief Callback for when a SetCloudAppProperties message is received
@@ -531,7 +530,7 @@ class PolicyHandler : public PolicyHandlerInterface,
       const std::string& device_id,
       const std::string& policy_app_id) const OVERRIDE;
 
-  virtual void SendOnAppPropertiesChanged(
+  virtual void SendOnAppPropertiesChangeNotification(
       const std::string& policy_app_id) const OVERRIDE;
 
   virtual void OnPTExchangeNeeded() OVERRIDE;

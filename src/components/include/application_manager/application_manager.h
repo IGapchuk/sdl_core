@@ -174,7 +174,7 @@ class ApplicationManager {
    * UpdateAppList will not be trigerred
    * Application will be created if app exists in policy database and
    * nicknames are not empty
-   * @param policy_app_ids list of appids to store
+   * @param policy_app_id app id to store
    */
   virtual void CreatePendingApplication(const std::string& policy_app_id) = 0;
 

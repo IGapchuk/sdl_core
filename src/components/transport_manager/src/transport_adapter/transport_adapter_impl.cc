@@ -487,13 +487,16 @@ DeviceList TransportAdapterImpl::GetDeviceList() const {
 DeviceSptr TransportAdapterImpl::GetWebEngineDevice() const {
   LOG4CXX_AUTO_TRACE(logger_);
   sync_primitives::AutoLock locker(devices_mutex_);
-  for (DeviceMap::const_iterator it = devices_.begin(); it != devices_.end();
-       ++it) {
-    LOG4CXX_TRACE(logger_,
-                  "exit with DeviceList. It's' size = " << it->second->name());
-    if ("Web Engine" == it->second->name()) {
-      return it->second;
-    }
+
+  auto web_engine_device =
+      std::find_if(devices_.begin(),
+                   devices_.end(),
+                   [](const std::pair<DeviceUID, DeviceSptr> device) {
+                     return "Web Engine" == device.second->name();
+                   });
+
+  if (devices_.end() != web_engine_device) {
+    return web_engine_device->second;
   }
 
   LOG4CXX_ERROR(logger_, "WebEngine device not found!");

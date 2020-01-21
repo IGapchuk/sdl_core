@@ -158,7 +158,7 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
       const std::string& device_id,
       const std::string& policy_app_id) const = 0;
 
-  virtual void SendOnAppPropertiesChanged(
+  virtual void SendOnAppPropertiesChangeNotification(
       const std::string& policy_app_id) const = 0;
 
   /**
@@ -482,10 +482,10 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
 
   /**
    * @brief Get a list of policy app ids
-   * @param apps list filled with the policy app ids of each
+   * @return apps list filled with the policy app ids of each
    * application
    */
-  virtual const std::vector<std::string> GetApplicationPolicyIDs() const = 0;
+  virtual std::vector<std::string> GetApplicationPolicyIDs() const = 0;
 
   /**
    * @brief Get a list of enabled cloud applications
@@ -520,9 +520,8 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
    * @param hybrid_app_preference Filled with the hybrid app preference for the
    * cloud application set by the user
    */
-  virtual bool GetCloudAppParameters(
-      const std::string& policy_app_id,
-      AppProperties& out_app_properties) const = 0;
+  virtual bool GetAppProperties(const std::string& policy_app_id,
+                                AppProperties& out_app_properties) const = 0;
 
   /**
    * @brief Callback for when a BC.SetAppProperties message is
@@ -532,8 +531,8 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
   virtual void OnSetAppProperties(
       const smart_objects::SmartObject& properties) = 0;
 
-  enum class AppPropertiesChange {
-    NO_APP_PROPERTIES_CHANGES,
+  enum class AppPropertiesState {
+    NO_CHANGES,
     ENABLED_FLAG_SWITCH,
     AUTH_TOKEN_CHANGE,
     TRANSPORT_TYPE_CHANGE,
@@ -543,22 +542,22 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
   };
 
   /**
-   * @brief Checks if the application properties have changed. Compares the
+   * @brief Checks if the application properties were changed. Compares the
    * properties received from the HMI with the stored properties in the database
    * @param properties new app properties
-   * @return true if properties have changed, otherwise - false
+   * @return true if properties were changed, otherwise - false
    */
-  virtual AppPropertiesChange GetAppPropertiesChangeStatus(
+  virtual AppPropertiesState GetAppPropertiesStatus(
       const smart_objects::SmartObject& properties) const = 0;
 
   /**
-   * @brief Checks if the application properties have changed from the .
+   * @brief Checks if the application properties were changed.
    * Compares the properties received from the mobile with the stored properties
    * in the database
    * @param properties new app properties
-   * @return true if properties have changed, otherwise - false
+   * @return true if properties were changed, otherwise - false
    */
-  virtual AppPropertiesChange GetAppPropertiesChangeStatusFromMobile(
+  virtual AppPropertiesState GetCloudAppPropertiesStatus(
       const smart_objects::SmartObject& properties) const = 0;
 
   /**
@@ -569,9 +568,9 @@ class PolicyHandlerInterface : public VehicleDataItemProvider {
   virtual bool IsNewApplication(const std::string& application_id) const = 0;
 
   /**
-   * @brief OnWebAppAdded triggers PTU
+   * @brief OnLocalAppAdded triggers PTU
    */
-  virtual void OnWebAppAdded() = 0;
+  virtual void OnLocalAppAdded() = 0;
 
   /**
    * @brief Callback for when a SetCloudAppProperties message is received from a

@@ -2723,7 +2723,7 @@ TEST_F(PolicyHandlerTest, OnSetCloudAppProperties_AllProperties_SUCCESS) {
   EXPECT_CALL(*mock_policy_manager_,
               SetHybridAppPreference(kPolicyAppId_, hybrid_app_preference_str));
   EXPECT_CALL(*mock_policy_manager_, SetAppEndpoint(kPolicyAppId_, endpoint));
-  EXPECT_CALL(*mock_policy_manager_, GetCloudAppParameters(kPolicyAppId_, _))
+  EXPECT_CALL(*mock_policy_manager_, GetAppProperties(kPolicyAppId_, _))
       .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
   EXPECT_CALL(app_manager_, RefreshCloudAppInformation());
   EXPECT_CALL(policy_handler_observer,
@@ -2752,12 +2752,12 @@ TEST_F(PolicyHandlerTest, GetCloudAppParameters_AllProperties_SUCCESS) {
   application_manager_test::MockPolicyHandlerObserver policy_handler_observer;
   policy_handler_.add_listener(&policy_handler_observer);
 
-  EXPECT_CALL(*mock_policy_manager_, GetCloudAppParameters(kPolicyAppId_, _))
+  EXPECT_CALL(*mock_policy_manager_, GetAppProperties(kPolicyAppId_, _))
       .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   policy::AppProperties out_app_properties;
   EXPECT_TRUE(
-      policy_handler_.GetCloudAppParameters(kPolicyAppId_, out_app_properties));
+      policy_handler_.GetAppProperties(kPolicyAppId_, out_app_properties));
   EXPECT_EQ(app_properties.enabled, out_app_properties.enabled);
   EXPECT_EQ(app_properties.endpoint, out_app_properties.endpoint);
   EXPECT_EQ(app_properties.certificate, out_app_properties.certificate);

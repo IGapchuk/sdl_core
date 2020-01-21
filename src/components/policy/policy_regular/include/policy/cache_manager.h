@@ -186,8 +186,8 @@ class CacheManager : public CacheManagerInterface {
    * @param hybrid_app_preference Filled with the hybrid app preference for the
    * cloud application set by the user
    */
-  virtual bool GetCloudAppParameters(const std::string& policy_app_id,
-                                     AppProperties& out_app_properties) const;
+  virtual bool GetAppProperties(const std::string& policy_app_id,
+                                AppProperties& out_app_properties) const;
 
   /**
    * Initializes a new cloud application with default policies

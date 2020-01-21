@@ -225,6 +225,14 @@ class TransportAdapter {
   virtual ConnectionStatus GetConnectionStatus(
       const DeviceUID& device_handle) const = 0;
 
+  /**
+   * @brief Add device to the container(map), if container doesn't hold it yet.
+   * in TransportAdapter is used only to add a WebEngine device
+   *
+   * @param device Smart pointer to the device.
+   *
+   * @return Smart pointer to the device.
+   */
   virtual DeviceSptr AddDevice(DeviceSptr device) = 0;
 
   /**

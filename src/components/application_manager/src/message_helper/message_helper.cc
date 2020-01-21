@@ -1904,7 +1904,7 @@ void MessageHelper::SendOnAppUnregNotificationToHMI(
 }
 
 smart_objects::SmartObjectSPtr
-MessageHelper::GetOnAppPropertiesChangeNotification(
+MessageHelper::CreateOnAppPropertiesChangeNotification(
     const std::string& policy_app_id, ApplicationManager& app_mngr) {
   LOG4CXX_AUTO_TRACE(logger_);
   smart_objects::SmartObjectSPtr notification =
@@ -1917,8 +1917,7 @@ MessageHelper::GetOnAppPropertiesChangeNotification(
   message[strings::params][strings::message_type] = MessageType::kNotification;
 
   policy::AppProperties app_properties;
-  app_mngr.GetPolicyHandler().GetCloudAppParameters(policy_app_id,
-                                                    app_properties);
+  app_mngr.GetPolicyHandler().GetAppProperties(policy_app_id, app_properties);
 
   policy::StringArray nicknames;
   policy::StringArray app_hmi_types;

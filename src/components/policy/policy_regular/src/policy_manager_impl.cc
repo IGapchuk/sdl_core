@@ -495,10 +495,10 @@ void PolicyManagerImpl::ProcessActionsForAppPolicies(
   }
 }
 
-void PolicyManagerImpl::SendOnAppPropertiesChanged(
+void PolicyManagerImpl::SendOnAppPropertiesChangeNotification(
     const std::string& policy_app_id) const {
   LOG4CXX_AUTO_TRACE(logger_);
-  listener_->SendOnAppPropertiesChanged(policy_app_id);
+  listener_->SendOnAppPropertiesChangeNotification(policy_app_id);
 }
 
 void PolicyManagerImpl::ResumePendingAppPolicyActions() {
@@ -515,7 +515,7 @@ void PolicyManagerImpl::ResumePendingAppPolicyActions() {
   }
 
   for (auto& app : app_properties_changed_list_) {
-    SendOnAppPropertiesChanged(app);
+    SendOnAppPropertiesChangeNotification(app);
   }
 
   send_permissions_list_.clear();
@@ -694,7 +694,7 @@ void PolicyManagerImpl::OnAppsSearchCompleted(const bool trigger_ptu) {
   }
 }
 
-void PolicyManagerImpl::OnWebAppAdded() {
+void PolicyManagerImpl::OnLocalAppAdded() {
   LOG4CXX_AUTO_TRACE(logger_);
   update_status_manager_.ScheduleUpdate();
   StartPTExchange();
@@ -756,9 +756,9 @@ void PolicyManagerImpl::GetEnabledCloudApps(
   cache_->GetEnabledCloudApps(enabled_apps);
 }
 
-bool PolicyManagerImpl::GetCloudAppParameters(
+bool PolicyManagerImpl::GetAppProperties(
     const std::string& policy_app_id, AppProperties& out_app_properties) const {
-  return cache_->GetCloudAppParameters(policy_app_id, out_app_properties);
+  return cache_->GetAppProperties(policy_app_id, out_app_properties);
 }
 
 void PolicyManagerImpl::InitCloudApp(const std::string& policy_app_id) {
@@ -1732,7 +1732,7 @@ void PolicyManagerImpl::SendAppPermissionsChanged(
 
 void PolicyManagerImpl::SendAuthTokenUpdated(const std::string policy_app_id) {
   AppProperties app_properties;
-  cache_->GetCloudAppParameters(policy_app_id, app_properties);
+  cache_->GetAppProperties(policy_app_id, app_properties);
   listener_->OnAuthTokenUpdated(policy_app_id, app_properties.auth_token);
 }
 

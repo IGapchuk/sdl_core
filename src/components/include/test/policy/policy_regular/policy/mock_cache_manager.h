@@ -69,7 +69,7 @@ class MockCacheManagerInterface : public CacheManagerInterface {
                      std::vector<policy_table::VehicleDataItem>());
   MOCK_CONST_METHOD1(GetEnabledCloudApps,
                      void(std::vector<std::string>& enabled_apps));
-  MOCK_CONST_METHOD2(GetCloudAppParameters,
+  MOCK_CONST_METHOD2(GetAppProperties,
                      bool(const std::string& policy_app_id,
                           AppProperties& out_app_properties));
   MOCK_METHOD1(InitCloudApp, void(const std::string& policy_app_id));

@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2019, Ford Motor Company, Livio
+ Copyright (c) 2020, Ford Motor Company, Livio
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,6 @@
  */
 
 #include "sdl_rpc_plugin/commands/hmi/bc_set_app_properties_request.h"
-#include "application_manager/application_impl.h"
 #include "application_manager/message_helper.h"
 #include "application_manager/policies/policy_handler_interface.h"
 #include "application_manager/rpc_service.h"
@@ -59,15 +58,13 @@ void BCSetAppPropertiesRequest::Run() {
       (*message_)[strings::msg_params][strings::properties];
 
   const auto properties_change_status =
-      policy_handler_.GetAppPropertiesChangeStatus(properties);
+      policy_handler_.GetAppPropertiesStatus(properties);
 
-  using AppPropertiesChange =
-      policy::PolicyHandlerInterface::AppPropertiesChange;
-  const bool is_properties_changed =
-      AppPropertiesChange::NO_APP_PROPERTIES_CHANGES !=
-      properties_change_status;
+  using AppPropertiesState = policy::PolicyHandlerInterface::AppPropertiesState;
+  const bool are_properties_changed =
+      AppPropertiesState::NO_CHANGES != properties_change_status;
 
-  std::string policy_app_id(properties[strings::policy_app_id].asString());
+  const auto policy_app_id(properties[strings::policy_app_id].asString());
   const bool is_new_app = policy_handler_.IsNewApplication(policy_app_id);
 
   policy_handler_.OnSetAppProperties(properties);
@@ -76,9 +73,9 @@ void BCSetAppPropertiesRequest::Run() {
                hmi_apis::FunctionID::BasicCommunication_SetAppProperties,
                hmi_apis::Common_Result::SUCCESS);
 
-  if (is_properties_changed || is_new_app) {
+  if (are_properties_changed || is_new_app) {
     const auto notification =
-        MessageHelper::GetOnAppPropertiesChangeNotification(
+        MessageHelper::CreateOnAppPropertiesChangeNotification(
             policy_app_id, application_manager_);
     application_manager_.GetRPCService().ManageHMICommand(notification);
   }
@@ -86,7 +83,7 @@ void BCSetAppPropertiesRequest::Run() {
     LOG4CXX_ERROR(logger_,
                   "Message contains unknow policyAppId: "
                       << policy_app_id << ", PTU will be triggered");
-    policy_handler_.OnWebAppAdded();
+    policy_handler_.OnLocalAppAdded();
   }
 
   auto app_enabled = [this]() -> bool {
@@ -98,7 +95,7 @@ void BCSetAppPropertiesRequest::Run() {
   };
 
   const bool enable_flag_switch =
-      AppPropertiesChange::ENABLED_FLAG_SWITCH == properties_change_status;
+      AppPropertiesState::ENABLED_FLAG_SWITCH == properties_change_status;
   if (enable_flag_switch || (is_new_app && app_enabled())) {
     application_manager_.CreatePendingApplication(policy_app_id);
     application_manager_.SendUpdateAppList();

@@ -766,8 +766,8 @@ void CacheManager::GetEnabledCloudApps(
 #endif  // CLOUD_APP_WEBSOCKET_TRANSPORT_SUPPORT
 }
 
-bool CacheManager::GetCloudAppParameters(
-    const std::string& policy_app_id, AppProperties& out_app_properties) const {
+bool CacheManager::GetAppProperties(const std::string& policy_app_id,
+                                    AppProperties& out_app_properties) const {
   const policy_table::ApplicationPolicies& policies =
       pt_->policy_table.app_policies_section.apps;
   policy_table::ApplicationPolicies::const_iterator policy_iter =

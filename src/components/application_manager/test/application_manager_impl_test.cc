@@ -1670,7 +1670,7 @@ void ApplicationManagerImplTest::AddCloudAppToPendingDeviceMap() {
   std::vector<std::string> enabled_apps{"1234"};
   EXPECT_CALL(*mock_policy_handler_, GetEnabledCloudApps(_))
       .WillOnce(SetArgReferee<0>(enabled_apps));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+  EXPECT_CALL(*mock_policy_handler_, GetAppProperties(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   std::vector<std::string> nicknames{"CloudApp"};
@@ -1696,7 +1696,7 @@ void ApplicationManagerImplTest::CreatePendingApplication() {
   EXPECT_CALL(*mock_policy_handler_, GetStatisticManager())
       .WillOnce(Return(std::shared_ptr<usage_statistics::StatisticsManager>(
           new usage_statistics_test::MockStatisticsManager())));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+  EXPECT_CALL(*mock_policy_handler_, GetAppProperties(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
   // Expect Update app list
   EXPECT_CALL(*mock_rpc_service_, ManageHMICommand(_, _)).Times(1);
@@ -1727,7 +1727,7 @@ TEST_F(ApplicationManagerImplTest, SetPendingState) {
 
   EXPECT_CALL(*mock_policy_handler_, GetEnabledCloudApps(_))
       .WillOnce(SetArgReferee<0>(enabled_apps));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+  EXPECT_CALL(*mock_policy_handler_, GetAppProperties(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   std::vector<std::string> nicknames{"CloudApp"};
@@ -1871,7 +1871,7 @@ TEST_F(ApplicationManagerImplTest, PolicyIDByIconUrl_Success) {
   std::vector<std::string> enabled_apps{"1234"};
   EXPECT_CALL(*mock_policy_handler_, GetEnabledCloudApps(_))
       .WillOnce(SetArgReferee<0>(enabled_apps));
-  EXPECT_CALL(*mock_policy_handler_, GetCloudAppParameters(_, _))
+  EXPECT_CALL(*mock_policy_handler_, GetAppProperties(_, _))
       .WillOnce(DoAll(SetArgReferee<1>(app_properties), Return(true)));
 
   std::vector<std::string> nicknames{"CloudApp"};

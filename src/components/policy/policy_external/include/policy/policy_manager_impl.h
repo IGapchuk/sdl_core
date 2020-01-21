@@ -682,8 +682,8 @@ class PolicyManagerImpl : public PolicyManager {
    * @param hybrid_app_preference Filled with the hybrid app preference for the
    * cloud application set by the user
    */
-  bool GetCloudAppParameters(const std::string& policy_app_id,
-                             AppProperties& out_app_properties) const OVERRIDE;
+  bool GetAppProperties(const std::string& policy_app_id,
+                        AppProperties& out_app_properties) const OVERRIDE;
 
   /**
    * @ brief Initialize new cloud app in the policy table
@@ -916,7 +916,7 @@ class PolicyManagerImpl : public PolicyManager {
    */
   void OnSystemRequestReceived() OVERRIDE;
 
-  void OnWebAppAdded() OVERRIDE;
+  void OnLocalAppAdded() OVERRIDE;
 
   bool IsNewApplication(const std::string& application_id) const OVERRIDE;
 
@@ -1116,7 +1116,7 @@ class PolicyManagerImpl : public PolicyManager {
   void SendAppPermissionsChanged(const std::string& device_id,
                                  const std::string& application_id) OVERRIDE;
 
-  void SendOnAppPropertiesChanged(
+  void SendOnAppPropertiesChangeNotification(
       const std::string& policy_app_id) const OVERRIDE;
 
   /**

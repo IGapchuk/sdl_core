@@ -35,8 +35,8 @@ void GetCloudAppPropertiesRequest::Run() {
 
   policy::AppProperties app_properties;
 
-  bool result =
-      policy_handler_.GetCloudAppParameters(policy_app_id, app_properties);
+  const bool result =
+      policy_handler_.GetAppProperties(policy_app_id, app_properties);
 
   if (!result) {
     SendResponse(false,

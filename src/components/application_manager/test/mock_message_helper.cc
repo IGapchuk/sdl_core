@@ -486,10 +486,10 @@ bool MessageHelper::CreateHMIApplicationStruct(
 }
 
 smart_objects::SmartObjectSPtr
-MessageHelper::GetOnAppPropertiesChangeNotification(
+MessageHelper::CreateOnAppPropertiesChangeNotification(
     const std::string& policy_app_id, ApplicationManager& app_mngr) {
   return MockMessageHelper::message_helper_mock()
-      ->GetOnAppPropertiesChangeNotification(policy_app_id, app_mngr);
+      ->CreateOnAppPropertiesChangeNotification(policy_app_id, app_mngr);
 }
 
 void MessageHelper::SendOnAppUnregNotificationToHMI(

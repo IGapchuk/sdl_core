@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Ford Motor Company
+ * Copyright (c) 2020, Ford Motor Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ class BCGetAppPropertiesRequest : public app_mngr::commands::RequestFromHMI {
   void Run() FINAL;
 
  private:
-  bool FillAppProperties(const std::string& policy_app_id,
+  void FillAppProperties(const std::string& policy_app_id,
                          smart_objects::SmartObject& out_properties) const;
 
   DISALLOW_COPY_AND_ASSIGN(BCGetAppPropertiesRequest);

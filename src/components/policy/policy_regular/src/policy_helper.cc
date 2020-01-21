@@ -389,7 +389,8 @@ bool CheckAppPolicy::operator()(const AppPoliciesValueType& app_policy) {
   const std::string app_id = app_policy.first;
 
   const bool is_app_properties_changed = IsAppPropertiesChanged(app_policy);
-  if (!IsPredefinedApp(app_policy) && is_app_properties_changed) {
+  const bool is_predefined_app = IsPredefinedApp(app_policy);
+  if (!is_predefined_app && is_app_properties_changed) {
     AddResult(app_id, RESULT_APP_PROPERTIES_CHANGED);
   }
 
@@ -648,33 +649,33 @@ bool CheckAppPolicy::IsAppPropertiesChanged(
 
   if (app_policy.second.enabled.is_initialized() &&
       app_policy.second.enabled != snapshot_properties.second.enabled) {
-    LOG4CXX_DEBUG(logger_, "\"enabled\" has changed");
+    LOG4CXX_DEBUG(logger_, "\"enabled\" was changed");
     return true;
   }
 
   if (app_policy.second.endpoint.is_initialized() &&
       app_policy.second.endpoint != snapshot_properties.second.endpoint) {
-    LOG4CXX_DEBUG(logger_, "\"endpoint\" has changed");
+    LOG4CXX_DEBUG(logger_, "\"endpoint\" was changed");
     return true;
   }
 
   if (app_policy.second.hybrid_app_preference.is_initialized() &&
       app_policy.second.hybrid_app_preference !=
           snapshot_properties.second.hybrid_app_preference) {
-    LOG4CXX_DEBUG(logger_, "\"hybrid_app_preference\" has changed");
+    LOG4CXX_DEBUG(logger_, "\"hybrid_app_preference\" was changed");
     return true;
   }
 
   if (app_policy.second.auth_token.is_initialized() &&
       app_policy.second.auth_token != snapshot_properties.second.auth_token) {
-    LOG4CXX_DEBUG(logger_, "\"auth_token\" has changed");
+    LOG4CXX_DEBUG(logger_, "\"auth_token\" was changed");
     return true;
   }
 
   if (app_policy.second.cloud_transport_type.is_initialized() &&
       app_policy.second.cloud_transport_type !=
           snapshot_properties.second.cloud_transport_type) {
-    LOG4CXX_DEBUG(logger_, "\"cloud_transport_type\" has changed");
+    LOG4CXX_DEBUG(logger_, "\"cloud_transport_type\" was changed");
     return true;
   }
 

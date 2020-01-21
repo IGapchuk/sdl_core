@@ -649,19 +649,30 @@ int TransportManagerImpl::PerformActionOnClients(
 
 void TransportManagerImpl::CreateWebEngineDevice(const std::string& vin_code) {
   LOG4CXX_AUTO_TRACE(logger_);
+  auto web_socket_ta = std::find_if(
+      transport_adapters_.begin(),
+      transport_adapters_.end(),
+      [](const TransportAdapter* ta) {
+        return transport_adapter::DeviceType::WEBENGINE_WEBSOCKET ==
+               ta->GetDeviceType();
+      });
+
+  if (transport_adapters_.end() == web_socket_ta) {
+    LOG4CXX_WARN(logger_,
+                 "WebSocketTransportAdapter not found."
+                 "Not able to create WebEngineDevice");
+    return;
+  }
+
   DeviceHandle device_handle =
       converter_.UidToHandle(vin_code, "WEBENGINE_WEBSOCKET");
   web_engine_device_ =
       DeviceInfo(device_handle, vin_code, "Web Engine", "WEBENGINE_WEBSOCKET");
-  auto ta = transport_adapters_.begin();
-  for (; ta != transport_adapters_.end(); ++ta) {
-    if (transport_adapter::DeviceType::WEBENGINE_WEBSOCKET ==
-        (*ta)->GetDeviceType()) {
-      (*ta)->AddDevice(std::make_shared<transport_adapter::WebSocketDevice>(
+
+  (*web_socket_ta)
+      ->AddDevice(std::make_shared<transport_adapter::WebSocketDevice>(
           web_engine_device_.name(), web_engine_device_.mac_address()));
-      device_list_.push_back(std::make_pair(*ta, web_engine_device_));
-    }
-  }
+  device_list_.push_back(std::make_pair(*web_socket_ta, web_engine_device_));
 
   RaiseEvent(&TransportManagerListener::OnDeviceAdded, web_engine_device_);
 }
