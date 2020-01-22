@@ -64,6 +64,7 @@ void BCGetAppPropertiesRequest::FillAppProperties(
     LOG4CXX_DEBUG(
         logger_,
         "Failed to get app parameters for policy_app_id: " << policy_app_id);
+    return;
   }
 
   out_properties[strings::policy_app_id] = policy_app_id;

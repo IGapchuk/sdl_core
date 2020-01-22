@@ -1996,7 +1996,7 @@ std::vector<std::string> PolicyHandler::GetApplicationPolicyIDs() const {
   for (const auto& id : all_policy_ids) {
     const bool result =
         helpers::Compare<std::string, helpers::NEQ, helpers::ALL>(
-            kDefaultId, kPreDataConsentId, kDeviceId);
+            id, kDefaultId, kPreDataConsentId, kDeviceId);
     if (result) {
       policy_app_ids.push_back(id);
     }
