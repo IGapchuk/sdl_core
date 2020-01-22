@@ -84,6 +84,8 @@ class MockApplicationManager : public application_manager::ApplicationManager {
                      DataAccessor<application_manager::ReregisterWaitList>());
   MOCK_METHOD1(CreatePendingApplication,
                void(const std::string& policy_app_id));
+  MOCK_METHOD1(RemovePendingApplication,
+               void(const std::string& policy_app_id));
   MOCK_CONST_METHOD1(
       application, application_manager::ApplicationSharedPtr(uint32_t app_id));
   MOCK_CONST_METHOD0(active_application,

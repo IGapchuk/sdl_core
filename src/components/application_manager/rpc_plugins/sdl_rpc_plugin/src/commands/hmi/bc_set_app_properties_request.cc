@@ -96,8 +96,15 @@ void BCSetAppPropertiesRequest::Run() {
 
   const bool enable_flag_switch =
       AppPropertiesState::ENABLED_FLAG_SWITCH == properties_change_status;
-  if (enable_flag_switch || (is_new_app && app_enabled())) {
+
+  if (app_enabled() && (enable_flag_switch || is_new_app)) {
     application_manager_.CreatePendingApplication(policy_app_id);
+    application_manager_.SendUpdateAppList();
+    return;
+  }
+
+  if (enable_flag_switch) {
+    application_manager_.RemovePendingApplication(policy_app_id);
     application_manager_.SendUpdateAppList();
   }
 }

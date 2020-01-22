@@ -409,6 +409,8 @@ class ApplicationManagerImpl
 
   void CreatePendingApplication(const std::string& policy_app_id) OVERRIDE;
 
+  void RemovePendingApplication(const std::string& policy_app_id) OVERRIDE;
+
   void SetPendingApplicationState(
       const transport_manager::ConnectionUID connection_id,
       const transport_manager::DeviceInfo& device_info);

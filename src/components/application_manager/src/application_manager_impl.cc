@@ -1216,6 +1216,28 @@ void ApplicationManagerImpl::CreatePendingApplication(
   SendUpdateAppList();
 }
 
+void ApplicationManagerImpl::RemovePendingApplication(
+    const std::string& policy_app_id) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  sync_primitives::AutoLock lock(apps_to_register_list_lock_ptr_);
+  PolicyAppIdPredicate finder(policy_app_id);
+  auto app_it =
+      std::find_if(apps_to_register_.begin(), apps_to_register_.end(), finder);
+
+  if (apps_to_register_.end() == app_it) {
+    LOG4CXX_WARN(
+        logger_,
+        "Unable to find app to remove (" << policy_app_id << "), skipping");
+    return;
+  }
+
+  apps_to_register_.erase(app_it);
+  LOG4CXX_DEBUG(logger_,
+                "Remove " << policy_app_id
+                          << " from apps_to_register_. new size = "
+                          << apps_to_register_.size());
+}
+
 void ApplicationManagerImpl::CreatePendingApplication(
     const std::string& policy_app_id) {
   policy::StringArray nicknames;

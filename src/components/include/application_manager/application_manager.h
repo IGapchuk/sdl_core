@@ -178,6 +178,14 @@ class ApplicationManager {
    */
   virtual void CreatePendingApplication(const std::string& policy_app_id) = 0;
 
+  /**
+   * @brief RemovePendingApplication Remove applicaiton from pending state
+   * Application will be removed from the internal pending applicaitons list.
+   * UpdateAppList will not be trigerred
+   * @param policy_app_id app id to remove
+   */
+  virtual void RemovePendingApplication(const std::string& policy_app_id) = 0;
+
   virtual DataAccessor<ReregisterWaitList> reregister_applications() const = 0;
 
   virtual ApplicationSharedPtr application(uint32_t app_id) const = 0;
