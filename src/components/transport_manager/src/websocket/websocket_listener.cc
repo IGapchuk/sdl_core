@@ -20,7 +20,8 @@ WebSocketListener::WebSocketListener(TransportAdapterController* controller,
     , socket_(ioc_)
     , io_pool_(num_threads)
     , shutdown_(false)
-    , settings_(settings) {}
+    , settings_(settings) {
+}
 
 WebSocketListener::~WebSocketListener() {
   Terminate();

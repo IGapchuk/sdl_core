@@ -56,7 +56,7 @@ namespace websocket =
     boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 #ifdef ENABLE_SECURITY
 namespace ssl = boost::asio::ssl;  // from <boost/asio/ssl.hpp>
-#endif  // ENABLE_SECURITY
+#endif                             // ENABLE_SECURITY
 
 CREATE_LOGGERPTR_GLOBAL(ws_logger_, "WebSocketSession")
 
