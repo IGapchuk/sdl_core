@@ -47,6 +47,7 @@ WebSocketSession<tcp::socket&>::WebSocketSession(
   ws_.binary(true);
 }
 
+#ifdef ENABLE_SECURITY
 template <>
 WebSocketSession<ssl::stream<tcp::socket&> >::WebSocketSession(
     boost::asio::ip::tcp::socket socket,
@@ -58,6 +59,8 @@ WebSocketSession<ssl::stream<tcp::socket&> >::WebSocketSession(
     , data_receive_(dataReceive) {
   ws_.binary(true);
 }
+template class WebSocketSession<ssl::stream<tcp::socket&> >;
+#endif  // ENABLE_SECURITY
 
 template <typename ExecutorType>
 WebSocketSession<ExecutorType>::~WebSocketSession() {}
@@ -147,7 +150,6 @@ bool WebSocketSession<ExecutorType>::Shutdown() {
 }
 
 template class WebSocketSession<tcp::socket&>;
-template class WebSocketSession<ssl::stream<tcp::socket&> >;
 
 }  // namespace transport_adapter
 }  // namespace transport_manager

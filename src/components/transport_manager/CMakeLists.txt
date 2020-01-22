@@ -106,10 +106,15 @@ else()
   )
 endif()
 
-if(NOT BUILD_WEBSOCKET_SERVER_SUPPORT)  
+if(NOT BUILD_WEBSOCKET_SERVER_SUPPORT)
   list(APPEND EXCLUDE_PATHS
     ${CMAKE_CURRENT_SOURCE_DIR}/include/transport_manager/websocket
     ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket
+  )
+elseif(NOT ENABLE_SECURITY)
+  list(APPEND EXCLUDE_PATHS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/transport_manager/websocket/websocket_secure_session.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/websocket/websocket_secure_session.cc
   )
 endif()
 

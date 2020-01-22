@@ -102,7 +102,10 @@ class WebSocketListener : public ClientConnectionListener {
  private:
   TransportAdapterController* controller_;
   boost::asio::io_context ioc_;
+#ifdef ENABLE_SECURITY
   ssl::context ctx_;
+  bool start_secure_;
+#endif  // ENABLE_SECURITY
   tcp::acceptor acceptor_;
   tcp::socket socket_;
   boost::asio::thread_pool io_pool_;
@@ -110,7 +113,6 @@ class WebSocketListener : public ClientConnectionListener {
   std::vector<std::shared_ptr<Connection> > connection_list_;
   sync_primitives::Lock connection_list_lock;
   const TransportManagerSettings& settings_;
-  bool start_secure_;
 };
 
 }  // namespace transport_adapter

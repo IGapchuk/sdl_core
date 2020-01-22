@@ -1921,6 +1921,7 @@ void Profile::UpdateValues() {
                     kWebSocketServerPortKey,
                     kTransportManagerSection);
 
+#ifdef ENABLE_SECURITY
   ReadStringValue(&ws_server_cert_path_,
                   "",
                   kTransportManagerSection,
@@ -1944,6 +1945,7 @@ void Profile::UpdateValues() {
   LOG_UPDATED_VALUE(ws_server_ca_cert_path_,
                     kWSServerCACertificaePathKey,
                     kTransportManagerSection);
+#endif  // ENABLE_SECURITY
 
   ReadUIntValue(&cloud_app_retry_timeout_,
                 kDefaultCloudAppRetryTimeout,

@@ -62,6 +62,7 @@ WebSocketConnection<WebSocketSession<> >::WebSocketConnection(
   thread_->start(threads::ThreadOptions());
 }
 
+#ifdef ENABLE_SECURITY
 template <>
 WebSocketConnection<WebSocketSecureSession<> >::WebSocketConnection(
     const DeviceUID& device_uid,
@@ -86,6 +87,8 @@ WebSocketConnection<WebSocketSecureSession<> >::WebSocketConnection(
     , thread_(threads::CreateThread("WS Async Send", thread_delegate_)) {
   thread_->start(threads::ThreadOptions());
 }
+template class WebSocketConnection<WebSocketSecureSession<> >;
+#endif  // ENABLE_SECURITY
 
 template <typename Session>
 WebSocketConnection<Session>::~WebSocketConnection() {
@@ -187,7 +190,6 @@ void WebSocketConnection<Session>::LoopThreadDelegate::SetShutdown() {
 }
 
 template class WebSocketConnection<WebSocketSession<> >;
-template class WebSocketConnection<WebSocketSecureSession<> >;
 
 }  // namespace transport_adapter
 }  // namespace transport_manager

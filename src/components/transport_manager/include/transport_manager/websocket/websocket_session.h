@@ -35,10 +35,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/beast/websocket/ssl.hpp>
 #include "protocol/raw_message.h"
 #include "transport_manager/transport_adapter/transport_adapter.h"
 #include "utils/logger.h"
+
+#ifdef ENABLE_SECURITY
+#include <boost/beast/websocket/ssl.hpp>
+#endif  // ENABLE_SECURITY
 
 namespace transport_manager {
 namespace transport_adapter {
@@ -49,9 +52,11 @@ using DataWriteCallback = std::function<TransportAdapter::Error(
     protocol_handler::RawMessagePtr message)>;
 
 using tcp = boost::asio::ip::tcp;  // from <boost/asio/ip/tcp.hpp>
-namespace ssl = boost::asio::ssl;  // from <boost/asio/ssl.hpp>
 namespace websocket =
     boost::beast::websocket;  // from <boost/beast/websocket.hpp>
+#ifdef ENABLE_SECURITY
+namespace ssl = boost::asio::ssl;  // from <boost/asio/ssl.hpp>
+#endif  // ENABLE_SECURITY
 
 CREATE_LOGGERPTR_GLOBAL(ws_logger_, "WebSocketSession")
 
@@ -64,9 +69,11 @@ class WebSocketSession
   WebSocketSession(boost::asio::ip::tcp::socket socket,
                    DataReceiveCallback dataReceive);
 
+#ifdef ENABLE_SECURITY
   WebSocketSession(boost::asio::ip::tcp::socket socket,
                    ssl::context& ctx,
                    DataReceiveCallback dataReceive);
+#endif  // ENABLE_SECURITY
 
   virtual ~WebSocketSession();
 

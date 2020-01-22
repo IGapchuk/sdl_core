@@ -98,9 +98,11 @@ class TransportManagerSettings : public TransportManagerMMESettings {
   virtual const std::string& aoa_filter_version() const = 0;
   virtual const std::string& aoa_filter_uri() const = 0;
   virtual const std::string& aoa_filter_serial_number() const = 0;
+#ifdef ENABLE_SECURITY
   virtual const std::string& ws_server_cert_path() const = 0;
   virtual const std::string& ws_server_key_path() const = 0;
   virtual const std::string& ws_server_ca_cert_path() const = 0;
+#endif  // ENABLE_SECURITY
 };
 }  // namespace transport_manager
 #endif  // SRC_COMPONENTS_INCLUDE_TRANSPORT_MANAGER_TRANSPORT_MANAGER_SETTINGS_H_

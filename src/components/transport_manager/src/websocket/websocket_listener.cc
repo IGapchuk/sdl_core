@@ -12,7 +12,10 @@ WebSocketListener::WebSocketListener(TransportAdapterController* controller,
                                      const int num_threads)
     : controller_(controller)
     , ioc_(num_threads)
+#ifdef ENABLE_SECURITY
     , ctx_(ssl::context::sslv23)
+    , start_secure_(false)
+#endif  // ENABLE_SECURITY
     , acceptor_(ioc_)
     , socket_(ioc_)
     , io_pool_(num_threads)
@@ -44,6 +47,7 @@ TransportAdapter::Error WebSocketListener::StartListening() {
       boost::asio::ip::make_address(settings_.websocket_server_address());
   tcp::endpoint endpoint = {address, settings_.websocket_server_port()};
 
+#ifdef ENABLE_SECURITY
   const auto cert_path = settings_.ws_server_cert_path();
   LOG4CXX_DEBUG(logger_, "Path to certificate : " << cert_path);
   const auto key_path = settings_.ws_server_key_path();
@@ -100,6 +104,7 @@ TransportAdapter::Error WebSocketListener::StartListening() {
                     "Loading WS server key failed: " << sec_ec.message());
     }
   }
+#endif  // ENABLE_SECURITY
 
   // Open the acceptor
   acceptor_.open(endpoint.protocol(), ec);
@@ -192,6 +197,7 @@ void WebSocketListener::ProcessConnection(
   WaitForConnection();
 }
 
+#ifdef ENABLE_SECURITY
 template <>
 void WebSocketListener::ProcessConnection(
     std::shared_ptr<WebSocketConnection<WebSocketSecureSession<> > > connection,
@@ -211,6 +217,7 @@ void WebSocketListener::ProcessConnection(
 
   WaitForConnection();
 }
+#endif  // ENABLE_SECURITY
 
 void WebSocketListener::StartSession(boost::system::error_code ec) {
   LOG4CXX_AUTO_TRACE(logger_);
@@ -230,6 +237,9 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
       std::static_pointer_cast<WebSocketDevice>(
           controller_->GetWebEngineDevice());
 
+  LOG4CXX_INFO(logger_, "Connected client: " << app_handle);
+
+#ifdef ENABLE_SECURITY
   if (start_secure_) {
     auto connection =
         std::make_shared<WebSocketConnection<WebSocketSecureSession<> > >(
@@ -239,16 +249,13 @@ void WebSocketListener::StartSession(boost::system::error_code ec) {
             ctx_,
             controller_);
     ProcessConnection(connection, device, app_handle);
-  } else {
-    auto connection =
-        std::make_shared<WebSocketConnection<WebSocketSession<> > >(
-            device->unique_device_id(),
-            app_handle,
-            std::move(socket_),
-            controller_);
-    ProcessConnection(connection, device, app_handle);
+    return;
   }
-  LOG4CXX_INFO(logger_, "Connected client: " << app_handle);
+#endif  // ENABLE_SECURITY
+
+  auto connection = std::make_shared<WebSocketConnection<WebSocketSession<> > >(
+      device->unique_device_id(), app_handle, std::move(socket_), controller_);
+  ProcessConnection(connection, device, app_handle);
 }
 
 void WebSocketListener::Shutdown() {

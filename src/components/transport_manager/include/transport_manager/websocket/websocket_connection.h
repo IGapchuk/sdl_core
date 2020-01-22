@@ -32,9 +32,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SRC_COMPONENTS_TRANSPORT_MANAGER_INCLUDE_TRANSPORT_MANAGER_WEBSOCKET_WEBSOCKET_CONNECTION_H
 
 #include "transport_manager/transport_adapter/connection.h"
-#include "transport_manager/websocket/websocket_secure_session.h"
 #include "utils/message_queue.h"
 #include "utils/threads/thread.h"
+
+#ifdef ENABLE_SECURITY
+#include "transport_manager/websocket/websocket_secure_session.h"
+#else
+#include "transport_manager/websocket/websocket_session.h"
+#endif  // ENABLE_SECURITY
 
 namespace transport_manager {
 namespace transport_adapter {
@@ -56,11 +61,13 @@ class WebSocketConnection
                       boost::asio::ip::tcp::socket socket,
                       TransportAdapterController* controller);
 
+#ifdef ENABLE_SECURITY
   WebSocketConnection(const DeviceUID& device_uid,
                       const ApplicationHandle& app_handle,
                       boost::asio::ip::tcp::socket socket,
                       ssl::context& ctx,
                       TransportAdapterController* controller);
+#endif  // ENABLE_SECURITY
 
   ~WebSocketConnection();
 
