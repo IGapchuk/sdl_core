@@ -756,6 +756,10 @@ void PolicyManagerImpl::GetEnabledCloudApps(
   cache_->GetEnabledCloudApps(enabled_apps);
 }
 
+std::vector<std::string> PolicyManagerImpl::GetEnabledLocalApps() const {
+  return cache_->GetEnabledLocalApps();
+}
+
 bool PolicyManagerImpl::GetAppProperties(
     const std::string& policy_app_id, AppProperties& out_app_properties) const {
   return cache_->GetAppProperties(policy_app_id, out_app_properties);
@@ -1587,10 +1591,10 @@ bool PolicyManagerImpl::InitPT(const std::string& file_name,
     if (!certificate_data.empty()) {
       listener_->OnCertificateUpdated(certificate_data);
     }
-    std::vector<std::string> enabled_apps;
-    cache_->GetEnabledCloudApps(enabled_apps);
-    for (auto it = enabled_apps.begin(); it != enabled_apps.end(); ++it) {
-      SendAuthTokenUpdated(*it);
+    std::vector<std::string> enabled_cloud_apps;
+    cache_->GetEnabledCloudApps(enabled_cloud_apps);
+    for (auto app : enabled_cloud_apps) {
+      SendAuthTokenUpdated(app);
     }
   }
   return ret;

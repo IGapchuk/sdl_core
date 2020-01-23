@@ -106,7 +106,10 @@ TransportManagerImpl::TransportManagerImpl(
     , events_processing_is_active_(true)
     , events_processing_lock_()
     , events_processing_cond_var_()
-    , web_engine_device_(0, "", "Web engine", "") {
+    , web_engine_device_(0,
+                         "",
+                         webengine_constants::kWebEngineDeviceName,
+                         webengine_constants::kWebEngineConnectionType) {
   LOG4CXX_TRACE(logger_, "TransportManager has created");
 }
 
@@ -667,7 +670,10 @@ void TransportManagerImpl::CreateWebEngineDevice(const std::string& vin_code) {
   DeviceHandle device_handle =
       converter_.UidToHandle(vin_code, "WEBENGINE_WEBSOCKET");
   web_engine_device_ =
-      DeviceInfo(device_handle, vin_code, "Web Engine", "WEBENGINE_WEBSOCKET");
+      DeviceInfo(device_handle,
+                 vin_code,
+                 webengine_constants::kWebEngineDeviceName,
+                 webengine_constants::kWebEngineConnectionType);
 
   (*web_socket_ta)
       ->AddDevice(std::make_shared<transport_adapter::WebSocketDevice>(

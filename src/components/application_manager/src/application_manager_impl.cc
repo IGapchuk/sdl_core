@@ -1301,6 +1301,21 @@ void ApplicationManagerImpl::CreatePendingApplication(
                           << apps_to_register_.size());
 }
 
+void ApplicationManagerImpl::OnWebEngineDeviceCreated() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  const auto enabled_local_apps = policy_handler_->GetEnabledLocalApps();
+
+  if (enabled_local_apps.empty()) {
+    LOG4CXX_DEBUG(logger_, "No enabled local apps present");
+    return;
+  }
+
+  for (auto policy_app_id : enabled_local_apps) {
+    CreatePendingApplication(policy_app_id);
+  }
+  SendUpdateAppList();
+}
+
 void ApplicationManagerImpl::SetPendingApplicationState(
     const transport_manager::ConnectionUID connection_id,
     const transport_manager::DeviceInfo& device_info) {

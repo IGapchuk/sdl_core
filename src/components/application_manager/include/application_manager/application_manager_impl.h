@@ -407,6 +407,8 @@ class ApplicationManagerImpl
       const transport_manager::DeviceInfo& device_info,
       connection_handler::DeviceHandle device_id) OVERRIDE;
 
+  void OnWebEngineDeviceCreated() OVERRIDE;
+
   void CreatePendingApplication(const std::string& policy_app_id) OVERRIDE;
 
   void RemovePendingApplication(const std::string& policy_app_id) OVERRIDE;

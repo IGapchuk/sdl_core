@@ -155,6 +155,11 @@ void ConnectionHandlerImpl::OnDeviceAdded(
 
   auto result = device_list_.insert(std::make_pair(handle, device));
 
+  if (device_info.name() ==
+      transport_manager::webengine_constants::kWebEngineDeviceName) {
+    connection_handler_observer_->OnWebEngineDeviceCreated();
+  }
+
   if (!result.second) {
     LOG4CXX_ERROR(logger_,
                   "Device with handle " << handle

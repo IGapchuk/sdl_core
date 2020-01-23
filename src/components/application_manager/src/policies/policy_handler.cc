@@ -2016,6 +2016,11 @@ bool PolicyHandler::GetAppProperties(const std::string& policy_app_id,
   return policy_manager_->GetAppProperties(policy_app_id, out_app_properties);
 }
 
+std::vector<std::string> PolicyHandler::GetEnabledLocalApps() const {
+  POLICY_LIB_CHECK(std::vector<std::string>());
+  return policy_manager_->GetEnabledLocalApps();
+}
+
 const bool PolicyHandler::CheckCloudAppEnabled(
     const std::string& policy_app_id) const {
   POLICY_LIB_CHECK(false);
@@ -2251,7 +2256,7 @@ void PolicyHandler::OnSetAppProperties(
 }
 
 void PolicyHandler::OnLocalAppAdded() {
-  return policy_manager_->OnLocalAppAdded();
+  policy_manager_->OnLocalAppAdded();
 }
 
 void PolicyHandler::OnSetCloudAppProperties(

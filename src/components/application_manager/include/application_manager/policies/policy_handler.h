@@ -436,6 +436,13 @@ class PolicyHandler : public PolicyHandlerInterface,
       std::vector<std::string>& enabled_apps) const OVERRIDE;
 
   /**
+   * @brief Get a list of enabled local applications
+   * @return enabled_apps List filled with the policy app id of each enabled
+   * local application
+   */
+  std::vector<std::string> GetEnabledLocalApps() const OVERRIDE;
+
+  /**
    * @brief Checks if a given application is an enabled cloud application
    * @param policy_app_id Unique application id
    * @return true, if the application is an enabled cloud application,

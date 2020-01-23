@@ -1817,8 +1817,10 @@ bool MessageHelper::CreateHMIApplicationStruct(
                      &secondary_device_info);
   }
 
-  message[strings::is_cloud_application] = app->is_cloud_app();
-  if (app->is_cloud_app()) {
+  const bool is_cloud_app = app->is_cloud_app();
+  message[strings::is_cloud_application] = is_cloud_app;
+
+  if (is_cloud_app) {
     message[strings::cloud_connection_status] =
         app_mngr.GetCloudAppConnectionStatus(app);
   }

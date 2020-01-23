@@ -55,6 +55,7 @@ class MockCacheManagerInterface : public CacheManagerInterface {
   MOCK_METHOD0(IsPTPreloaded, bool());
   MOCK_METHOD0(IgnitionCyclesBeforeExchange, int());
   MOCK_METHOD1(KilometersBeforeExchange, int(int current));
+  MOCK_CONST_METHOD0(GetEnabledLocalApps, std::vector<std::string>());
   MOCK_METHOD2(SetCountersPassedForSuccessfulUpdate,
                bool(Counters counter, int value));
   MOCK_METHOD1(DaysBeforeExchange, int(int current));

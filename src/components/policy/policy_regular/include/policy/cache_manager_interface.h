@@ -177,6 +177,13 @@ class CacheManagerInterface {
       std::vector<std::string>& enabled_apps) const = 0;
 
   /**
+   * @brief Get a list of enabled local applications
+   * @return enabled_apps List filled with the policy app id of each enabled
+   * local application
+   */
+  virtual std::vector<std::string> GetEnabledLocalApps() const = 0;
+
+  /**
    * @brief Get cloud app policy information, all fields that aren't set for a
    * given app will be filled with empty strings
    * @param policy_app_id Unique application id

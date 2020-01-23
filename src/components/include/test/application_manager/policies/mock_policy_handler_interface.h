@@ -249,6 +249,7 @@ class MockPolicyHandlerInterface : public policy::PolicyHandlerInterface {
                      void(std::vector<std::string>& enabled_apps));
   MOCK_CONST_METHOD1(CheckCloudAppEnabled,
                      const bool(const std::string& policy_app_id));
+  MOCK_CONST_METHOD0(GetEnabledLocalApps, std::vector<std::string>());
   MOCK_CONST_METHOD2(GetAppProperties,
                      bool(const std::string& policy_app_id,
                           policy::AppProperties& app_properties));
