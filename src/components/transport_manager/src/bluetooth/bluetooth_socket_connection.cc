@@ -65,6 +65,14 @@ bool BluetoothSocketConnection::Establish(ConnectError** error) {
   LOG4CXX_DEBUG(logger_, "error: " << error);
   DeviceSptr device = controller()->FindDevice(device_handle());
 
+  if (!device) {
+    LOG4CXX_WARN(logger_,
+                 "Device with UID:" << device_handle() << " not found");
+    *error = new ConnectError();
+    LOG4CXX_TRACE(logger_, "exit with FALSE");
+    return false;
+  }
+
   BluetoothDevice* bluetooth_device =
       static_cast<BluetoothDevice*>(device.get());
 

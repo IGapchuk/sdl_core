@@ -57,7 +57,8 @@ bool TcpServerOriginatedSocketConnection::Establish(ConnectError** error) {
   LOG4CXX_DEBUG(logger_, "error " << error);
   DeviceSptr device = controller()->FindDevice(device_handle());
   if (device.use_count() == 0) {
-    LOG4CXX_ERROR(logger_, "Device " << device_handle() << " not found");
+    LOG4CXX_ERROR(logger_,
+                  "Device wiht UID:" << device_handle() << " not found");
     *error = new ConnectError();
     return false;
   }

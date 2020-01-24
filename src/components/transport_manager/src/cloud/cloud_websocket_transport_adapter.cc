@@ -77,6 +77,7 @@ void CloudWebsocketTransportAdapter::CreateDevice(const std::string& uid) {
   // If the device has already been created, just ignore the request
   DeviceSptr device = FindDevice(uid);
   if (device.use_count() != 0) {
+    LOG4CXX_WARN(logger_, "Device with UID:" << uid << " not found.");
     return;
   }
 

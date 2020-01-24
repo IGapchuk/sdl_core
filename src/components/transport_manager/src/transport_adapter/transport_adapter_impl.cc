@@ -369,6 +369,12 @@ TransportAdapter::Error TransportAdapterImpl::DisconnectDevice(
 
   Error error = OK;
   DeviceSptr device = FindDevice(device_id);
+
+  if (!device) {
+    LOG4CXX_WARN(logger_, "Device: uid " << device_id << " not found");
+    return TransportAdapter::BAD_PARAM;
+  }
+
   ConnectionStatusUpdated(device, ConnectionStatus::CLOSING);
 
   std::vector<ConnectionInfo> to_disconnect;
@@ -909,8 +915,10 @@ void TransportAdapterImpl::ConnectPending(const DeviceUID& device_id,
 
   DeviceSptr device = FindDevice(device_id);
   if (device.use_count() == 0) {
-    LOG4CXX_ERROR(
-        logger_, "Unable to find device, cannot set connection pending status");
+    LOG4CXX_ERROR(logger_,
+                  "Unable to find device["
+                      << device_id
+                      << "], cannot set connection pending status");
     return;
   } else {
     device->set_connection_status(ConnectionStatus::PENDING);
@@ -975,14 +983,14 @@ void TransportAdapterImpl::RemoveFinalizedConnection(
     auto it_conn = connections_.find(std::make_pair(device_uid, app_handle));
     if (connections_.end() == it_conn) {
       LOG4CXX_WARN(logger_,
-                   "Device_id: " << &device_uid << ", app_handle: "
+                   "Device_id: " << device_uid << ", app_handle: "
                                  << &app_handle << " connection not found");
       return;
     }
     const ConnectionInfo& info = it_conn->second;
     if (ConnectionInfo::FINALISING != info.state) {
       LOG4CXX_WARN(logger_,
-                   "Device_id: " << &device_uid << ", app_handle: "
+                   "Device_id: " << device_uid << ", app_handle: "
                                  << &app_handle << " connection not finalized");
       return;
     }
@@ -991,7 +999,7 @@ void TransportAdapterImpl::RemoveFinalizedConnection(
 
   DeviceSptr device = FindDevice(device_handle);
   if (!device) {
-    LOG4CXX_WARN(logger_, "Device: uid " << &device_uid << " not found");
+    LOG4CXX_WARN(logger_, "Device: uid " << device_uid << " not found");
     return;
   }
 
@@ -1009,7 +1017,7 @@ void TransportAdapterImpl::AddListener(TransportAdapterListener* listener) {
 
 ApplicationList TransportAdapterImpl::GetApplicationList(
     const DeviceUID& device_id) const {
-  LOG4CXX_TRACE(logger_, "enter. device_id: " << &device_id);
+  LOG4CXX_TRACE(logger_, "enter. device_id: " << device_id);
   DeviceSptr device = FindDevice(device_id);
   if (device.use_count() != 0) {
     ApplicationList lst = device->GetApplicationList();
@@ -1020,7 +1028,8 @@ ApplicationList TransportAdapterImpl::GetApplicationList(
   }
   LOG4CXX_TRACE(logger_,
                 "exit with empty ApplicationList. Condition: NOT "
-                "device.use_count() != 0");
+                "device.use_count() != 0. DeviceUID: "
+                    << device_id);
   return ApplicationList();
 }
 

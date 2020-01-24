@@ -82,6 +82,12 @@ void WebsocketClientConnection::AddCertificateAuthority(
 TransportAdapter::Error WebsocketClientConnection::Start() {
   LOG4CXX_AUTO_TRACE(logger_);
   DeviceSptr device = controller_->FindDevice(device_uid_);
+
+  if (!device) {
+    LOG4CXX_WARN(logger_, "Device: uid " << device_uid_ << " not found");
+    return TransportAdapter::BAD_PARAM;
+  }
+
   CloudDevice* cloud_device = static_cast<CloudDevice*>(device.get());
   CloudWebsocketTransportAdapter* cloud_ta =
       static_cast<CloudWebsocketTransportAdapter*>(controller_);

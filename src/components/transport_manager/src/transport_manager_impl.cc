@@ -339,10 +339,12 @@ int TransportManagerImpl::AddEventListener(TransportManagerListener* listener) {
 void TransportManagerImpl::DisconnectAllDevices() {
   LOG4CXX_AUTO_TRACE(logger_);
   sync_primitives::AutoReadLock lock(device_list_lock_);
+  LOG4CXX_DEBUG(logger_, "LOLKEK: Devices count:" << device_list_.size());
   for (DeviceInfoList::iterator i = device_list_.begin();
        i != device_list_.end();
        ++i) {
     DeviceInfo& device = i->second;
+    LOG4CXX_DEBUG(logger_, "LOLKEK: Device UID:" << device.device_handle());
     DisconnectDevice(device.device_handle());
   }
 }

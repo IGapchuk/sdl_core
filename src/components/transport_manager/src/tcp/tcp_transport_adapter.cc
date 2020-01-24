@@ -98,6 +98,7 @@ void TcpTransportAdapter::Store() const {
     DeviceUID device_id = *i;
     DeviceSptr device = FindDevice(device_id);
     if (!device) {  // device could have been disconnected
+      LOG4CXX_WARN(logger_, "Device with UID:" << device_id << " not found");
       continue;
     }
     std::shared_ptr<TcpDevice> tcp_device =
