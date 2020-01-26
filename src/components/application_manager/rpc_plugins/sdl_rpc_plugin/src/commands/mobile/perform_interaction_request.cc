@@ -280,8 +280,9 @@ void PerformInteractionRequest::on_event(const event_engine::Event& event) {
     LOG4CXX_DEBUG(logger_,
                   "Send response in interaction mode "
                       << static_cast<int32_t>(interaction_mode_));
-    SetChoiceIdToResponseMsgParams(msg_param);
-    SendBothModeResponse(msg_param);
+    if (SetChoiceIdToResponseMsgParams(msg_param)) {
+      SendBothModeResponse(msg_param);
+    }
   }
 }
 
@@ -1123,8 +1124,8 @@ PerformInteractionRequest::PrepareResultCodeForResponse(
     }
   }
 
-  return MessageHelper::HMIToMobileResult(
-      std::min(ui_result_code_, vr_result_code_));
+  return CommandRequestImpl::PrepareResultCodeForResponse(ui_response,
+                                                          vr_response);
 }
 
 bool PerformInteractionRequest::PrepareResultForMobileResponse(
@@ -1144,9 +1145,17 @@ bool PerformInteractionRequest::PrepareResultForMobileResponse(
                                                             vr_response);
 }
 
-void PerformInteractionRequest::SetChoiceIdToResponseMsgParams(
+bool PerformInteractionRequest::SetChoiceIdToResponseMsgParams(
     ns_smart_device_link::ns_smart_objects::SmartObject& msg_param) {
   LOG4CXX_AUTO_TRACE(logger_);
+
+  const bool ui_choice_id_valid = INVALID_CHOICE_ID != ui_choice_id_received_;
+  const bool vr_choice_id_valid = INVALID_CHOICE_ID != vr_choice_id_received_;
+
+  if (ui_choice_id_valid && vr_choice_id_valid &&
+      ui_choice_id_received_ == vr_choice_id_received_) {
+    return false;
+  }
 
   msg_param[strings::choice_id] = INVALID_CHOICE_ID;
 
@@ -1165,6 +1174,8 @@ void PerformInteractionRequest::SetChoiceIdToResponseMsgParams(
   } else {
     LOG4CXX_DEBUG(logger_, "Invalid interaction mode: " << interaction_mode_);
   }
+
+  return true;
 }
 
 }  // namespace commands

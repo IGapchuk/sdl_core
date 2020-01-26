@@ -271,7 +271,7 @@ class PerformInteractionRequest
    * @param msg_param Message parameters which will be included in the response
    * to mobile device.
    */
-  void SetChoiceIdToResponseMsgParams(smart_objects::SmartObject& msg_param);
+  bool SetChoiceIdToResponseMsgParams(smart_objects::SmartObject& msg_param);
 
   mobile_apis::InteractionMode::eType interaction_mode_;
   std::int32_t ui_choice_id_received_;
