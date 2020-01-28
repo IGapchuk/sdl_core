@@ -78,8 +78,7 @@ PerformInteractionRequest::PerformInteractionRequest(
     , vr_response_received_(false)
     , app_pi_was_active_before_(false)
     , vr_result_code_(hmi_apis::Common_Result::INVALID_ENUM)
-    , ui_result_code_(hmi_apis::Common_Result::INVALID_ENUM)
-    , is_close_popup_request_already_sent_(false) {
+    , ui_result_code_(hmi_apis::Common_Result::INVALID_ENUM) {
   subscribe_on_event(hmi_apis::FunctionID::UI_OnResetTimeout);
   subscribe_on_event(hmi_apis::FunctionID::VR_OnCommand);
   subscribe_on_event(hmi_apis::FunctionID::Buttons_OnButtonPress);
@@ -284,13 +283,11 @@ void PerformInteractionRequest::on_event(const event_engine::Event& event) {
     if (SetChoiceIdToResponseMsgParams(msg_param)) {
       SendBothModeResponse(msg_param);
     } else {
-      TerminatePerformInteraction();
+      DisablePerformInteraction();
       SendResponse(false,
                    mobile_apis::Result::GENERIC_ERROR,
                    "Received two different choice IDs");
     }
-
-    is_close_popup_request_already_sent_ = false;
   }
 }
 
@@ -969,12 +966,6 @@ void PerformInteractionRequest::TerminatePerformInteraction() {
 }
 
 void PerformInteractionRequest::SendClosePopupRequestToHMI() {
-  if (is_close_popup_request_already_sent_) {
-    return;
-  } else {
-    is_close_popup_request_already_sent_ = true;
-  }
-
   smart_objects::SmartObject msg_params =
       smart_objects::SmartObject(smart_objects::SmartType_Map);
   msg_params[hmi_request::method_name] = "UI.PerformInteraction";

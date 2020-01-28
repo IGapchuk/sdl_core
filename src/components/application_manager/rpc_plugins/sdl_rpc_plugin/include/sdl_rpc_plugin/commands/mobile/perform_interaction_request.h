@@ -287,7 +287,6 @@ class PerformInteractionRequest
   std::string ui_info_;
   std::string vr_info_;
 
-  bool is_close_popup_request_already_sent_;
   DISALLOW_COPY_AND_ASSIGN(PerformInteractionRequest);
 };
 
