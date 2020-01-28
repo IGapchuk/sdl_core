@@ -58,7 +58,7 @@ class LastStateImpl : public LastState {
   ~LastStateImpl();
 
   DEPRECATED
-  void SaveStateToFileSystem() {}
+  void SaveStateToFileSystem();
 
   /**
    * @brief Saving dictionary to filesystem

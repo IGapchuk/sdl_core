@@ -55,8 +55,7 @@ class ResumptionDataJson : public ResumptionData {
   DEPRECATED
   ResumptionDataJson(
       LastState&,
-      const application_manager::ApplicationManager& application_manager)
-      : ResumptionData(application_manager) {}
+      const application_manager::ApplicationManager& application_manager);
 
   /**
    * @brief allows to destroy ResumptionDataJson object
@@ -180,6 +179,9 @@ class ResumptionDataJson : public ResumptionData {
    * @brief Write json resumption info to file system
    */
   void Persist() OVERRIDE;
+
+  DEPRECATED
+  resumption::LastState& last_state() const;
 
  private:
   /**

@@ -63,6 +63,7 @@ class IAP2BluetoothEmulationTransportAdapter : public TcpTransportAdapter {
       resumption::LastStateWrapperPtr last_state_wrapper,
       const TransportManagerSettings& settings);
 
+  DEPRECATED
   IAP2BluetoothEmulationTransportAdapter(
       const uint16_t port,
       resumption::LastState& last_state_wrapper,

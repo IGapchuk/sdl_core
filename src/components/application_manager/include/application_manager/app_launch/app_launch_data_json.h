@@ -54,6 +54,10 @@ class AppLaunchDataJson : public AppLaunchDataImpl {
   AppLaunchDataJson(const AppLaunchSettings& settings,
                     resumption::LastStateWrapperPtr last_state_wrapper);
 
+  DEPRECATED
+  AppLaunchDataJson(const AppLaunchSettings& settings,
+                    resumption::LastState& last_state);
+
   /**
    * @brief allows to destroy AppLaunchDataJson object
    */

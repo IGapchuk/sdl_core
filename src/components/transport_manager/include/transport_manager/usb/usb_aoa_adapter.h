@@ -49,7 +49,7 @@ class UsbAoaAdapter : public TransportAdapterImpl {
 
   DEPRECATED
   UsbAoaAdapter(resumption::LastState&,
-                const TransportManagerSettings& settings) = delete;
+                const TransportManagerSettings& settings);
 
   virtual ~UsbAoaAdapter();
 

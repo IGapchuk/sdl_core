@@ -54,9 +54,7 @@ class TransportManager {
   virtual ~TransportManager() {}
 
   DEPRECATED
-  virtual int Init(resumption::LastState&) {
-    return 1;
-  }
+  virtual int Init(resumption::LastState& last_state) = 0;
 
   /**
    * @brief Initialize transport manager.

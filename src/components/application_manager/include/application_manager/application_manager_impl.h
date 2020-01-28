@@ -160,9 +160,7 @@ class ApplicationManagerImpl
 
   DEPRECATED
   bool Init(resumption::LastState&,
-            media_manager::MediaManager* media_manager) {
-    return false;
-  }
+            media_manager::MediaManager* media_manager) OVERRIDE;
 
   /**
    * Inits application manager

@@ -529,7 +529,7 @@ class HMICapabilities {
       const = 0;
 
   DEPRECATED
-  virtual void Init(resumption::LastState&) {}
+  virtual void Init(resumption::LastState* last_state) = 0;
 
   virtual void Init(resumption::LastStateWrapperPtr last_state_wrapper) = 0;
 

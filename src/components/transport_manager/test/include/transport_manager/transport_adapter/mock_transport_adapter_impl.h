@@ -71,8 +71,7 @@ class MockTransportAdapterImpl : public TransportAdapterImpl {
                            ServerConnectionFactory*,
                            ClientConnectionListener*,
                            resumption::LastState&,
-                           const transport_manager::TransportManagerSettings&) =
-      delete;
+                           const transport_manager::TransportManagerSettings&);
 
   ConnectionSPtr FindStatedConnection(const DeviceUID& device_handle,
                                       const ApplicationHandle& app_handle) {
