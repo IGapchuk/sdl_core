@@ -1130,13 +1130,13 @@ PerformInteractionRequest::PrepareResultCodeForResponse(
   if (mobile_apis::InteractionMode::MANUAL_ONLY == interaction_mode_) {
     return MessageHelper::HMIToMobileResult(ui_result_code_);
   }
-  if (mobile_apis::InteractionMode::BOTH == interaction_mode_) {
-    if (INVALID_CHOICE_ID != vr_choice_id_received_) {
-      return MessageHelper::HMIToMobileResult(vr_result_code_);
-    }
-    if (INVALID_CHOICE_ID != ui_choice_id_received_) {
-      return MessageHelper::HMIToMobileResult(ui_result_code_);
-    }
+
+  // BOTH mode
+  if (INVALID_CHOICE_ID != vr_choice_id_received_) {
+    return MessageHelper::HMIToMobileResult(vr_result_code_);
+  }
+  if (INVALID_CHOICE_ID != ui_choice_id_received_) {
+    return MessageHelper::HMIToMobileResult(ui_result_code_);
   }
 
   return CommandRequestImpl::PrepareResultCodeForResponse(ui_response,
@@ -1152,12 +1152,9 @@ bool PerformInteractionRequest::PrepareResultForMobileResponse(
   if (mobile_apis::InteractionMode::MANUAL_ONLY == interaction_mode_) {
     return ui_response.is_ok;
   }
-  if (mobile_apis::InteractionMode::BOTH == interaction_mode_) {
-    return (vr_response.is_ok || ui_response.is_ok);
-  }
 
-  return CommandRequestImpl::PrepareResultForMobileResponse(ui_response,
-                                                            vr_response);
+  // BOTH mode
+  return (vr_response.is_ok || ui_response.is_ok);
 }
 
 bool PerformInteractionRequest::SetChoiceIdToResponseMsgParams(
