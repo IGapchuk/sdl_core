@@ -78,7 +78,8 @@ PerformInteractionRequest::PerformInteractionRequest(
     , vr_response_received_(false)
     , app_pi_was_active_before_(false)
     , vr_result_code_(hmi_apis::Common_Result::INVALID_ENUM)
-    , ui_result_code_(hmi_apis::Common_Result::INVALID_ENUM) {
+    , ui_result_code_(hmi_apis::Common_Result::INVALID_ENUM)
+    , is_close_popup_request_already_sent_(false) {
   subscribe_on_event(hmi_apis::FunctionID::UI_OnResetTimeout);
   subscribe_on_event(hmi_apis::FunctionID::VR_OnCommand);
   subscribe_on_event(hmi_apis::FunctionID::Buttons_OnButtonPress);
@@ -282,7 +283,14 @@ void PerformInteractionRequest::on_event(const event_engine::Event& event) {
                       << static_cast<int32_t>(interaction_mode_));
     if (SetChoiceIdToResponseMsgParams(msg_param)) {
       SendBothModeResponse(msg_param);
+    } else {
+      TerminatePerformInteraction();
+      SendResponse(false,
+                   mobile_apis::Result::GENERIC_ERROR,
+                   "Received two different choice IDs");
     }
+
+    is_close_popup_request_already_sent_ = false;
   }
 }
 
@@ -359,7 +367,8 @@ bool PerformInteractionRequest::ProcessVRResponse(
     return false;
   }
 
-  if (!ui_response_received_) {
+  if (!ui_response_received_ &&
+      InteractionMode::MANUAL_ONLY != interaction_mode_) {
     // After VR.PerformInteraction response HMI should close UI popup window
     // if UI.PerformInteraction response comes
     // after VR.PerformInteraction response.
@@ -960,6 +969,12 @@ void PerformInteractionRequest::TerminatePerformInteraction() {
 }
 
 void PerformInteractionRequest::SendClosePopupRequestToHMI() {
+  if (is_close_popup_request_already_sent_) {
+    return;
+  } else {
+    is_close_popup_request_already_sent_ = true;
+  }
+
   smart_objects::SmartObject msg_params =
       smart_objects::SmartObject(smart_objects::SmartType_Map);
   msg_params[hmi_request::method_name] = "UI.PerformInteraction";
@@ -1146,35 +1161,31 @@ bool PerformInteractionRequest::PrepareResultForMobileResponse(
 }
 
 bool PerformInteractionRequest::SetChoiceIdToResponseMsgParams(
-    ns_smart_device_link::ns_smart_objects::SmartObject& msg_param) {
+    ns_smart_device_link::ns_smart_objects::SmartObject& msg_param) const {
   LOG4CXX_AUTO_TRACE(logger_);
 
   const bool ui_choice_id_valid = INVALID_CHOICE_ID != ui_choice_id_received_;
   const bool vr_choice_id_valid = INVALID_CHOICE_ID != vr_choice_id_received_;
 
   if (ui_choice_id_valid && vr_choice_id_valid &&
-      ui_choice_id_received_ == vr_choice_id_received_) {
+      ui_choice_id_received_ != vr_choice_id_received_) {
     return false;
   }
 
-  msg_param[strings::choice_id] = INVALID_CHOICE_ID;
-
   if (mobile_apis::InteractionMode::eType::MANUAL_ONLY == interaction_mode_) {
     msg_param[strings::choice_id] = ui_choice_id_received_;
+    return true;
   }
 
   if (mobile_apis::InteractionMode::eType::VR_ONLY == interaction_mode_) {
     msg_param[strings::choice_id] = vr_choice_id_received_;
+    return true;
   }
 
-  if (mobile_apis::InteractionMode::eType::BOTH == interaction_mode_) {
-    msg_param[strings::choice_id] =
-        (INVALID_CHOICE_ID != ui_choice_id_received_) ? ui_choice_id_received_
-                                                      : vr_choice_id_received_;
-  } else {
-    LOG4CXX_DEBUG(logger_, "Invalid interaction mode: " << interaction_mode_);
-  }
-
+  // Both mode
+  msg_param[strings::choice_id] = (INVALID_CHOICE_ID != ui_choice_id_received_)
+                                      ? ui_choice_id_received_
+                                      : vr_choice_id_received_;
   return true;
 }
 

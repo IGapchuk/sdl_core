@@ -271,7 +271,8 @@ class PerformInteractionRequest
    * @param msg_param Message parameters which will be included in the response
    * to mobile device.
    */
-  bool SetChoiceIdToResponseMsgParams(smart_objects::SmartObject& msg_param);
+  bool SetChoiceIdToResponseMsgParams(
+      smart_objects::SmartObject& msg_param) const;
 
   mobile_apis::InteractionMode::eType interaction_mode_;
   std::int32_t ui_choice_id_received_;
@@ -286,6 +287,7 @@ class PerformInteractionRequest
   std::string ui_info_;
   std::string vr_info_;
 
+  bool is_close_popup_request_already_sent_;
   DISALLOW_COPY_AND_ASSIGN(PerformInteractionRequest);
 };
 
