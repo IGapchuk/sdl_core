@@ -74,8 +74,8 @@ const int32_t kCorrelationId = 1u;
 const int32_t kCommandId = 1;
 const uint32_t kCmdId = 1u;
 const uint32_t kConnectionKey = 2u;
-const int32_t ui_choice_id1 = 1u;
-const int32_t vr_choice_id2 = 2u;
+const int32_t kUiChoiceID = 1u;
+const int32_t kVrChoiceID = 2u;
 const int32_t kInvalidChoiceId = -1;
 }  // namespace
 
@@ -98,13 +98,13 @@ class PerformInteractionRequestTest
     choice_set2[strings::choice_set] =
         smart_objects::SmartType::SmartType_Array;
 
-    choice_set1[strings::choice_set][0][strings::choice_id] = ui_choice_id1;
-    choice_set2[strings::choice_set][0][strings::choice_id] = vr_choice_id2;
+    choice_set1[strings::choice_set][0][strings::choice_id] = kUiChoiceID;
+    choice_set2[strings::choice_set][0][strings::choice_id] = kVrChoiceID;
 
     choice_set_map_[kCorrelationId].insert(std::make_pair(
-        ui_choice_id1, new smart_objects::SmartObject(choice_set1)));
+        kUiChoiceID, new smart_objects::SmartObject(choice_set1)));
     choice_set_map_[kCorrelationId].insert(std::make_pair(
-        vr_choice_id2, new smart_objects::SmartObject(choice_set2)));
+        kVrChoiceID, new smart_objects::SmartObject(choice_set2)));
 
     ON_CALL(app_mngr_, application(kConnectionKey))
         .WillByDefault(Return(mock_app_));
@@ -134,6 +134,38 @@ class PerformInteractionRequestTest
     EXPECT_EQ((*msg)[am::strings::msg_params][am::hmi_request::method_name]
                   .asString(),
               method_name);
+  }
+
+  MessageSharedPtr CreateRequestMessage(
+      const mobile_apis::InteractionMode::eType& interaction_mode) {
+    MessageSharedPtr request_msg = CreateMessage(smart_objects::SmartType_Map);
+    (*request_msg)[strings::params][strings::connection_key] = kConnectionKey;
+    (*request_msg)[strings::params][strings::correlation_id] = kCorrelationId;
+    (*request_msg)[strings::msg_params][strings::interaction_mode] =
+        interaction_mode;
+    return request_msg;
+  }
+
+  MessageSharedPtr CreateHMIResponseMessage(
+      const hmi_apis::Common_Result::eType& response_code,
+      const std::string& message_info,
+      const int32_t command_id = kCommandId) {
+    MessageSharedPtr response_msg = CreateMessage(smart_objects::SmartType_Map);
+    (*response_msg)[strings::params][hmi_response::code] = response_code;
+    (*response_msg)[strings::msg_params][strings::cmd_id] = command_id;
+    (*response_msg)[am::strings::msg_params][am::strings::info] = message_info;
+    return response_msg;
+  }
+
+  MessageSharedPtr CreateHMIResponseMessageWithChoiceID(
+      const hmi_apis::Common_Result::eType& response_code,
+      const std::string& message_info,
+      const int32_t choice_id,
+      const int32_t command_id = kCommandId) {
+    MessageSharedPtr response_msg =
+        CreateHMIResponseMessage(response_code, message_info, kCommandId);
+    (*response_msg)[strings::msg_params][strings::choice_id] = choice_id;
+    return response_msg;
   }
 
   sync_primitives::Lock lock_;
@@ -191,31 +223,19 @@ TEST_F(PerformInteractionRequestTest, OnTimeout_VR_GENERIC_ERROR) {
 TEST_F(PerformInteractionRequestTest,
        OnEvent_BOTHMode_UIChoiceIdReceivedFirst) {
   MessageSharedPtr msg_from_mobile =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*msg_from_mobile)[strings::params][strings::correlation_id] = kCorrelationId;
-  (*msg_from_mobile)[strings::params][strings::connection_key] = kConnectionKey;
-  (*msg_from_mobile)[strings::msg_params][strings::interaction_mode] =
-      mobile_apis::InteractionMode::BOTH;
+      CreateRequestMessage(mobile_apis::InteractionMode::BOTH);
   std::shared_ptr<PerformInteractionRequest> command =
       CreateCommand<PerformInteractionRequest>(msg_from_mobile);
 
   ASSERT_TRUE(command->Init());
 
-  MessageSharedPtr response_msg_vr =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_vr)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-  (*response_msg_vr)[strings::msg_params][strings::choice_id] = vr_choice_id2;
-
-  MessageSharedPtr response_msg_ui =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_ui)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-  (*response_msg_ui)[strings::msg_params][strings::choice_id] = ui_choice_id1;
-
+  MessageSharedPtr response_msg_vr = CreateHMIResponseMessage(
+      hmi_apis::Common_Result::SUCCESS, "", kInvalidChoiceId);
   am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
   event_vr.set_smart_object(*response_msg_vr);
 
+  MessageSharedPtr response_msg_ui = CreateHMIResponseMessageWithChoiceID(
+      hmi_apis::Common_Result::SUCCESS, "", kUiChoiceID);
   am::event_engine::Event event_ui(hmi_apis::FunctionID::UI_PerformInteraction);
   event_ui.set_smart_object(*response_msg_ui);
 
@@ -230,35 +250,23 @@ TEST_F(PerformInteractionRequestTest,
   command->on_event(event_vr);
 
   EXPECT_EQ(
-      ui_choice_id1,
+      kUiChoiceID,
       (*response_to_mobile)[strings::msg_params][strings::choice_id].asInt());
 }
 
 TEST_F(PerformInteractionRequestTest,
        OnEvent_BOTHMode_VRChoiceIdReceivedFirst) {
   MessageSharedPtr msg_from_mobile =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*msg_from_mobile)[strings::params][strings::correlation_id] = kCorrelationId;
-  (*msg_from_mobile)[strings::params][strings::connection_key] = kConnectionKey;
-  (*msg_from_mobile)[strings::msg_params][strings::interaction_mode] =
-      mobile_apis::InteractionMode::BOTH;
+      CreateRequestMessage(mobile_apis::InteractionMode::BOTH);
   std::shared_ptr<PerformInteractionRequest> command =
       CreateCommand<PerformInteractionRequest>(msg_from_mobile);
 
   ASSERT_TRUE(command->Init());
 
-  MessageSharedPtr response_msg_vr =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_vr)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-  (*response_msg_vr)[strings::msg_params][strings::choice_id] = vr_choice_id2;
-
-  MessageSharedPtr response_msg_ui =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_ui)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-  (*response_msg_ui)[strings::msg_params][strings::choice_id] =
-      kInvalidChoiceId;
+  MessageSharedPtr response_msg_vr = CreateHMIResponseMessageWithChoiceID(
+      hmi_apis::Common_Result::SUCCESS, "", kVrChoiceID);
+  MessageSharedPtr response_msg_ui = CreateHMIResponseMessageWithChoiceID(
+      hmi_apis::Common_Result::SUCCESS, "", kInvalidChoiceId);
 
   am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
   event_vr.set_smart_object(*response_msg_vr);
@@ -284,17 +292,14 @@ TEST_F(PerformInteractionRequestTest,
   command->on_event(event_ui);
 
   EXPECT_EQ(
-      vr_choice_id2,
+      kVrChoiceID,
       (*response_to_mobile)[strings::msg_params][strings::choice_id].asInt());
 }
 
 TEST_F(PerformInteractionRequestTest,
        OnEvent_VRHmiSendSuccess_UNSUPPORTED_RESOURCE) {
   MessageSharedPtr msg_from_mobile =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*msg_from_mobile)[strings::params][strings::connection_key] = kConnectionKey;
-  (*msg_from_mobile)[strings::msg_params][strings::interaction_mode] =
-      mobile_apis::InteractionMode::VR_ONLY;
+      CreateRequestMessage(mobile_apis::InteractionMode::VR_ONLY);
   std::shared_ptr<PerformInteractionRequest> command =
       CreateCommand<PerformInteractionRequest>(msg_from_mobile);
 
@@ -304,21 +309,13 @@ TEST_F(PerformInteractionRequestTest,
   EXPECT_CALL(app_mngr_, application(_)).WillRepeatedly(Return(mock_app));
 
   MessageSharedPtr response_msg_vr =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_vr)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::UNSUPPORTED_RESOURCE;
-  (*response_msg_vr)[strings::msg_params][strings::cmd_id] = kCommandId;
-  (*response_msg_vr)[am::strings::msg_params][am::strings::info] =
-      "VR is not supported by system";
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::UNSUPPORTED_RESOURCE,
+                               "VR is not supported by system");
   am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
   event_vr.set_smart_object(*response_msg_vr);
 
   MessageSharedPtr response_msg_ui =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_ui)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::SUCCESS, "");
   am::event_engine::Event event_ui(hmi_apis::FunctionID::UI_PerformInteraction);
   event_ui.set_smart_object(*response_msg_ui);
 
@@ -348,10 +345,7 @@ TEST_F(PerformInteractionRequestTest,
 TEST_F(PerformInteractionRequestTest,
        OnEvent_UIHmiSendSuccess_UNSUPPORTED_RESOURCE) {
   MessageSharedPtr msg_from_mobile =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*msg_from_mobile)[strings::params][strings::connection_key] = kConnectionKey;
-  (*msg_from_mobile)[strings::msg_params][strings::interaction_mode] =
-      mobile_apis::InteractionMode::VR_ONLY;
+      CreateRequestMessage(mobile_apis::InteractionMode::VR_ONLY);
   std::shared_ptr<PerformInteractionRequest> command =
       CreateCommand<PerformInteractionRequest>(msg_from_mobile);
 
@@ -361,20 +355,13 @@ TEST_F(PerformInteractionRequestTest,
   EXPECT_CALL(app_mngr_, application(_)).WillRepeatedly(Return(mock_app));
 
   MessageSharedPtr response_msg_vr =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_vr)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
+      CreateHMIResponseMessage(hmi_apis::Common_Result::SUCCESS, "");
   am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
   event_vr.set_smart_object(*response_msg_vr);
 
   MessageSharedPtr response_msg_ui =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_ui)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::UNSUPPORTED_RESOURCE;
-  (*response_msg_ui)[strings::msg_params][strings::cmd_id] = kCommandId;
-  (*response_msg_ui)[am::strings::msg_params][am::strings::info] =
-      "UI is not supported by system";
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::UNSUPPORTED_RESOURCE,
+                               "UI is not supported by system");
   am::event_engine::Event event_ui(hmi_apis::FunctionID::UI_PerformInteraction);
   event_ui.set_smart_object(*response_msg_ui);
 
@@ -397,18 +384,11 @@ TEST_F(PerformInteractionRequestTest,
 TEST_F(
     PerformInteractionRequestTest,
     PrepareResultCodeAndResponseForMobile_GetVRResultCodeOnly_InVR_OnlyMode_SUCCESS) {
-  ON_CALL(mock_hmi_interfaces_,
-          GetInterfaceState(am::HmiInterfaces::HMI_INTERFACE_UI))
-      .WillByDefault(Return(am::HmiInterfaces::STATE_AVAILABLE));
-  ON_CALL(mock_hmi_interfaces_,
-          GetInterfaceState(am::HmiInterfaces::HMI_INTERFACE_VR))
+  ON_CALL(mock_hmi_interfaces_, GetInterfaceState(_))
       .WillByDefault(Return(am::HmiInterfaces::STATE_AVAILABLE));
 
   MessageSharedPtr msg_from_mobile =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*msg_from_mobile)[strings::params][strings::connection_key] = kConnectionKey;
-  (*msg_from_mobile)[strings::msg_params][strings::interaction_mode] =
-      mobile_apis::InteractionMode::VR_ONLY;
+      CreateRequestMessage(mobile_apis::InteractionMode::VR_ONLY);
   std::shared_ptr<PerformInteractionRequest> command =
       CreateCommand<PerformInteractionRequest>(msg_from_mobile);
 
@@ -418,21 +398,13 @@ TEST_F(
   EXPECT_CALL(app_mngr_, application(_)).WillRepeatedly(Return(mock_app));
 
   MessageSharedPtr response_msg_vr =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_vr)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::UNSUPPORTED_RESOURCE;
-  (*response_msg_vr)[strings::msg_params][strings::cmd_id] = kCommandId;
-  (*response_msg_vr)[am::strings::msg_params][am::strings::info] =
-      "VR is not supported by system";
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::UNSUPPORTED_RESOURCE,
+                               "VR is not supported by system");
   am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
   event_vr.set_smart_object(*response_msg_vr);
 
   MessageSharedPtr response_msg_ui =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_ui)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::SUCCESS, "");
   am::event_engine::Event event_ui(hmi_apis::FunctionID::UI_PerformInteraction);
   event_ui.set_smart_object(*response_msg_ui);
 
@@ -453,40 +425,25 @@ TEST_F(
 
 TEST_F(
     PerformInteractionRequestTest,
-    PrepareResultCodeAndResponseForMobile_GetUI_SuccessCode_And_VR_ErrorInfo_InBOTH_Mode_SUCCESS) {
-  ON_CALL(mock_hmi_interfaces_,
-          GetInterfaceState(am::HmiInterfaces::HMI_INTERFACE_UI))
-      .WillByDefault(Return(am::HmiInterfaces::STATE_AVAILABLE));
-  ON_CALL(mock_hmi_interfaces_,
-          GetInterfaceState(am::HmiInterfaces::HMI_INTERFACE_VR))
+    PrepareResultCodeAndResponseForMobile_GetVR_ErrorInfoAndCode_InBOTH_Mode_With_UI_success_result_code) {
+  ON_CALL(mock_hmi_interfaces_, GetInterfaceState(_))
       .WillByDefault(Return(am::HmiInterfaces::STATE_AVAILABLE));
 
-  MessageSharedPtr msg_from_mobile =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*msg_from_mobile)[strings::params][strings::connection_key] = kConnectionKey;
-  (*msg_from_mobile)[strings::msg_params][strings::interaction_mode] =
-      mobile_apis::InteractionMode::BOTH;
+  auto msg_from_mobile =
+      CreateRequestMessage(mobile_apis::InteractionMode::BOTH);
   std::shared_ptr<PerformInteractionRequest> command =
       CreateCommand<PerformInteractionRequest>(msg_from_mobile);
 
   ASSERT_TRUE(command->Init());
 
   MessageSharedPtr response_msg_vr =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_vr)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::UNSUPPORTED_RESOURCE;
-  (*response_msg_vr)[strings::msg_params][strings::cmd_id] = kCommandId;
-  (*response_msg_vr)[am::strings::msg_params][am::strings::info] =
-      "VR is not supported by system";
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::UNSUPPORTED_RESOURCE,
+                               "VR is not supported by system");
   am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
   event_vr.set_smart_object(*response_msg_vr);
 
   MessageSharedPtr response_msg_ui =
-      CreateMessage(smart_objects::SmartType_Map);
-  (*response_msg_ui)[strings::params][hmi_response::code] =
-      hmi_apis::Common_Result::SUCCESS;
-
+      CreateHMIResponseMessage(hmi_apis::Common_Result::SUCCESS, "");
   am::event_engine::Event event_ui(hmi_apis::FunctionID::UI_PerformInteraction);
   event_ui.set_smart_object(*response_msg_ui);
 
@@ -511,8 +468,56 @@ TEST_F(
 
   ResultCommandExpectations(response_to_mobile,
                             true,
-                            hmi_apis::Common_Result::SUCCESS,
+                            hmi_apis::Common_Result::UNSUPPORTED_RESOURCE,
                             "VR is not supported by system");
+}
+
+TEST_F(
+    PerformInteractionRequestTest,
+    PrepareResultCodeAndResponseForMobile_Send_GENERIC_ERROR_To_Mobile_When_different_valid_choice_ids_received_in_BOTH_mode_SUCCESS) {
+  ON_CALL(mock_hmi_interfaces_, GetInterfaceState(_))
+      .WillByDefault(Return(am::HmiInterfaces::STATE_AVAILABLE));
+
+  MessageSharedPtr msg_from_mobile =
+      CreateRequestMessage(mobile_apis::InteractionMode::BOTH);
+  std::shared_ptr<PerformInteractionRequest> command =
+      CreateCommand<PerformInteractionRequest>(msg_from_mobile);
+
+  ASSERT_TRUE(command->Init());
+
+  MessageSharedPtr response_msg_vr = CreateHMIResponseMessageWithChoiceID(
+      hmi_apis::Common_Result::SUCCESS, "", kVrChoiceID);
+  MessageSharedPtr response_msg_ui = CreateHMIResponseMessageWithChoiceID(
+      hmi_apis::Common_Result::SUCCESS, "", kUiChoiceID);
+
+  am::event_engine::Event event_vr(hmi_apis::FunctionID::VR_PerformInteraction);
+  event_vr.set_smart_object(*response_msg_vr);
+  am::event_engine::Event event_ui(hmi_apis::FunctionID::UI_PerformInteraction);
+  event_ui.set_smart_object(*response_msg_ui);
+
+  MessageSharedPtr response_to_mobile;
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(_, am::commands::Command::CommandSource::SOURCE_SDL))
+      .WillOnce(DoAll(SaveArg<0>(&response_to_mobile), Return(true)));
+
+  MessageSharedPtr request_to_hmi;
+  EXPECT_CALL(mock_rpc_service_,
+              ManageHMICommand(
+                  _, am::commands::Command::CommandSource::SOURCE_SDL_TO_HMI))
+      .WillOnce(DoAll(SaveArg<0>(&request_to_hmi), Return(true)));
+
+  command->on_event(event_vr);
+  command->on_event(event_ui);
+
+  HMIRequestExpectations(request_to_hmi,
+                         hmi_apis::FunctionID::UI_ClosePopUp,
+                         "UI.PerformInteraction");
+
+  ResultCommandExpectations(response_to_mobile,
+                            false,
+                            hmi_apis::Common_Result::GENERIC_ERROR,
+                            "Received two different choice IDs");
 }
 
 }  // namespace perform_interaction_request
