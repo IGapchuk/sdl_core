@@ -90,7 +90,7 @@ class TransportAdapterImpl : public TransportAdapter,
                        ServerConnectionFactory* server_connection_factory,
                        ClientConnectionListener* client_connection_listener,
                        resumption::LastState& last_state,
-                       const TransportManagerSettings& settings);
+                       const TransportManagerSettings& settings) = delete;
 
   /**
    * @brief Destructor.
