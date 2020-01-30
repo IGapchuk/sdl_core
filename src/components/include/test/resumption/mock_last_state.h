@@ -35,6 +35,7 @@
 
 #include "gmock/gmock.h"
 #include "resumption/last_state.h"
+#include "utils/macro.h"
 
 namespace test {
 namespace components {
@@ -44,6 +45,8 @@ class MockLastState : public resumption::LastState {
  public:
   MOCK_METHOD0(SaveToFileSystem, void());
   MOCK_METHOD0(RemoveFromFileSystem, void());
+  DEPRECATED
+  MOCK_METHOD0(get_dictionary, Json::Value&());
   MOCK_CONST_METHOD0(dictionary, Json::Value());
   MOCK_METHOD1(set_dictionary, void(const Json::Value&));
 };

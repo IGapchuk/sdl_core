@@ -71,16 +71,16 @@ class LastStateImpl : public LastState {
   void RemoveFromFileSystem() OVERRIDE;
 
   /**
-   * @brief Get the dictionary
+   * @brief Gets internal dictionary
    * @return A copy of the dictionary instance
    */
   Json::Value dictionary() const OVERRIDE;
 
   /**
-   * @brief Get the dictionary
+   * @brief Gets internal dictionary
    * @return Reference to the dictionary
    */
-  DEPRECATED Json::Value& get_dictionary();
+  DEPRECATED Json::Value& get_dictionary() OVERRIDE;
 
   /**
    * @brief Resets internal dictionary

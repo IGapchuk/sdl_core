@@ -34,6 +34,7 @@
 #define SRC_COMPONENTS_INCLUDE_RESUMPTION_LAST_STATE_H_
 
 #include "json/json.h"
+#include "utils/macro.h"
 
 namespace resumption {
 
@@ -55,6 +56,12 @@ class LastState {
    * Remove dictionary from filesystem
    */
   virtual void RemoveFromFileSystem() = 0;
+
+  /**
+   * @brief Gets internal dictionary
+   * @return Reference to the dictionary
+   */
+  DEPRECATED virtual Json::Value& get_dictionary() = 0;
 
   /**
    * @brief dictionary Gets internal dictionary

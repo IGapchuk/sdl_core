@@ -365,7 +365,7 @@ TEST_F(TcpAdapterTest, NotifyTransportConfigUpdated) {
   MockTransportAdapterListener mock_adapter_listener;
 
   TcpTransportAdapter transport_adapter(
-      port, last_state_, transport_manager_settings);
+      port, last_state_wrapper_, transport_manager_settings);
   transport_adapter.AddListener(&mock_adapter_listener);
 
   TransportConfig config;
@@ -382,7 +382,7 @@ TEST_F(TcpAdapterTest, NotifyTransportConfigUpdated) {
 
 TEST_F(TcpAdapterTest, GetTransportConfiguration) {
   TcpTransportAdapter transport_adapter(
-      port, last_state_, transport_manager_settings);
+      port, last_state_wrapper_, transport_manager_settings);
 
   TransportConfig config;
   config[tc_enabled] = std::string("true");
