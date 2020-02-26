@@ -379,6 +379,45 @@ class HMICapabilitiesImpl : public HMICapabilities {
       const smart_objects::CSmartSchema& schema,
       Json::Value& out_node) const;
 
+  /**
+   * @brief Prepares specified JSON structure for Buttons interface according to
+   * sections which should be updated
+   * @param sections_to_update reference to list of fields to update
+   * @param schema reference to schema which should be unapplied before field
+   * updating
+   * @param out_node reference to JSON structure to update
+   */
+  void PrepareButtonsJsonValueForSaving(
+      const std::vector<std::string>& sections_to_update,
+      const smart_objects::CSmartSchema& schema,
+      Json::Value& out_node) const;
+
+  /**
+   * @brief Prepares specified JSON structure for VehicleInfo interface
+   * according to sections which should be updated
+   * @param sections_to_update reference to list of fields to update
+   * @param schema reference to schema which should be unapplied before field
+   * updating
+   * @param out_node reference to JSON structure to update
+   */
+  void PrepareVehicleInfoJsonValueForSaving(
+      const std::vector<std::string>& sections_to_update,
+      const smart_objects::CSmartSchema& schema,
+      Json::Value& out_node) const;
+
+  /**
+   * @brief Prepares specified JSON structure for RC interface according to
+   * sections which should be updated
+   * @param sections_to_update reference to list of fields to update
+   * @param schema reference to schema which should be unapplied before field
+   * updating
+   * @param out_node reference to JSON structure to update
+   */
+  void PrepareRCJsonValueForSaving(
+      const std::vector<std::string>& sections_to_update,
+      const smart_objects::CSmartSchema& schema,
+      Json::Value& out_node) const;
+
   bool is_vr_cooperating_;
   bool is_tts_cooperating_;
   bool is_ui_cooperating_;

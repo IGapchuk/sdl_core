@@ -1603,35 +1603,28 @@ void HMICapabilitiesImpl::PrepareUiJsonValueForSaving(
                                       out_node);
   }
 
-  if (helpers::in_range(sections_to_update, strings::navigation)) {
-    out_node[strings::hmi_capabilities] = navigation_supported();
+  if (helpers::in_range(sections_to_update, strings::hmi_capabilities)) {
+    out_node[strings::hmi_capabilities][strings::navigation] =
+        navigation_supported();
+    out_node[strings::hmi_capabilities][strings::phone_call] =
+        phone_call_supported();
+    out_node[strings::hmi_capabilities][strings::video_streaming] =
+        video_streaming_supported();
   }
 
-  if (helpers::in_range(sections_to_update, strings::phone_call)) {
-    out_node[strings::hmi_capabilities] = phone_call_supported();
-  }
-
-  if (helpers::in_range(sections_to_update, strings::navigation_capability)) {
+  if (helpers::in_range(sections_to_update, strings::system_capabilities)) {
     save_hmi_capability_field_to_json(strings::navigation_capability,
                                       schema,
                                       navigation_capability(),
                                       out_node[strings::system_capabilities]);
-  }
-  if (helpers::in_range(sections_to_update, strings::phone_capability)) {
     save_hmi_capability_field_to_json(strings::phone_capability,
                                       schema,
                                       phone_capability(),
                                       out_node[strings::system_capabilities]);
-  }
-  if (helpers::in_range(sections_to_update,
-                        strings::video_streaming_capability)) {
     save_hmi_capability_field_to_json(strings::video_streaming_capability,
                                       schema,
                                       video_streaming_capability(),
                                       out_node[strings::system_capabilities]);
-  }
-  if (helpers::in_range(sections_to_update,
-                        strings::system_display_capabilities)) {
     save_hmi_capability_field_to_json(strings::display_capabilities,
                                       schema,
                                       system_display_capabilities(),
@@ -1659,6 +1652,16 @@ void HMICapabilitiesImpl::PrepareVrJsonValueForSaving(
     out_node[hmi_response::language] =
         MessageHelper::CommonLanguageToString(active_vr_language());
   }
+
+  if (helpers::in_range(sections_to_update, hmi_response::languages)) {
+    save_hmi_capability_field_to_json(
+        hmi_response::languages, schema, vr_supported_languages(), out_node);
+  }
+
+  if (helpers::in_range(sections_to_update, strings::vr_capabilities)) {
+    save_hmi_capability_field_to_json(
+        strings::vr_capabilities, schema, vr_capabilities(), out_node);
+  }
 }
 
 void HMICapabilitiesImpl::PrepareTtsJsonValueForSaving(
@@ -1670,6 +1673,77 @@ void HMICapabilitiesImpl::PrepareTtsJsonValueForSaving(
   if (helpers::in_range(sections_to_update, hmi_response::language)) {
     out_node[hmi_response::language] =
         MessageHelper::CommonLanguageToString(active_tts_language());
+  }
+
+  if (helpers::in_range(sections_to_update, hmi_response::languages)) {
+    save_hmi_capability_field_to_json(
+        hmi_response::languages, schema, tts_supported_languages(), out_node);
+  }
+
+  if (helpers::in_range(sections_to_update,
+                        hmi_response::speech_capabilities)) {
+    save_hmi_capability_field_to_json(hmi_response::speech_capabilities,
+                                      schema,
+                                      speech_capabilities(),
+                                      out_node);
+  }
+  if (helpers::in_range(sections_to_update,
+                        hmi_response::prerecorded_speech_capabilities)) {
+    save_hmi_capability_field_to_json(
+        hmi_response::prerecorded_speech_capabilities,
+        schema,
+        prerecorded_speech(),
+        out_node);
+  }
+}
+
+void HMICapabilitiesImpl::PrepareButtonsJsonValueForSaving(
+    const std::vector<std::string>& sections_to_update,
+    const smart_objects::CSmartSchema& schema,
+    Json::Value& out_node) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  if (helpers::in_range(sections_to_update,
+                        hmi_response::button_capabilities)) {
+    save_hmi_capability_field_to_json(
+        hmi_response::capabilities, schema, button_capabilities(), out_node);
+  }
+
+  if (helpers::in_range(sections_to_update,
+                        hmi_response::preset_bank_capabilities)) {
+    save_hmi_capability_field_to_json(hmi_response::preset_bank_capabilities,
+                                      schema,
+                                      preset_bank_capabilities(),
+                                      out_node);
+  }
+}
+
+void HMICapabilitiesImpl::PrepareVehicleInfoJsonValueForSaving(
+    const std::vector<std::string>& sections_to_update,
+    const smart_objects::CSmartSchema& schema,
+    Json::Value& out_node) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  if (helpers::in_range(sections_to_update, hmi_response::vehicle_type)) {
+    save_hmi_capability_field_to_json(
+        hmi_response::vehicle_type, schema, vehicle_type(), out_node);
+  }
+}
+
+void HMICapabilitiesImpl::PrepareRCJsonValueForSaving(
+    const std::vector<std::string>& sections_to_update,
+    const smart_objects::CSmartSchema& schema,
+    Json::Value& out_node) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  if (helpers::in_range(sections_to_update, strings::rc_capability)) {
+    save_hmi_capability_field_to_json(
+        strings::rc_capability, schema, rc_capability(), out_node);
+  }
+
+  if (helpers::in_range(sections_to_update,
+                        strings::seat_location_capability)) {
+    save_hmi_capability_field_to_json(strings::seat_location_capability,
+                                      schema,
+                                      seat_location_capability(),
+                                      out_node);
   }
 }
 
@@ -1700,6 +1774,20 @@ void HMICapabilitiesImpl::PrepareJsonValueForSaving(
 
   if (strcmp(interface_name, hmi_interface::tts) == 0) {
     PrepareTtsJsonValueForSaving(sections_to_update, schema, interface_node);
+  }
+
+  if (strcmp(interface_name, hmi_interface::buttons) == 0) {
+    PrepareButtonsJsonValueForSaving(
+        sections_to_update, schema, interface_node);
+  }
+
+  if (strcmp(interface_name, hmi_interface::vehicle_info) == 0) {
+    PrepareVehicleInfoJsonValueForSaving(
+        sections_to_update, schema, interface_node);
+  }
+
+  if (strcmp(interface_name, hmi_interface::rc) == 0) {
+    PrepareRCJsonValueForSaving(sections_to_update, schema, interface_node);
   }
 }
 
