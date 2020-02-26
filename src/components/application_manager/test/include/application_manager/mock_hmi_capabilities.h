@@ -212,6 +212,7 @@ class MockHMICapabilities : public ::application_manager::HMICapabilities {
                     const std::vector<std::string>& sections_to_update,
                     const smart_objects::CSmartSchema& schema));
   MOCK_CONST_METHOD0(DeleteCachedCapabilitiesFile, void());
+  MOCK_CONST_METHOD0(AreAllUIFieldsSavedInCache, bool());
 };
 
 }  // namespace application_manager_test

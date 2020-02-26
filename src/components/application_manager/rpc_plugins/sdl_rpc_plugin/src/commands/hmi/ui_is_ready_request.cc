@@ -77,6 +77,10 @@ void UIIsReadyRequest::on_event(const event_engine::Event& event) {
                      "HmiInterfaces::HMI_INTERFACE_UI isn't available");
         return;
       }
+      if (hmi_capabilities_.AreAllUIFieldsSavedInCache()) {
+        LOG4CXX_INFO(logger_, "All fiels are present in the cache");
+        return;
+      }
       SendMessageToHMI();
       break;
     }

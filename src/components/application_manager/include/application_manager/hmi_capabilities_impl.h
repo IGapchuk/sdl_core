@@ -240,6 +240,8 @@ class HMICapabilitiesImpl : public HMICapabilities {
 
   void DeleteCachedCapabilitiesFile() const OVERRIDE;
 
+  bool AreAllUIFieldsSavedInCache() const OVERRIDE;
+
  protected:
   /**
    * @brief Loads capabilities from local file in case SDL was launched

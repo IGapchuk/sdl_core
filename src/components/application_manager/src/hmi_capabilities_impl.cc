@@ -1525,6 +1525,67 @@ HMICapabilitiesImpl::GetActiveLanguageForInterface(
   return hmi_apis::Common_Language::INVALID_ENUM;
 }
 
+bool HMICapabilitiesImpl::AreAllUIFieldsSavedInCache() const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  const std::string cache_file_name =
+      app_mngr_.get_settings().hmi_capabilities_cache_file_name();
+  if (cache_file_name.empty()) {
+    LOG4CXX_DEBUG(logger_,
+                  "Cache file name is not specified. No need to save cache");
+    return false;
+  }
+
+  if (!file_system::FileExists(cache_file_name)) {
+    LOG4CXX_DEBUG(logger_, "Cache file does not exist");
+    return false;
+  }
+
+  Json::Value root_node;
+  LOG4CXX_DEBUG(logger_, "Cache file exists. Check for it's content");
+
+  std::string file_content;
+  if (!file_system::ReadFile(cache_file_name, file_content)) {
+    LOG4CXX_ERROR(logger_, "Failed to read file content");
+    return false;
+  }
+
+  Json::CharReaderBuilder builder;
+  const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  if (!reader->parse(file_content.c_str(),
+                     file_content.c_str() + file_content.length(),
+                     &root_node,
+                     NULL)) {
+    LOG4CXX_ERROR(logger_, "Can't parse the file. Skipping");
+    return false;
+  }
+
+  if (!check_existing_json_member(root_node, hmi_interface::ui)) {
+    LOG4CXX_DEBUG(logger_,
+                  " UI interface is not found. All fields should be saved");
+    return false;
+  }
+
+  const std::vector<std::string>& sections_to_check{
+      hmi_response::display_capabilities,
+      hmi_response::hmi_zone_capabilities,
+      hmi_response::soft_button_capabilities,
+      strings::audio_pass_thru_capabilities,
+      strings::hmi_capabilities,
+      strings::system_capabilities};
+
+  for (auto it = sections_to_check.begin(); it != sections_to_check.end();
+       ++it) {
+    const std::string section = (*it).c_str();
+    if (!check_existing_json_member(root_node[hmi_interface::ui],
+                                    section.c_str())) {
+      LOG4CXX_DEBUG(logger_,
+                    "Field " << *it << " should be saved into the file");
+      return false;
+    }
+  }
+  return true;
+}
+
 bool HMICapabilitiesImpl::AreAllFieldsSaved(
     const Json::Value& root_node,
     const char* interface_name,
