@@ -100,6 +100,7 @@ const char kSignalChangeThresholdAvailable[] = "signalChangeThresholdAvailable";
 const char kRadioEnableAvailable[] = "radioEnableAvailable";
 const char kStateAvailable[] = "stateAvailable";
 const char kSisDataAvailable[] = "sisDataAvailable";
+const char kHdChannelAvailable[] = "hdChannelAvailable";
 
 const char kSiriusxmRadioAvailable[] = "siriusxmRadioAvailable";
 
@@ -128,6 +129,7 @@ const char kSourceAvailable[] = "sourceAvailable";
 const char kKeepContextAvailable[] = "keepContextAvailable";
 const char kVolumeAvailable[] = "volumeAvailable";
 const char kEqualizerAvailable[] = "equalizerAvailable";
+const char kEqualizerMaxChannelId[] = "equalizerMaxChannelId";
 
 // HmiSettingsCapabilities
 const char kDistanceUnitAvailable[] = "distanceUnitAvailable";
@@ -358,6 +360,7 @@ const char kNotFound[] = "NOT_FOUND";
 const char kFront[] = "FRONT";
 const char kRear[] = "REAR";
 const char kAll[] = "ALL";
+const char kNone[] = "NONE";
 // DefrostZone enum
 
 // TemperatureUnit enum
@@ -387,8 +390,9 @@ const char kRepeat[] = "REPEAT";
 // ButtonName enum
 
 // ButtonPressMode enum
-const char kLong[] = "LONG";
-const char kShort[] = "SHORT";
+const char kShortPressAvailable[] = "shortPressAvailable";
+const char kLongPressAvailable[] = "longPressAvailable";
+const char kUpDownAvailable[] = "upDownAvailable";
 // ButtonPressMode enum
 
 // Access mode enum
