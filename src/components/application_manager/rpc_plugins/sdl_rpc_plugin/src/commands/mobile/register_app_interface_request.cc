@@ -81,6 +81,8 @@ mobile_apis::AppHMIType::eType StringToAppHMIType(const std::string& str) {
     return mobile_apis::AppHMIType::PROJECTION;
   } else if ("REMOTE_CONTROL" == str) {
     return mobile_apis::AppHMIType::REMOTE_CONTROL;
+  } else if ("WEB_VIEW" == str) {
+    return mobile_apis::AppHMIType::WEB_VIEW;
   } else {
     return mobile_apis::AppHMIType::INVALID_ENUM;
   }
@@ -99,7 +101,8 @@ std::string AppHMITypeToString(mobile_apis::AppHMIType::eType type) {
        {mobile_apis::AppHMIType::BACKGROUND_PROCESS, "BACKGROUND_PROCESS"},
        {mobile_apis::AppHMIType::TESTING, "TESTING"},
        {mobile_apis::AppHMIType::SYSTEM, "SYSTEM"},
-       {mobile_apis::AppHMIType::PROJECTION, "PROJECTION"}};
+       {mobile_apis::AppHMIType::PROJECTION, "PROJECTION"},
+       {mobile_apis::AppHMIType::WEB_VIEW, "WEB_VIEW"}};
 
   std::map<mobile_apis::AppHMIType::eType, std::string>::const_iterator iter =
       app_hmi_type_map.find(type);
@@ -293,7 +296,7 @@ void RegisterAppInterfaceRequest::Run() {
           policy_result,
           mobile_apis::Result::SUCCESS,
           mobile_apis::Result::WARNINGS)) {
-    SendResponse(false, policy_result);
+    SendResponse(false, policy_result, response_info_.c_str());
     return;
   }
 
@@ -479,6 +482,10 @@ void RegisterAppInterfaceRequest::Run() {
         }
         case mobile_apis::AppHMIType::REMOTE_CONTROL: {
           application->set_remote_control_supported(true);
+          break;
+        }
+        case mobile_apis::AppHMIType::WEB_VIEW: {
+          application->set_webengine_projection_enabled(true);
           break;
         }
         default: {}
@@ -1132,12 +1139,12 @@ mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckWithPolicyData() {
 
   smart_objects::SmartObject& message = *message_;
   policy::StringArray app_nicknames;
-  policy::StringArray app_hmi_types;
+  policy::StringArray app_hmi_types_in_policy;
 
   const std::string mobile_app_id =
       application_manager_.GetCorrectMobileIDFromMessage(message_);
   const bool init_result = GetPolicyHandler().GetInitialAppData(
-      mobile_app_id, &app_nicknames, &app_hmi_types);
+      mobile_app_id, &app_nicknames, &app_hmi_types_in_policy);
 
   if (!init_result) {
     LOG4CXX_ERROR(logger_, "Error during initial application data check.");
@@ -1166,17 +1173,27 @@ mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckWithPolicyData() {
   mobile_apis::Result::eType result = mobile_apis::Result::SUCCESS;
 
   // If AppHMIType is not included in policy - allow any type
-  if (!app_hmi_types.empty()) {
+  if (!app_hmi_types_in_policy.empty()) {
     if (message[strings::msg_params].keyExists(strings::app_hmi_type)) {
       // If AppHmiTypes are partially same, the system should allow those listed
       // in the policy table and send warning info on missed values
-      smart_objects::SmartArray app_types =
+      smart_objects::SmartArray app_types_in_message =
           *(message[strings::msg_params][strings::app_hmi_type].asArray());
 
       std::string log;
-      CheckMissedTypes checker(app_hmi_types, log);
-      std::for_each(app_types.begin(), app_types.end(), checker);
+      CheckMissedTypes checker(app_hmi_types_in_policy, log);
+      std::for_each(
+          app_types_in_message.begin(), app_types_in_message.end(), checker);
       if (!log.empty()) {
+        auto it = std::find(app_types_in_message.begin(),
+                            app_types_in_message.end(),
+                            mobile_apis::AppHMIType::WEB_VIEW);
+        if (app_types_in_message.end() != it) {
+          response_info_ =
+              "WEB_VIEW AppHmiType is absent in application policies";
+          LOG4CXX_DEBUG(logger_, response_info_);
+          return mobile_apis::Result::DISALLOWED;
+        }
         response_info_ =
             "Following AppHmiTypes are not present in policy "
             "table:" +
@@ -1192,7 +1209,23 @@ mobile_apis::Result::eType RegisterAppInterfaceRequest::CheckWithPolicyData() {
         message[strings::msg_params][strings::app_hmi_type];
 
     AppHMITypeInserter inserter(app_hmi_type);
-    std::for_each(app_hmi_types.begin(), app_hmi_types.end(), inserter);
+    std::for_each(app_hmi_types_in_policy.begin(),
+                  app_hmi_types_in_policy.end(),
+                  inserter);
+  } else {
+    if (message[strings::msg_params].keyExists(strings::app_hmi_type)) {
+      smart_objects::SmartArray app_types_in_message =
+          *(message[strings::msg_params][strings::app_hmi_type].asArray());
+      auto it = std::find(app_types_in_message.begin(),
+                          app_types_in_message.end(),
+                          mobile_apis::AppHMIType::WEB_VIEW);
+      if (app_types_in_message.end() != it) {
+        LOG4CXX_DEBUG(logger_,
+                      "WEB_VIEW AppHmiType is absent in application policies, "
+                      "because they are empty");
+        return mobile_apis::Result::DISALLOWED;
+      }
+    }
   }
 
   return result;
