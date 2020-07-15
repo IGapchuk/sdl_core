@@ -526,16 +526,13 @@ MobileCommandFactory::MobileCommandFactory(
 
 bool MobileCommandFactory::IsAbleToProcess(
     const int32_t function_id,
-    const application_manager::commands::Command::CommandSource message_source)
-    const {
-  LOG4CXX_DEBUG(logger_,
-                "MobileCommandFactory::IsAbleToProcess: " << function_id << " "
-                                                          << message_source);
-  auto id = static_cast<mobile_apis::FunctionID::eType>(function_id);
-  return get_command_creator(id, mobile_apis::messageType::INVALID_ENUM)
-             .CanBeCreated() ||
-         get_notification_creator(id).CanBeCreated() ||
-         get_notification_from_mobile_creator(id).CanBeCreated();
+    const app_mngr::commands::Command::CommandSource message_source) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  return get_creator_factory(
+             static_cast<mobile_apis::FunctionID::eType>(function_id),
+             mobile_apis::messageType::INVALID_ENUM,
+             message_source)
+      .CanBeCreated();
 }
 
 CommandSharedPtr MobileCommandFactory::CreateCommand(
