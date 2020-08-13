@@ -41,6 +41,8 @@ namespace resumption {
 
 namespace app_mngr = application_manager;
 
+typedef std::pair<std::string, std::string> ModuleUid;
+
 struct ResumptionRequestIDs {
   hmi_apis::FunctionID::eType function_id;
   int32_t correlation_id;
@@ -59,6 +61,8 @@ struct ApplicationResumptionStatus {
   std::vector<ResumptionRequest> successful_requests;
   std::vector<std::string> unsuccesfull_vehicle_data_subscriptions_;
   std::vector<std::string> succesfull_vehicle_data_subscriptions_;
+  std::vector<ModuleUid> succesfull_module_subscriptions_;
+  std::vector<ModuleUid> unsuccesfull_module_subscriptions_;
 };
 
 /**
@@ -284,6 +288,10 @@ class ResumptionDataProcessor : public app_mngr::event_engine::EventObserver {
   void CheckVehicleDataResponse(const smart_objects::SmartObject& request,
                                 const smart_objects::SmartObject& response,
                                 ApplicationResumptionStatus& status);
+
+  void CheckModuleDataSubscription(const smart_objects::SmartObject& request,
+                                   const smart_objects::SmartObject& response,
+                                   ApplicationResumptionStatus& status);
 
   /**
    * @brief Checks whether CreateWindow response successful or not and handles

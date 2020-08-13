@@ -196,6 +196,7 @@ void RCAppExtension::RevertResumption(
       ConvertSmartObjectToModuleCollection(subscriptions_so);
 
   plugin_.RevertResumption(module_subscriptions);
+  UpdateHash();
 }
 
 std::set<ModuleUid> RCAppExtension::InteriorVehicleDataSubscriptions() const {
