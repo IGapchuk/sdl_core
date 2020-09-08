@@ -703,7 +703,7 @@ class PolicyHandler : public PolicyHandlerInterface,
 
 #ifdef BUILD_TESTS
   void SetPolicyManager(std::shared_ptr<PolicyManager> pm) {
-    policy_manager_ = pm;
+    ExchangePolicyManager(std::move(pm));
   }
 #endif  // BUILD_TESTS
 
@@ -901,8 +901,31 @@ class PolicyHandler : public PolicyHandlerInterface,
    */
   void GetRegisteredLinks(std::map<std::string, std::string>& out_links) const;
 
+  /**
+   * @brief Load policy manager
+   * This method is thread safe
+   * @return Pointer to the policy manager instance or null if not inited
+   */
+  std::shared_ptr<PolicyManager> LoadPolicyManager() const;
+
+  /**
+   * @brief Exchange a policy manager
+   * This method is thread safe
+   * @param policy_manager - new policy manager
+   * @return Pointer to the previous policy manager
+   * or null if the policy manager not set previously
+   */
+  std::shared_ptr<PolicyManager> ExchangePolicyManager(
+      std::shared_ptr<PolicyManager> policy_manager);
+
   mutable sync_primitives::RWLock policy_manager_lock_;
-  std::shared_ptr<PolicyManager> policy_manager_;
+
+  /**
+   * @brief Policy manager
+   * @note Use atomic_policy_manager_ only with
+   * LoadPolicyManager and ExchangePolicyManager methods!
+   */
+  std::shared_ptr<PolicyManager> atomic_policy_manager_;
   std::shared_ptr<PolicyEventObserver> event_observer_;
   uint32_t last_activated_app_id_;
 
