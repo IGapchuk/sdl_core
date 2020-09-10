@@ -703,7 +703,7 @@ class PolicyHandler : public PolicyHandlerInterface,
 
 #ifdef BUILD_TESTS
   void SetPolicyManager(std::shared_ptr<PolicyManager> pm) {
-    ExchangePolicyManager(std::move(pm));
+    ExchangePolicyManager(pm);
   }
 #endif  // BUILD_TESTS
 
@@ -912,11 +912,8 @@ class PolicyHandler : public PolicyHandlerInterface,
    * @brief Exchange a policy manager
    * This method is thread safe
    * @param policy_manager - new policy manager
-   * @return Pointer to the previous policy manager
-   * or null if the policy manager not set previously
    */
-  std::shared_ptr<PolicyManager> ExchangePolicyManager(
-      std::shared_ptr<PolicyManager> policy_manager);
+  void ExchangePolicyManager(std::shared_ptr<PolicyManager> policy_manager);
 
   mutable sync_primitives::RWLock policy_manager_lock_;
 
@@ -940,8 +937,6 @@ class PolicyHandler : public PolicyHandlerInterface,
    * @brief Contains device handles, which were sent for user consent to HMI
    */
   DeviceHandles pending_device_handles_;
-
-  inline bool CreateManager();
 
   typedef std::list<PolicyHandlerObserver*> HandlersCollection;
   HandlersCollection listeners_;

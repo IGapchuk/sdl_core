@@ -127,7 +127,9 @@ class SSLTest : public testing::Test {
     EXPECT_CALL(*mock_crypto_manager_settings_, ca_cert_path())
         .WillRepeatedly(ReturnRef(kCaPath));
     EXPECT_CALL(*mock_crypto_manager_settings_, verify_peer())
-        .WillOnce(Return(false));
+        .Times(2)
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
 
     ON_CALL(*mock_crypto_manager_settings_, force_unprotected_service())
         .WillByDefault(ReturnRef(forced_unprotected_service_));
@@ -157,10 +159,11 @@ class SSLTest : public testing::Test {
     EXPECT_CALL(*mock_client_manager_settings_, ciphers_list())
         .WillRepeatedly(ReturnRef(kAllCiphers));
     EXPECT_CALL(*mock_client_manager_settings_, ca_cert_path())
-        .Times(2)
         .WillRepeatedly(ReturnRef(kCaPath));
     EXPECT_CALL(*mock_client_manager_settings_, verify_peer())
-        .WillOnce(Return(false));
+        .Times(2)
+        .WillOnce(Return(false))
+        .WillOnce(Return(true));
 
     ON_CALL(*mock_client_manager_settings_, force_unprotected_service())
         .WillByDefault(ReturnRef(forced_unprotected_service_));

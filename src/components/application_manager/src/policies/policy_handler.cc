@@ -305,23 +305,66 @@ bool PolicyHandler::PolicyEnabled() const {
 
 bool PolicyHandler::LoadPolicyLibrary() {
   SDL_LOG_AUTO_TRACE();
+  ExchangePolicyManager(nullptr);
 
-  sync_primitives::AutoWriteLock lock(policy_manager_lock_);
-  if (!PolicyEnabled()) {
-    SDL_LOG_WARN(
-        "System is configured to work without policy "
-        "functionality.");
-    atomic_policy_manager_.reset();
+  auto create_policy_manager_instance = [this]() {
+    sync_primitives::AutoWriteLock lock(policy_manager_lock_);
+    if (!PolicyEnabled()) {
+      SDL_LOG_WARN(
+          "System is configured to work without policy "
+          "functionality.");
+      return std::shared_ptr<PolicyManager>();
+    }
+
+    void* const dl_handle = dlopen(kLibrary.c_str(), RTLD_LAZY);
+
+    if (!dl_handle) {
+      SDL_LOG_ERROR("An error occurs while calling dlopen");
+      return std::shared_ptr<PolicyManager>();
+    }
+
+    typedef PolicyManager* (*CreateManager)(logger::Logger*);
+
+    CreateManager create_manager =
+        reinterpret_cast<CreateManager>(dlsym(dl_handle, "CreateManager"));
+
+    PolicyManager* const policy_manager_raw =
+        create_manager ? create_manager(&logger::Logger::instance()) : nullptr;
+
+    if (!policy_manager_raw) {
+      if (dlclose(dl_handle)) {
+        SDL_LOG_ERROR("An error occurs while calling dlclose");
+      }
+      SDL_LOG_ERROR(kLibraryNotLoadedMessage);
+      return std::shared_ptr<PolicyManager>();
+    }
+
+    std::shared_ptr<PolicyManager> policy_manager{
+        policy_manager_raw, [dl_handle](PolicyManager* pm) noexcept {
+          typedef void (*DeleteManager)(PolicyManager*);
+          DeleteManager delete_manager = reinterpret_cast<DeleteManager>(
+              dlsym(dl_handle, "DeleteManager"));
+          if (delete_manager) {
+            delete_manager(pm);
+          }
+          dlclose(dl_handle);
+        }};
+
+    policy_manager->set_listener(this);
+
+    return policy_manager;
+  };
+
+  auto policy_manager = create_policy_manager_instance();
+
+  if (!policy_manager) {
     return false;
   }
 
-  if (CreateManager()) {
-    atomic_policy_manager_->set_listener(this);
-    event_observer_ = std::shared_ptr<PolicyEventObserver>(
-        new PolicyEventObserver(this, application_manager_.event_dispatcher()));
-  }
-
-  return (atomic_policy_manager_.use_count() != 0);
+  ExchangePolicyManager(std::move(policy_manager));
+  event_observer_ = std::make_shared<PolicyEventObserver>(
+      this, application_manager_.event_dispatcher());
+  return true;
 }
 
 const PolicySettings& PolicyHandler::get_settings() const {
@@ -776,46 +819,10 @@ std::shared_ptr<PolicyManager> PolicyHandler::LoadPolicyManager() const {
   return atomic_policy_manager_;
 }
 
-std::shared_ptr<PolicyManager> PolicyHandler::ExchangePolicyManager(
+void PolicyHandler::ExchangePolicyManager(
     std::shared_ptr<PolicyManager> policy_manager) {
   sync_primitives::AutoWriteLock lock{policy_manager_lock_};
   std::swap(atomic_policy_manager_, policy_manager);
-  return policy_manager;
-}
-
-bool PolicyHandler::CreateManager() {
-  void* policy_handle = dlopen(kLibrary.c_str(), RTLD_LAZY);
-  const char* error = dlerror();
-  if (!policy_handle) {
-    SDL_LOG_ERROR((error == NULL
-                       ? "Unknown error in dlopen while loading policy table"
-                       : error));
-    return false;
-  }
-
-  typedef PolicyManager* (*CreateManager)(logger::Logger*);
-  typedef void (*DeleteManager)(PolicyManager*);
-  CreateManager create_manager =
-      reinterpret_cast<CreateManager>(dlsym(policy_handle, "CreateManager"));
-  DeleteManager delete_manager =
-      reinterpret_cast<DeleteManager>(dlsym(policy_handle, "DeleteManager"));
-  auto policy_destroyer = [delete_manager,
-                           policy_handle](PolicyManager* policy_manager) {
-    SDL_LOG_DEBUG("Delete Policy Manager");
-    delete_manager(policy_manager);
-    dlclose(policy_handle);
-  };
-  char* error_string = dlerror();
-  if (NULL == error_string) {
-    sync_primitives::AutoWriteLock lock(policy_manager_lock_);
-    atomic_policy_manager_ = std::shared_ptr<PolicyManager>(
-        create_manager(&logger::Logger::instance()), policy_destroyer);
-  } else {
-    SDL_LOG_WARN(error_string);
-    dlclose(policy_handle);
-  }
-  sync_primitives::AutoReadLock lock(policy_manager_lock_);
-  return (atomic_policy_manager_.use_count() != 0);
 }
 
 std::vector<policy::FunctionalGroupPermission>
@@ -1250,17 +1257,9 @@ bool PolicyHandler::ReceiveMessageFromSDK(const std::string& file,
 
 bool PolicyHandler::UnloadPolicyLibrary() {
   SDL_LOG_AUTO_TRACE();
-  auto policy_manager = LoadPolicyManager();
-  DCHECK_OR_RETURN(policy_manager, false);
-  SDL_LOG_DEBUG("policy_manager_ = " << policy_manager);
-  bool ret = true;
   AsyncRunner::Stop();
-  sync_primitives::AutoWriteLock lock(policy_manager_lock_);
-  if (policy_manager) {
-    policy_manager.reset();
-  }
-  SDL_LOG_TRACE("exit");
-  return ret;
+  ExchangePolicyManager(nullptr);
+  return !atomic_policy_manager_;
 }
 
 #ifdef EXTERNAL_PROPRIETARY_MODE
