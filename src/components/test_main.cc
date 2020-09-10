@@ -20,8 +20,6 @@ int main(int argc, char** argv) {
   auto logger_impl =
       std::unique_ptr<logger::LoggerImpl>(new logger::LoggerImpl(false));
   logger::Logger::instance(logger_impl.get());
-
-  logger_impl->Init(std::move(logger));
 #endif  // ENABLE_LOG
 
   namespace custom_str = utils::custom_string;

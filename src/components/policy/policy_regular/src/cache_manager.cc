@@ -110,7 +110,7 @@ CacheManager::CacheManager()
     , update_required(false)
     , removed_custom_vd_items_()
     , settings_(nullptr) {
-  //  SDL_LOG_AUTO_TRACE();
+  SDL_LOG_AUTO_TRACE();
   backuper_ = new BackgroundBackuper(this);
   backup_thread_ = threads::CreateThread("Backup thread", backuper_);
   backup_thread_->Start();
